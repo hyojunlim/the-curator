@@ -69,7 +69,8 @@
       "Bash(findstr \":3000\")",
       "Bash(findstr \"LISTENING\")",
       "Bash(taskkill /F /PID 190248)",
-      "Bash(powershell -Command \"Stop-Process -Id 190248 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 190248 -Force\")",
+      "Bash(npx vercel:*)"
     ]
   }
 }

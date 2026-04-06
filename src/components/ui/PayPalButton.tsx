@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { loadScript } from "@paypal/paypal-js";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface PayPalButtonProps {
   plan?: "pro" | "business";
@@ -9,10 +8,47 @@ interface PayPalButtonProps {
   onError?: (msg: string) => void;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Manually load the PayPal SDK script to avoid the querySelector    */
+/*  bug in @paypal/paypal-js when the client-id contains special      */
+/*  characters.                                                       */
+/* ------------------------------------------------------------------ */
+
+const PAYPAL_SDK_NAMESPACE = "__paypal_sdk__";
+let sdkPromise: Promise<void> | null = null;
+
+function loadPayPalSDK(clientId: string): Promise<void> {
+  if (sdkPromise) return sdkPromise;
+
+  sdkPromise = new Promise<void>((resolve, reject) => {
+    // Already loaded?
+    if ((window as unknown as Record<string, unknown>).paypal) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&locale=en_US`;
+    script.id = PAYPAL_SDK_NAMESPACE;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      sdkPromise = null;
+      reject(new Error("Failed to load PayPal SDK"));
+    };
+    document.head.appendChild(script);
+  });
+
+  return sdkPromise;
+}
+
 export default function PayPalButton({ plan = "pro", onSuccess, onError }: PayPalButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const renderedRef = useRef(false);
+
+  const stableOnSuccess = useCallback(onSuccess, [onSuccess]);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,17 +62,26 @@ export default function PayPalButton({ plan = "pro", onSuccess, onError }: PayPa
           return;
         }
 
-        const paypal = await loadScript({
-          clientId,
-          currency: "USD",
-          locale: "en_US",
-        });
+        await loadPayPalSDK(clientId);
 
-        if (cancelled || !paypal || !containerRef.current) return;
+        if (cancelled || !containerRef.current) return;
 
+        const paypal = (window as unknown as Record<string, unknown>).paypal as {
+          Buttons: (opts: Record<string, unknown>) => { render: (el: HTMLElement) => void };
+        } | undefined;
+
+        if (!paypal) {
+          setError("PayPal SDK failed to initialize.");
+          setLoading(false);
+          return;
+        }
+
+        // Prevent double render
+        if (renderedRef.current) return;
+        renderedRef.current = true;
         containerRef.current.innerHTML = "";
 
-        paypal.Buttons!({
+        paypal.Buttons({
           style: {
             layout: "vertical",
             color: "blue",
@@ -62,7 +107,7 @@ export default function PayPalButton({ plan = "pro", onSuccess, onError }: PayPa
             });
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Payment capture failed");
-            onSuccess();
+            stableOnSuccess();
           },
           onError: (err: unknown) => {
             const msg = err instanceof Error ? err.message : "Payment failed";
@@ -83,7 +128,7 @@ export default function PayPalButton({ plan = "pro", onSuccess, onError }: PayPa
 
     init();
     return () => { cancelled = true; };
-  }, [plan, onSuccess, onError]);
+  }, [plan, stableOnSuccess, onError]);
 
   if (error) {
     return (
