@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Light mode design tokens (MD3 Light scheme) ── */
+:root {
+  --c-primary: 0 21 79;
+  --c-primary-fixed: 220 225 255;
+  --c-primary-fixed-dim: 182 196 255;
+  --c-primary-container: 0 38 126;
+  --c-on-primary: 255 255 255;
+  --c-on-primary-fixed: 0 21 80;
+  --c-on-primary-fixed-variant: 0 58 179;
+  --c-on-primary-container: 115 145 255;
+  --c-inverse-primary: 182 196 255;
+
+  --c-secondary: 76 86 175;
+  --c-secondary-fixed: 224 224 255;
+  --c-secondary-fixed-dim: 189 194 255;
+  --c-secondary-container: 149 158 253;
+  --c-on-secondary: 255 255 255;
+  --c-on-secondary-fixed: 0 7 103;
+  --c-on-secondary-fixed-variant: 52 61 150;
+  --c-on-secondary-container: 39 48 138;
+
+  --c-tertiary: 56 11 0;
+  --c-tertiary-container: 92 24 0;
+  --c-tertiary-fixed: 255 219 208;
+  --c-tertiary-fixed-dim: 255 181 157;
+  --c-on-tertiary: 255 255 255;
+  --c-on-tertiary-container: 225 124 90;
+  --c-on-tertiary-fixed: 57 12 0;
+  --c-on-tertiary-fixed-variant: 123 46 18;
+
+  --c-error: 186 26 26;
+  --c-error-container: 255 218 214;
+  --c-on-error: 255 255 255;
+  --c-on-error-container: 147 0 10;
+
+  --c-background: 247 249 252;
+  --c-on-background: 25 28 30;
+  --c-surface: 247 249 252;
+  --c-surface-bright: 247 249 252;
+  --c-surface-dim: 216 218 221;
+  --c-surface-variant: 224 227 230;
+  --c-surface-tint: 0 78 232;
+  --c-surface-container-lowest: 255 255 255;
+  --c-surface-container-low: 242 244 247;
+  --c-surface-container: 236 238 241;
+  --c-surface-container-high: 230 232 235;
+  --c-surface-container-highest: 224 227 230;
+  --c-on-surface: 25 28 30;
+  --c-on-surface-variant: 69 70 82;
+  --c-inverse-surface: 45 49 51;
+  --c-inverse-on-surface: 239 241 244;
+
+  --c-outline: 118 118 131;
+  --c-outline-variant: 198 197 212;
+}
+
+/* ── Dark mode design tokens (MD3 Dark scheme) ── */
+.dark {
+  --c-primary: 182 196 255;
+  --c-primary-fixed: 220 225 255;
+  --c-primary-fixed-dim: 182 196 255;
+  --c-primary-container: 0 58 179;
+  --c-on-primary: 0 21 80;
+  --c-on-primary-fixed: 0 21 80;
+  --c-on-primary-fixed-variant: 0 58 179;
+  --c-on-primary-container: 220 225 255;
+  --c-inverse-primary: 0 21 79;
+
+  --c-secondary: 189 194 255;
+  --c-secondary-fixed: 224 224 255;
+  --c-secondary-fixed-dim: 189 194 255;
+  --c-secondary-container: 52 61 150;
+  --c-on-secondary: 37 46 124;
+  --c-on-secondary-fixed: 0 7 103;
+  --c-on-secondary-fixed-variant: 52 61 150;
+  --c-on-secondary-container: 224 224 255;
+
+  --c-tertiary: 255 181 157;
+  --c-tertiary-container: 92 24 0;
+  --c-tertiary-fixed: 255 219 208;
+  --c-tertiary-fixed-dim: 255 181 157;
+  --c-on-tertiary: 105 0 0;
+  --c-on-tertiary-container: 255 219 208;
+  --c-on-tertiary-fixed: 57 12 0;
+  --c-on-tertiary-fixed-variant: 123 46 18;
+
+  --c-error: 255 180 171;
+  --c-error-container: 147 0 10;
+  --c-on-error: 105 0 5;
+  --c-on-error-container: 255 218 214;
+
+  --c-background: 17 19 24;
+  --c-on-background: 226 226 233;
+  --c-surface: 17 19 24;
+  --c-surface-bright: 54 57 62;
+  --c-surface-dim: 17 19 24;
+  --c-surface-variant: 69 70 82;
+  --c-surface-tint: 182 196 255;
+  --c-surface-container-lowest: 12 14 19;
+  --c-surface-container-low: 25 28 30;
+  --c-surface-container: 29 32 36;
+  --c-surface-container-high: 39 42 45;
+  --c-surface-container-highest: 50 53 56;
+  --c-on-surface: 226 226 233;
+  --c-on-surface-variant: 198 197 212;
+  --c-inverse-surface: 226 226 233;
+  --c-inverse-on-surface: 45 49 51;
+
+  --c-outline: 144 144 157;
+  --c-outline-variant: 69 70 82;
+}
+
+@layer utilities {
+  .bg-glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+  }
+  .hero-gradient {
+    background: linear-gradient(135deg, #00154f 0%, #00267e 100%);
+  }
+  .btn-primary-gradient {
+    background: linear-gradient(135deg, #00154f 0%, #00267e 100%);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .btn-hero {
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  }
+  /* Light-mode grid: dark lines on white */
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  /* Dark-mode grid: white lines on dark */
+  .dark .bg-grid-pattern {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  /* Card used on the landing page */
+  .card-dark {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    transition: background 0.15s;
+  }
+  .dark .card-dark {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .card-dark:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .dark .card-dark:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* ── Animations ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-outline-variant) / 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--c-outline-variant) / 0.6);
+}
