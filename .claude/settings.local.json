@@ -70,7 +70,8 @@
       "Bash(findstr \"LISTENING\")",
       "Bash(taskkill /F /PID 190248)",
       "Bash(powershell -Command \"Stop-Process -Id 190248 -Force\")",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(curl -s -X POST http://localhost:3000/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"\"plan\"\":\"\"pro\"\"}')"
     ]
   }
 }
