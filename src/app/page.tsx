@@ -77,15 +77,15 @@ export default function HomePage() {
                   <span className="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim/60" />
                   <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
                 </div>
-                <span className="text-xs font-headline font-bold text-on-surface-variant/60 ml-2">The Curator — Analysis Result</span>
+                <span className="text-xs font-headline font-bold text-on-surface-variant/60 ml-2">{t("landing.demoTitle")}</span>
               </div>
 
               <div className="p-6 space-y-5 text-left">
                 {/* Risk Score */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">Risk Score</span>
-                    <span className="text-xs font-bold text-error px-2 py-0.5 rounded-full bg-error/10">High</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">{t("landing.demoRiskScore")}</span>
+                    <span className="text-xs font-bold text-error px-2 py-0.5 rounded-full bg-error/10">{t("landing.demoHigh")}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl font-headline font-extrabold text-on-surface">72<span className="text-sm text-on-surface-variant/50">/100</span></span>
@@ -98,11 +98,11 @@ export default function HomePage() {
                 {/* Risk Items */}
                 <div className="space-y-2">
                   {[
-                    { icon: "warning", label: "Auto-Renewal Clause", severity: "high", color: "error" },
-                    { icon: "warning", label: "Unlimited Liability", severity: "high", color: "error" },
-                    { icon: "change_history", label: "Non-Compete (2 years)", severity: "medium", color: "tertiary-fixed-dim" },
-                  ].map((r) => (
-                    <div key={r.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-surface-container/50">
+                    { icon: "warning", label: t("landing.demoAutoRenewal"), severity: t("landing.demoHigh"), color: "error" },
+                    { icon: "warning", label: t("landing.demoUnlimitedLiability"), severity: t("landing.demoHigh"), color: "error" },
+                    { icon: "change_history", label: t("landing.demoNonCompete"), severity: t("landing.demoMedium"), color: "tertiary-fixed-dim" },
+                  ].map((r, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-surface-container/50">
                       <div className="flex items-center gap-2">
                         <span className={`material-symbols-outlined text-[16px] text-${r.color}`}>{r.icon}</span>
                         <span className="text-sm text-on-surface font-medium">{r.label}</span>
@@ -115,8 +115,8 @@ export default function HomePage() {
                 {/* Fairness */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">Fairness</span>
-                    <span className="text-xs text-on-surface-variant">35/100 · Favors Party A</span>
+                    <span className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">{t("landing.demoFairness")}</span>
+                    <span className="text-xs text-on-surface-variant">35/100 · {t("landing.demoFavorsPartyA")}</span>
                   </div>
                   <div className="relative h-2 bg-surface-container rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-error/80 to-tertiary-fixed-dim/60 rounded-full" style={{ width: "35%" }} />
@@ -126,23 +126,23 @@ export default function HomePage() {
                 {/* Bottom row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/15">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary-fixed-dim block mb-1.5">Missing Clauses</span>
-                    <p className="text-xs text-on-surface-variant">Force Majeure · Data Protection</p>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary-fixed-dim block mb-1.5">{t("landing.demoMissingClauses")}</span>
+                    <p className="text-xs text-on-surface-variant">{t("landing.demoForceMajeure")} · {t("landing.demoDataProtection")}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1.5">Action Items</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1.5">{t("landing.demoActionItems")}</span>
                     <div className="space-y-1">
                       <p className="text-xs text-on-surface-variant flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px] text-primary">check_box</span>
-                        Negotiate liability cap
+                        {t("landing.demoNegotiateLiability")}
                       </p>
                       <p className="text-xs text-on-surface-variant flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px] text-primary">check_box</span>
-                        Add termination clause
+                        {t("landing.demoAddTermination")}
                       </p>
                       <p className="text-xs text-on-surface-variant flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px] text-on-surface-variant/40">check_box_outline_blank</span>
-                        Review IP assignment
+                        {t("landing.demoReviewIP")}
                       </p>
                     </div>
                   </div>
@@ -214,15 +214,15 @@ export default function HomePage() {
                 <div className="flex flex-wrap gap-3">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-error/10 text-error text-sm font-bold">
                     <span className="w-2 h-2 rounded-full bg-error" />
-                    3 Critical
+                    {t("landing.demoCritical3")}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-fixed-dim/10 text-tertiary-fixed-dim text-sm font-bold">
                     <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim" />
-                    2 Caution
+                    {t("landing.demoCaution2")}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold">
                     <span className="w-2 h-2 rounded-full bg-primary" />
-                    1 Advisory
+                    {t("landing.demoAdvisory1")}
                   </span>
                 </div>
               </div>
@@ -233,15 +233,15 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">balance</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Fairness Score</h4>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.fairnessScoreTitle")}</h4>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                See who the contract favors at a glance with our imbalance detector.
+                {t("landing.fairnessScoreDesc")}
               </p>
               {/* Balance bar mockup */}
               <div className="space-y-3">
                 <div className="flex justify-between text-xs text-on-surface-variant">
-                  <span>Party A</span>
-                  <span>Party B</span>
+                  <span>{t("landing.partyA")}</span>
+                  <span>{t("landing.partyB")}</span>
                 </div>
                 <div className="relative h-3 bg-surface-container rounded-full overflow-hidden">
                   <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-error/70 to-tertiary-fixed-dim/60 rounded-full" style={{ width: "65%" }} />
@@ -254,7 +254,7 @@ export default function HomePage() {
                 </div>
                 <p className="text-xs font-bold text-error flex items-center gap-1 pt-3">
                   <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-                  Favors Party A
+                  {t("landing.favorsPartyA")}
                 </p>
               </div>
             </div>
@@ -264,21 +264,21 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Key Dates</h4>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.keyDatesTitle")}</h4>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                Never miss a deadline — renewal dates, expirations, and notice periods all extracted.
+                {t("landing.keyDatesDesc")}
               </p>
               {/* Timeline mockup */}
               <div className="relative pl-5 space-y-4 border-l-2 border-outline-variant/20">
                 <div className="relative">
                   <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-surface-container-lowest" />
                   <p className="text-xs font-bold text-on-surface">Jan 1, 2024</p>
-                  <p className="text-[11px] text-on-surface-variant">Effective Date</p>
+                  <p className="text-[11px] text-on-surface-variant">{t("landing.effectiveDate")}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-surface-container-lowest" />
                   <p className="text-xs font-bold text-on-surface">Dec 31, 2024</p>
-                  <p className="text-[11px] text-on-surface-variant">Expiration</p>
+                  <p className="text-[11px] text-on-surface-variant">{t("landing.expiration")}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-tertiary-fixed-dim border-2 border-surface-container-lowest" />
@@ -286,7 +286,7 @@ export default function HomePage() {
                     Nov 30, 2024
                     <span className="material-symbols-outlined text-tertiary-fixed-dim text-[14px]">warning</span>
                   </p>
-                  <p className="text-[11px] text-tertiary-fixed-dim font-medium">Renewal Deadline</p>
+                  <p className="text-[11px] text-tertiary-fixed-dim font-medium">{t("landing.renewalDeadline")}</p>
                 </div>
               </div>
             </div>
@@ -296,24 +296,24 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">search_off</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Missing Clauses</h4>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.missingClausesTitle")}</h4>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                Detect critical clauses that should be present but are missing from the contract.
+                {t("landing.missingClausesDesc")}
               </p>
               {/* Warning items */}
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2.5 p-3 rounded-xl bg-tertiary-fixed-dim/8 border border-tertiary-fixed-dim/15">
                   <span className="material-symbols-outlined text-tertiary-fixed-dim text-[18px] mt-0.5">warning</span>
                   <div>
-                    <p className="text-sm font-bold text-on-surface">Force Majeure</p>
-                    <p className="text-[11px] text-on-surface-variant">Not found in contract</p>
+                    <p className="text-sm font-bold text-on-surface">{t("landing.demoForceMajeure")}</p>
+                    <p className="text-[11px] text-on-surface-variant">{t("landing.notFoundInContract")}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5 p-3 rounded-xl bg-tertiary-fixed-dim/8 border border-tertiary-fixed-dim/15">
                   <span className="material-symbols-outlined text-tertiary-fixed-dim text-[18px] mt-0.5">warning</span>
                   <div>
-                    <p className="text-sm font-bold text-on-surface">Data Protection</p>
-                    <p className="text-[11px] text-on-surface-variant">Not found in contract</p>
+                    <p className="text-sm font-bold text-on-surface">{t("landing.demoDataProtection")}</p>
+                    <p className="text-[11px] text-on-surface-variant">{t("landing.notFoundInContract")}</p>
                   </div>
                 </div>
               </div>
@@ -324,26 +324,26 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">payments</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Financial Obligations</h4>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.financialTitle")}</h4>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                Every fee, penalty, and payment term surfaced in a clear summary table.
+                {t("landing.financialDesc")}
               </p>
               {/* Mini table */}
               <div className="rounded-xl border border-outline-variant/15 overflow-hidden text-xs">
                 <div className="grid grid-cols-3 gap-0 bg-surface-container px-3 py-2 font-bold text-on-surface-variant/60 uppercase tracking-wider text-[10px]">
-                  <span>Type</span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Party</span>
+                  <span>{t("landing.tableType")}</span>
+                  <span className="text-right">{t("landing.tableAmount")}</span>
+                  <span className="text-right">{t("landing.tableParty")}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-0 px-3 py-2.5 border-t border-outline-variant/10">
-                  <span className="text-on-surface font-medium">Monthly Fee</span>
+                  <span className="text-on-surface font-medium">{t("landing.monthlyFee")}</span>
                   <span className="text-right text-on-surface font-mono font-bold">$2,000</span>
-                  <span className="text-right text-on-surface-variant">Party B</span>
+                  <span className="text-right text-on-surface-variant">{t("landing.partyB")}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-0 px-3 py-2.5 border-t border-outline-variant/10 bg-error/5">
-                  <span className="text-on-surface font-medium">Penalty</span>
+                  <span className="text-on-surface font-medium">{t("landing.penalty")}</span>
                   <span className="text-right text-error font-mono font-bold">$5,000</span>
-                  <span className="text-right text-on-surface-variant">Party B</span>
+                  <span className="text-right text-on-surface-variant">{t("landing.partyB")}</span>
                 </div>
               </div>
             </div>
@@ -353,26 +353,26 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">checklist</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Action Items</h4>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.actionItemsTitle")}</h4>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                AI-generated to-do list with priority levels so you know what to fix first.
+                {t("landing.actionItemsDesc")}
               </p>
               {/* Checklist */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-error/5 border border-error/10">
                   <span className="w-2 h-2 rounded-full bg-error flex-shrink-0" />
-                  <span className="text-sm text-on-surface">Negotiate liability cap</span>
-                  <span className="text-[10px] font-bold text-error ml-auto uppercase">High</span>
+                  <span className="text-sm text-on-surface">{t("landing.actionNegotiateLiability")}</span>
+                  <span className="text-[10px] font-bold text-error ml-auto uppercase">{t("landing.demoHigh")}</span>
                 </div>
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/10">
                   <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim flex-shrink-0" />
-                  <span className="text-sm text-on-surface">Add termination notice</span>
-                  <span className="text-[10px] font-bold text-tertiary-fixed-dim ml-auto uppercase">Med</span>
+                  <span className="text-sm text-on-surface">{t("landing.actionAddTermination")}</span>
+                  <span className="text-[10px] font-bold text-tertiary-fixed-dim ml-auto uppercase">{t("landing.demoMedium")}</span>
                 </div>
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/5 border border-secondary/10">
                   <span className="w-2 h-2 rounded-full bg-secondary flex-shrink-0" />
-                  <span className="text-sm text-on-surface">Review payment terms</span>
-                  <span className="text-[10px] font-bold text-secondary ml-auto uppercase">Low</span>
+                  <span className="text-sm text-on-surface">{t("landing.actionReviewPayment")}</span>
+                  <span className="text-[10px] font-bold text-secondary ml-auto uppercase">{t("landing.demoLow")}</span>
                 </div>
               </div>
             </div>
@@ -421,9 +421,9 @@ export default function HomePage() {
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
                       <span className="material-symbols-outlined text-error mt-0.5">warning</span>
                       <div>
-                        <p className="text-sm font-bold text-on-surface mb-1">Auto-Renewal Clause</p>
+                        <p className="text-sm font-bold text-on-surface mb-1">{t("landing.multilingualDemoTitle")}</p>
                         <p className="text-sm text-on-surface-variant leading-relaxed">
-                          This contract renews automatically every 12 months unless either party provides 30-day written notice before expiration.
+                          {t("landing.multilingualDemoEN")}
                         </p>
                       </div>
                     </div>
@@ -433,9 +433,9 @@ export default function HomePage() {
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
                       <span className="material-symbols-outlined text-error mt-0.5">warning</span>
                       <div>
-                        <p className="text-sm font-bold text-on-surface mb-1">자동 갱신 조항</p>
+                        <p className="text-sm font-bold text-on-surface mb-1">{t("landing.multilingualDemoTitle")}</p>
                         <p className="text-sm text-on-surface-variant leading-relaxed">
-                          이 계약은 만료 전 30일 이내에 서면 통지를 하지 않는 한 매 12개월마다 자동으로 갱신됩니다.
+                          {t("landing.multilingualDemoKO")}
                         </p>
                       </div>
                     </div>
@@ -445,9 +445,9 @@ export default function HomePage() {
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
                       <span className="material-symbols-outlined text-error mt-0.5">warning</span>
                       <div>
-                        <p className="text-sm font-bold text-on-surface mb-1">自動更新条項</p>
+                        <p className="text-sm font-bold text-on-surface mb-1">{t("landing.multilingualDemoTitle")}</p>
                         <p className="text-sm text-on-surface-variant leading-relaxed">
-                          本契約は、いずれかの当事者が満了の30日前までに書面で通知しない限り、12ヶ月ごとに自動的に更新されます。
+                          {t("landing.multilingualDemoJA")}
                         </p>
                       </div>
                     </div>
@@ -463,26 +463,26 @@ export default function HomePage() {
       <section className="py-32 px-8 border-t border-outline-variant/15">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Transformation</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.transformation")}</span>
             <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
-              From Complex Contracts to Clear Insights
+              {t("landing.beforeAfterTitle")}
             </h2>
-            <p className="text-on-surface-variant text-lg">See how The Curator transforms dense legal text into actionable intelligence.</p>
+            <p className="text-on-surface-variant text-lg">{t("landing.beforeAfterDesc")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-6 md:gap-4 items-center">
             {/* Before — blurred contract */}
             <div className="relative bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 overflow-hidden">
-              <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 block mb-4">Before</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 block mb-4">{t("landing.before")}</span>
               <div className="space-y-3 select-none" style={{ filter: "blur(1.5px)" }}>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  제7조 (계약의 해지) 본 계약의 당사자는 상대방이 본 계약에서 정한 의무를 위반한 경우 서면으로 시정을 요구하고, 시정요구를 받은 날로부터 30일 이내에 이를 시정하지 아니한 때에는 본 계약을 해지할 수 있다.
+                  {t("landing.beforeText1")}
                 </p>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  제8조 (손해배상) 본 계약을 위반한 당사자는 그 위반으로 인하여 상대방에게 발생한 모든 손해를 배상하여야 한다. 손해배상의 범위는 직접손해에 한정되지 아니하며, 간접손해 및 기대이익의 상실도 포함한다.
+                  {t("landing.beforeText2")}
                 </p>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  제9조 (비밀유지) 각 당사자는 본 계약의 체결 및 이행 과정에서 알게 된 상대방의 경영, 기술, 영업 등에 관한 비밀정보를 제3자에게 누설하거나 본 계약의 목적 이외에 사용하여서는 아니된다.
+                  {t("landing.beforeText3")}
                 </p>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent pointer-events-none" />
@@ -493,12 +493,12 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary text-[24px]">arrow_forward</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary whitespace-nowrap">AI Analysis</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary whitespace-nowrap">{t("landing.aiAnalysis")}</span>
             </div>
 
             {/* After — clean analysis */}
             <div className="bg-surface-container-lowest border border-primary/20 rounded-2xl p-8 shadow-lg shadow-primary/5">
-              <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-4">After</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-4">{t("landing.after")}</span>
               <div className="space-y-4">
                 {/* Risk score mini */}
                 <div className="flex items-center gap-3">
@@ -514,29 +514,29 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-on-surface">High Risk Detected</p>
-                    <p className="text-xs text-on-surface-variant">5 issues found across 3 categories</p>
+                    <p className="text-sm font-bold text-on-surface">{t("landing.afterHighRisk")}</p>
+                    <p className="text-xs text-on-surface-variant">{t("landing.afterIssuesFound")}</p>
                   </div>
                 </div>
                 {/* Key findings */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="material-symbols-outlined text-error text-[16px]">warning</span>
-                    <span className="text-on-surface">Unlimited liability exposure</span>
+                    <span className="text-on-surface">{t("landing.afterIssue1")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="material-symbols-outlined text-error text-[16px]">warning</span>
-                    <span className="text-on-surface">No damages cap specified</span>
+                    <span className="text-on-surface">{t("landing.afterIssue2")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="material-symbols-outlined text-tertiary-fixed-dim text-[16px]">info</span>
-                    <span className="text-on-surface">Broad confidentiality scope</span>
+                    <span className="text-on-surface">{t("landing.afterIssue3")}</span>
                   </div>
                 </div>
                 {/* Action */}
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                  <p className="text-xs font-bold text-primary mb-1">Recommended Action</p>
-                  <p className="text-xs text-on-surface-variant">Add a liability cap and specify damages limitation clause.</p>
+                  <p className="text-xs font-bold text-primary mb-1">{t("landing.afterRecommended")}</p>
+                  <p className="text-xs text-on-surface-variant">{t("landing.afterRecommendedText")}</p>
                 </div>
               </div>
             </div>
@@ -568,7 +568,7 @@ export default function HomePage() {
               {/* Mini upload area */}
               <div className="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center bg-surface-container/30">
                 <span className="material-symbols-outlined text-on-surface-variant/30 text-[32px] mb-2 block">description</span>
-                <p className="text-xs text-on-surface-variant/50 font-medium">Drop PDF or DOCX here</p>
+                <p className="text-xs text-on-surface-variant/50 font-medium">{t("landing.dropFileHere")}</p>
                 <div className="mt-3 flex items-center justify-center gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">.pdf</span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">.docx</span>
@@ -590,8 +590,8 @@ export default function HomePage() {
               <div className="space-y-3 p-4 bg-surface-container/30 rounded-xl">
                 <div>
                   <div className="flex justify-between text-[10px] mb-1">
-                    <span className="text-on-surface-variant">Risk Scanning</span>
-                    <span className="text-primary font-bold">Done</span>
+                    <span className="text-on-surface-variant">{t("landing.riskScanning")}</span>
+                    <span className="text-primary font-bold">{t("landing.done")}</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full w-full" />
@@ -599,8 +599,8 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] mb-1">
-                    <span className="text-on-surface-variant">Clause Analysis</span>
-                    <span className="text-primary font-bold">Done</span>
+                    <span className="text-on-surface-variant">{t("landing.clauseAnalysis")}</span>
+                    <span className="text-primary font-bold">{t("landing.done")}</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full w-full" />
@@ -608,7 +608,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] mb-1">
-                    <span className="text-on-surface-variant">Financial Extraction</span>
+                    <span className="text-on-surface-variant">{t("landing.financialExtraction")}</span>
                     <span className="text-tertiary-fixed-dim font-bold">85%</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
@@ -617,7 +617,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] mb-1">
-                    <span className="text-on-surface-variant">Report Generation</span>
+                    <span className="text-on-surface-variant">{t("landing.reportGeneration")}</span>
                     <span className="text-on-surface-variant/50 font-bold">42%</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
@@ -652,17 +652,17 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-on-surface">Risk Score: 72/100</p>
-                    <p className="text-[10px] text-on-surface-variant">5 items need attention</p>
+                    <p className="text-xs font-bold text-on-surface">{t("landing.mockRiskScore")}</p>
+                    <p className="text-[10px] text-on-surface-variant">{t("landing.mockItemsAttention")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-error/5">
                   <span className="w-1.5 h-1.5 rounded-full bg-error" />
-                  <span className="text-on-surface">Unlimited liability clause</span>
+                  <span className="text-on-surface">{t("landing.mockLiabilityClause")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-tertiary-fixed-dim/5">
                   <span className="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim" />
-                  <span className="text-on-surface">Auto-renewal without notice</span>
+                  <span className="text-on-surface">{t("landing.mockAutoRenewal")}</span>
                 </div>
               </div>
             </div>
@@ -684,10 +684,10 @@ export default function HomePage() {
           {/* Beta Banner */}
           <div className="mb-10 p-5 rounded-2xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-base font-headline font-bold text-primary mb-1">
-              Beta Special — All features are currently FREE for early adopters!
+              {t("landing.betaBanner")}
             </p>
             <p className="text-sm text-on-surface-variant">
-              Sign up now to lock in unlimited access while we&apos;re in beta.
+              {t("landing.betaBannerDesc")}
             </p>
           </div>
 
@@ -716,8 +716,8 @@ export default function HomePage() {
                     <span className="text-5xl font-headline font-extrabold text-on-surface">
                       {plan.price}
                     </span>
-                    {plan.price !== "Custom" && plan.price !== "Free" && (
-                      <span className="text-sm text-on-surface-variant">/mo</span>
+                    {plan.price !== "Custom" && plan.price !== t("landing.starterPrice") && (
+                      <span className="text-sm text-on-surface-variant">{t("landing.perMonth")}</span>
                     )}
                   </div>
                   <p className="text-sm mt-1 text-on-surface-variant">{plan.sub}</p>
