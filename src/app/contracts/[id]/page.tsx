@@ -96,47 +96,25 @@ export default function ContractDetailPage() {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  function handleExportPDF() {
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExportPDF() {
     if (!contract) return;
-    const { risk_score, risk_high, result, title } = contract;
-    const lang = result.language || "English";
-    const printStyles = `
-      <style>
-        body { font-family: Inter, sans-serif; color: #191c1e; padding: 40px; }
-        h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-        .score { font-size: 48px; font-weight: 800; color: ${risk_high ? "#ba1a1a" : "#00154f"}; }
-        .summary { background: #f2f4f7; padding: 16px; border-radius: 8px; margin: 16px 0; }
-        .risk { border-left: 4px solid #ba1a1a; padding: 12px 16px; margin: 12px 0; background: #fff8f7; border-radius: 0 8px 8px 0; }
-        .risk.medium { border-color: #4c56af; background: #f2f2ff; }
-        .risk.low { border-color: #4c56af; background: #f2f4f7; }
-        .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
-        .badge.high { background: #ffdad6; color: #93000a; }
-        .badge.medium { background: #e0e0ff; color: #27308a; }
-        .badge.low { background: #dce1ff; color: #00154f; }
-        blockquote { font-style: italic; color: #454652; font-size: 12px; background: #eceef1; padding: 10px; margin: 8px 0; border-radius: 4px; }
-        .footer { margin-top: 40px; font-size: 11px; color: #767683; border-top: 1px solid #e0e3e6; padding-top: 16px; }
-      </style>`;
-    const body = `
-      <h1>${escapeHtml(title)}</h1>
-      <div class="score">${risk_score}<span style="font-size:20px;color:#767683">/100</span></div>
-      <p style="color:#454652">${t(lang, "riskLevel")}: ${risk_score >= 70 ? tr("contractDetail.riskLevelHigh") : risk_score >= 40 ? tr("contractDetail.riskLevelMedium") : tr("contractDetail.riskLevelLow")} &bull; ${result.risks.length} ${t(lang, "clausesIdentified")}</p>
-      <div class="summary"><strong>${t(lang, "summary")}</strong><p style="margin-top:8px">${escapeHtml(result.summary)}</p></div>
-      <h2 style="margin-top:24px">${t(lang, "clauseBreakdown")}</h2>
-      ${result.risks.map((r) => `
-        <div class="risk ${escapeHtml(r.severity)}">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-            <strong>${escapeHtml(r.title)}</strong><span class="badge ${escapeHtml(r.severity)}">${escapeHtml(r.severity)}</span>
-          </div>
-          ${r.clause ? `<blockquote>"${escapeHtml(r.clause)}"</blockquote>` : ""}
-          <p style="font-size:13px;color:#454652">${escapeHtml(r.explanation)}</p>
-        </div>`).join("")}
-      <div class="footer">${t(lang, "generatedBy")} &bull; ${new Date().toLocaleDateString(dateLocale, { dateStyle: "long" })} &bull; ${t(lang, "informationalOnly")}</div>`;
-    const win = window.open("", "_blank");
-    if (!win) { showToast(tr("contractDetail.allowPopups")); return; }
-    win.document.write(`<!DOCTYPE html><html><head>${printStyles}</head><body>${body}</body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 300);
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/export-pdf?id=${contract.id}`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${contract.title || "contract-analysis"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast("PDF export failed. Please try again.");
+    }
+    setExporting(false);
   }
 
   if (loading) {
@@ -281,8 +259,8 @@ export default function ContractDetailPage() {
                     <button onClick={handleShare} className="text-xs font-bold text-on-surface-variant border border-outline-variant/30 px-3 py-1 rounded hover:bg-surface-container-low transition-colors flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">share</span>{t(lang, "share")}
                     </button>
-                    <button onClick={handleExportPDF} className="text-xs font-bold btn-primary-gradient text-white px-3 py-1 rounded flex items-center gap-1 hover:opacity-90 transition-opacity">
-                      <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>{t(lang, "exportPdf")}
+                    <button onClick={handleExportPDF} disabled={exporting} className="text-xs font-bold btn-primary-gradient text-white px-3 py-1 rounded flex items-center gap-1 hover:opacity-90 transition-opacity disabled:opacity-50">
+                      <span className="material-symbols-outlined text-[14px]">{exporting ? "hourglass_empty" : "picture_as_pdf"}</span>{exporting ? "Exporting..." : t(lang, "exportPdf")}
                     </button>
                   </>
                 ) : (
