@@ -7,6 +7,8 @@ export interface RiskItem {
   suggestion_party_a?: string;
   suggestion_party_b?: string;
   rewrite?: string;
+  rewrite_party_a?: string;
+  rewrite_party_b?: string;
 }
 
 export interface ContractParty {
