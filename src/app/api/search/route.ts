@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   // Rate limit: max 60 searches per hour per user
-  const limit = checkRateLimit(`${userId}:search`, 60);
+  const limit = await checkRateLimit(`${userId}:search`, 60);
   if (!limit.allowed) {
     return Response.json({ error: "Too many search requests. Please slow down." }, { status: 429 });
   }

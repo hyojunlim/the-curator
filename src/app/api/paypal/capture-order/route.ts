@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   // Rate limit: max 5 capture attempts per hour per user
-  const limit = checkRateLimit(`${userId}:paypal-capture`, 5);
+  const limit = await checkRateLimit(`${userId}:paypal-capture`, 5);
   if (!limit.allowed) {
     return Response.json({ error: "Too many payment attempts. Please try again later." }, { status: 429 });
   }

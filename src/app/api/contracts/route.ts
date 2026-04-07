@@ -38,7 +38,7 @@ export async function DELETE(request: Request) {
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   // Rate limit: max 20 bulk deletes per hour per user
-  const limit = checkRateLimit(`${userId}:delete`, 20);
+  const limit = await checkRateLimit(`${userId}:delete`, 20);
   if (!limit.allowed) {
     return Response.json({ error: "Too many delete requests. Please slow down." }, { status: 429 });
   }

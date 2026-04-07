@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limit check (hourly)
-    const limit = checkRateLimit(userId);
+    const limit = await checkRateLimit(userId);
     if (!limit.allowed) {
       const retryMinutes = Math.ceil((limit.resetAt - Date.now()) / 60_000);
       return NextResponse.json(

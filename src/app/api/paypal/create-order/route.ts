@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   // Rate limit: max 10 order creations per hour per user
-  const limit = checkRateLimit(`${userId}:paypal-create`, 10);
+  const limit = await checkRateLimit(`${userId}:paypal-create`, 10);
   if (!limit.allowed) {
     return Response.json({ error: "Too many payment attempts. Please try again later." }, { status: 429 });
   }

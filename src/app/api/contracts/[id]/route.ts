@@ -25,7 +25,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   // Rate limit: max 60 PATCH per hour per user
-  const limit = checkRateLimit(`${userId}:patch`, 60);
+  const limit = await checkRateLimit(`${userId}:patch`, 60);
   if (!limit.allowed) {
     return Response.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   }
@@ -75,7 +75,7 @@ export async function DELETE(_: Request, { params }: { params: { id: string } })
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   // Rate limit: max 20 DELETE per hour per user
-  const limit = checkRateLimit(`${userId}:delete`, 20);
+  const limit = await checkRateLimit(`${userId}:delete`, 20);
   if (!limit.allowed) {
     return Response.json({ error: "Too many delete requests. Please slow down." }, { status: 429 });
   }

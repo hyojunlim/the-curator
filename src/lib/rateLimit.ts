@@ -1,52 +1,59 @@
 /**
- * In-memory rate limiter with per-endpoint support.
- *
- * WARNING: This works per-instance only. On serverless platforms (Vercel),
- * each cold start resets the store. For strict enforcement, replace with
- * Upstash Redis or similar persistent store. The current implementation
- * still provides reasonable protection for moderate traffic.
+ * Rate limiter using Upstash Redis for persistent enforcement.
+ * Falls back to in-memory store if Redis is not configured.
  */
 
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS } from "./config";
+
+// ── Upstash Redis rate limiter (persistent, works across serverless instances) ──
+let redisLimiter: Ratelimit | null = null;
+
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+
+  redisLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, `${Math.round(RATE_LIMIT_WINDOW_MS / 1000)} s`),
+    analytics: true,
+    prefix: "curator:ratelimit",
+  });
+}
+
+// ── In-memory fallback (for local dev without Redis) ──
 interface Entry {
   count: number;
   resetAt: number;
 }
 
-import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS } from "./config";
-
-const store = new Map<string, Entry>();
-
-// Periodic cleanup to prevent memory leaks
+const memStore = new Map<string, Entry>();
 let lastCleanup = Date.now();
-const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
 
-function cleanup() {
+function memCleanup() {
   const now = Date.now();
   if (now - lastCleanup < CLEANUP_INTERVAL) return;
   lastCleanup = now;
-  store.forEach((val, key) => {
-    if (val.resetAt <= now) store.delete(key);
+  memStore.forEach((val, key) => {
+    if (val.resetAt <= now) memStore.delete(key);
   });
 }
 
-/**
- * Check rate limit for a given key.
- * @param key - Unique identifier (e.g., userId, or "userId:endpoint" for per-endpoint limits)
- * @param maxRequests - Override max requests (defaults to RATE_LIMIT_MAX_REQUESTS)
- * @param windowMs - Override window (defaults to RATE_LIMIT_WINDOW_MS)
- */
-export function checkRateLimit(
+function checkMemoryRateLimit(
   key: string,
-  maxRequests = RATE_LIMIT_MAX_REQUESTS,
-  windowMs = RATE_LIMIT_WINDOW_MS,
+  maxRequests: number,
+  windowMs: number,
 ): { allowed: boolean; remaining: number; resetAt: number } {
-  cleanup();
-
+  memCleanup();
   const now = Date.now();
-  const entry = store.get(key);
+  const entry = memStore.get(key);
 
   if (!entry || entry.resetAt <= now) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
+    memStore.set(key, { count: 1, resetAt: now + windowMs });
     return { allowed: true, remaining: maxRequests - 1, resetAt: now + windowMs };
   }
 
@@ -56,4 +63,24 @@ export function checkRateLimit(
 
   entry.count++;
   return { allowed: true, remaining: maxRequests - entry.count, resetAt: entry.resetAt };
+}
+
+// ── Public API ──
+export async function checkRateLimit(
+  key: string,
+  maxRequests = RATE_LIMIT_MAX_REQUESTS,
+  windowMs = RATE_LIMIT_WINDOW_MS,
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  // Use Upstash Redis if configured
+  if (redisLimiter) {
+    const result = await redisLimiter.limit(key);
+    return {
+      allowed: result.success,
+      remaining: result.remaining,
+      resetAt: result.reset,
+    };
+  }
+
+  // Fallback to in-memory for local development
+  return checkMemoryRateLimit(key, maxRequests, windowMs);
 }
