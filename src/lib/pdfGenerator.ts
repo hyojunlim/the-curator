@@ -458,60 +458,86 @@ export async function generateContractPDF(contract: {
           doc.y += 4;
         }
 
-        // Suggestion
+        // General Suggestion
         if (risk.suggestion) {
           ensureSpace(doc, 20);
-          doc
-            .font("Bold")
-            .fontSize(9)
-            .fillColor(COLOR.success)
-            .text("Suggestion:", MARGIN, doc.y, { width: CONTENT_W });
-
-          doc
-            .font("Regular")
-            .fontSize(9)
-            .fillColor(COLOR.dark)
-            .text(risk.suggestion, MARGIN, doc.y, {
-              width: CONTENT_W,
-              lineGap: 2,
-            });
+          doc.font("Bold").fontSize(9).fillColor(COLOR.success).text("💡 General Advice:", MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
           doc.y += 4;
         }
 
-        // Suggested Rewrite
-        if (risk.rewrite) {
-          ensureSpace(doc, 30);
-          doc
-            .font("Bold")
-            .fontSize(9)
-            .fillColor(COLOR.primary)
-            .text("Suggested Rewrite:", MARGIN, doc.y, { width: CONTENT_W });
+        // Party A Advice
+        if (risk.suggestion_party_a) {
+          ensureSpace(doc, 20);
+          const partyAName = result.parties?.[0]?.name || "Party A";
+          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text(`🏢 ${partyAName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion_party_a, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
+          doc.y += 4;
+        }
 
-          const rwHeight = doc
-            .font("Regular")
-            .fontSize(9)
-            .heightOfString(risk.rewrite, {
-              width: CONTENT_W - 20,
-              lineGap: 2,
-            });
+        // Party B Advice
+        if (risk.suggestion_party_b) {
+          ensureSpace(doc, 20);
+          const partyBName = result.parties?.[1]?.name || "Party B";
+          doc.font("Bold").fontSize(9).fillColor("#6B4C9A").text(`👤 ${partyBName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion_party_b, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
+          doc.y += 4;
+        }
 
-          const rwBoxY = doc.y;
+        // Suggested Rewrite — Before/After with all 3 versions
+        if (risk.rewrite && risk.clause) {
+          ensureSpace(doc, 60);
+
+          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text("✏️ Suggested Rewrite", MARGIN, doc.y, { width: CONTENT_W });
+          doc.y += 2;
+
+          // Before (original clause)
+          const beforeH = doc.font("Regular").fontSize(8).heightOfString(risk.clause, { width: CONTENT_W - 24, lineGap: 2 });
+          const beforeY = doc.y;
           doc.save();
-          doc
-            .roundedRect(MARGIN, rwBoxY, CONTENT_W, rwHeight + 12, 3)
-            .fill(COLOR.lightBg);
+          doc.roundedRect(MARGIN, beforeY, CONTENT_W, beforeH + 20, 3).fill("#fff5f5");
           doc.restore();
+          doc.font("Bold").fontSize(7).fillColor(COLOR.error).text("✕ BEFORE (Original)", MARGIN + 8, beforeY + 4, { width: CONTENT_W - 16 });
+          doc.font("Regular").fontSize(8).fillColor(COLOR.muted).text(risk.clause, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
+          doc.y += 4;
 
-          doc
-            .font("Regular")
-            .fontSize(9)
-            .fillColor(COLOR.dark)
-            .text(risk.rewrite, MARGIN + 10, rwBoxY + 6, {
-              width: CONTENT_W - 20,
-              lineGap: 2,
-            });
+          // After — Balanced
+          const afterH = doc.font("Regular").fontSize(8).heightOfString(risk.rewrite, { width: CONTENT_W - 24, lineGap: 2 });
+          const afterY = doc.y;
+          doc.save();
+          doc.roundedRect(MARGIN, afterY, CONTENT_W, afterH + 20, 3).fill("#f0f4ff");
+          doc.restore();
+          doc.font("Bold").fontSize(7).fillColor(COLOR.success).text("✓ AFTER (Balanced)", MARGIN + 8, afterY + 4, { width: CONTENT_W - 16 });
+          doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
+          doc.y += 4;
 
-          doc.y += 6;
+          // Party A version
+          if (risk.rewrite_party_a) {
+            ensureSpace(doc, 30);
+            const paH = doc.font("Regular").fontSize(8).heightOfString(risk.rewrite_party_a, { width: CONTENT_W - 24, lineGap: 2 });
+            const paY = doc.y;
+            doc.save();
+            doc.roundedRect(MARGIN, paY, CONTENT_W, paH + 20, 3).fill("#f5f5ff");
+            doc.restore();
+            const paName = result.parties?.[0]?.name || "Party A";
+            doc.font("Bold").fontSize(7).fillColor(COLOR.primary).text(`✓ AFTER (Favors ${paName})`, MARGIN + 8, paY + 4, { width: CONTENT_W - 16 });
+            doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite_party_a, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
+            doc.y += 4;
+          }
+
+          // Party B version
+          if (risk.rewrite_party_b) {
+            ensureSpace(doc, 30);
+            const pbH = doc.font("Regular").fontSize(8).heightOfString(risk.rewrite_party_b, { width: CONTENT_W - 24, lineGap: 2 });
+            const pbY = doc.y;
+            doc.save();
+            doc.roundedRect(MARGIN, pbY, CONTENT_W, pbH + 20, 3).fill("#faf5ff");
+            doc.restore();
+            const pbName = result.parties?.[1]?.name || "Party B";
+            doc.font("Bold").fontSize(7).fillColor("#6B4C9A").text(`✓ AFTER (Favors ${pbName})`, MARGIN + 8, pbY + 4, { width: CONTENT_W - 16 });
+            doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite_party_b, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
+            doc.y += 6;
+          }
         }
 
         // Divider between risks
