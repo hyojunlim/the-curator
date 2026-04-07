@@ -32,7 +32,8 @@ interface ContractDetail {
 type PerspectiveView = "none" | "party_a" | "party_b";
 
 export default function ContractDetailPage() {
-  const { t: tr } = useTranslation();
+  const { t: tr, locale: uiLocale } = useTranslation();
+  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[uiLocale] || "en-US";
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [contract, setContract] = useState<ContractDetail | null>(null);
@@ -129,7 +130,7 @@ export default function ContractDetailPage() {
           ${r.clause ? `<blockquote>"${escapeHtml(r.clause)}"</blockquote>` : ""}
           <p style="font-size:13px;color:#454652">${escapeHtml(r.explanation)}</p>
         </div>`).join("")}
-      <div class="footer">${t(lang, "generatedBy")} &bull; ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })} &bull; ${t(lang, "informationalOnly")}</div>`;
+      <div class="footer">${t(lang, "generatedBy")} &bull; ${new Date().toLocaleDateString(dateLocale, { dateStyle: "long" })} &bull; ${t(lang, "informationalOnly")}</div>`;
     const win = window.open("", "_blank");
     if (!win) { showToast(tr("contractDetail.allowPopups")); return; }
     win.document.write(`<!DOCTYPE html><html><head>${printStyles}</head><body>${body}</body></html>`);
@@ -236,7 +237,7 @@ export default function ContractDetailPage() {
           </div>
           <div className="text-right text-xs text-on-surface-variant">
             <p>{tr("contractDetail.analyzed")} <span className="font-medium text-on-surface">
-              {new Date(created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              {new Date(created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}
             </span></p>
             <p className="mt-1">{tr("contractDetail.riskScoreLabel")}{" "}
               <span className={`font-headline font-bold text-sm ${risk_high ? "text-error" : "text-secondary"}`}>

@@ -8,7 +8,8 @@ import { useTranslation } from "@/lib/i18n";
 import type { Contract } from "@/types";
 
 export default function AnalyticsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[locale] || "en-US";
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +33,7 @@ export default function AnalyticsPage() {
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
-      const label = d.toLocaleDateString("en-US", { month: "short" });
+      const label = d.toLocaleDateString(dateLocale, { month: "short" });
       const count = contracts.filter((c) => {
         const cd = new Date(c.created_at);
         return cd.getMonth() === d.getMonth() && cd.getFullYear() === d.getFullYear();

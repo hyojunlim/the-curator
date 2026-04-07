@@ -18,7 +18,8 @@ const SECTION_IDS = ["profile", "notifications", "security", "billing"] as const
 const SECTION_ICONS: Record<string, string> = { profile: "person", notifications: "notifications", security: "security", billing: "credit_card" };
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[locale] || "en-US";
   const [activeSection, setActiveSection] = useState("profile");
   const [saved, setSaved] = useState(false);
   const { sub, loading: subLoading, refresh: refreshSub } = useSubscription();
@@ -176,40 +177,17 @@ export default function SettingsPage() {
             )}
 
             {activeSection === "notifications" && (
-              <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-5">
-                <h2 className="font-headline font-bold text-on-surface">{t("settings.notifications")}</h2>
-                {[
-                  { key: "email" as const, label: t("settings.emailNotifications"), desc: t("settings.emailNotificationsDesc") },
-                  { key: "browser" as const, label: t("settings.browserNotifications"), desc: t("settings.browserNotificationsDesc") },
-                  { key: "weeklyReport" as const, label: t("settings.weeklyDigest"), desc: t("settings.weeklyDigestDesc") },
-                ].map(({ key, label, desc }) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-on-surface">{label}</p>
-                      <p className="text-xs text-on-surface-variant">{desc}</p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        setForm((f) => ({
-                          ...f,
-                          notifications: { ...f.notifications, [key]: !f.notifications[key] },
-                        }))
-                      }
-                      className={`w-11 h-6 rounded-full transition-colors relative ${
-                        form.notifications[key] ? "bg-primary" : "bg-surface-container-high"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                          form.notifications[key] ? "translate-x-6" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
+              <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
+                <h2 className="font-headline font-bold text-on-surface mb-4">{t("settings.notifications")}</h2>
+                <div className="flex items-center gap-4 bg-primary/5 rounded-lg p-5">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-[20px]">notifications</span>
                   </div>
-                ))}
-                <button onClick={handleSave} className="btn-primary-gradient text-white font-headline font-bold text-sm px-6 py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-2">
-                  {saved ? <><span className="material-symbols-outlined text-[16px]">check</span>{t("settings.saved")}</> : <><span className="material-symbols-outlined text-[16px]">save</span>{t("settings.saveChanges")}</>}
-                </button>
+                  <div>
+                    <p className="text-sm font-medium text-on-surface">{t("team.comingSoon")}</p>
+                    <p className="text-xs text-on-surface-variant">{t("settings.emailNotificationsDesc")}</p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -330,7 +308,7 @@ export default function SettingsPage() {
                             />
                           </div>
                           <p className="text-[11px] text-on-surface-variant mt-1">
-                            {t("settings.resets", { date: new Date(sub.resetsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) })}
+                            {t("settings.resets", { date: new Date(sub.resetsAt).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" }) })}
                           </p>
                         </div>
                       )}

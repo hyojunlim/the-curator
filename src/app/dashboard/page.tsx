@@ -10,8 +10,10 @@ import { useSubscription } from "@/hooks/useSubscription";
 import type { Contract } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
+
+function formatDate(iso: string, locale = "en") {
+  return new Date(iso).toLocaleDateString(DATE_LOCALES[locale] || "en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | number>) => string) {
@@ -66,7 +68,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const { sub, refresh: refreshSub } = useSubscription();
   const { user, isLoaded: userLoaded } = useUser();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     fetch("/api/contracts")
@@ -175,7 +177,7 @@ export default function DashboardPage() {
             <h2 className="font-headline font-bold text-on-surface">{t("dashboard.recentContracts")}</h2>
             {lastAnalyzed && !loading && (
               <span className="text-[11px] text-on-surface-variant bg-surface-container-lowest px-2 py-0.5 rounded-full">
-                {t("dashboard.latest", { date: formatDate(lastAnalyzed) })}
+                {t("dashboard.latest", { date: formatDate(lastAnalyzed, locale) })}
               </span>
             )}
           </div>
@@ -243,7 +245,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="font-headline font-bold text-sm text-on-surface group-hover:text-primary transition-colors line-clamp-1">{c.title}</p>
-                    <p className="text-xs text-on-surface-variant">{c.type} · {formatDate(c.created_at)}</p>
+                    <p className="text-xs text-on-surface-variant">{c.type} · {formatDate(c.created_at, locale)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">

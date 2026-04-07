@@ -12,8 +12,10 @@ import type { Contract } from "@/types";
 
 const SORT_KEYS = ["sortMostRecent", "sortHighestRisk", "sortLowestRisk", "sortAlphabetical"] as const;
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
+
+function formatDate(iso: string, locale = "en") {
+  return new Date(iso).toLocaleDateString(DATE_LOCALES[locale] || "en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 /* ──────────────────────── Skeleton Card ──────────────────────── */
@@ -85,7 +87,7 @@ function ConfirmDialog({
 
 /* ──────────────────────── Main Page ──────────────────────── */
 export default function HistoryPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const { sub } = useSubscription();
@@ -409,7 +411,7 @@ export default function HistoryPage() {
                       <div className="flex items-center justify-between text-[11px] text-on-surface-variant">
                         <div>
                           <span className="uppercase tracking-wider">{t("history.analyzed")}</span>
-                          <p className="font-medium text-on-surface">{formatDate(c.created_at)}</p>
+                          <p className="font-medium text-on-surface">{formatDate(c.created_at, locale)}</p>
                         </div>
                         <div className="text-right">
                           <span className="uppercase tracking-wider">{t("history.riskScore")}</span>
