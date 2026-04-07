@@ -8,6 +8,7 @@ import { checkUsage, incrementUsage } from "@/lib/subscription";
 import { ALLOWED_LANGUAGES, FREE_LANGUAGES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_WORD_COUNT, PLAN_FEATURES } from "@/lib/config";
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // Allow up to 60s for Gemini API calls
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,6 +57,23 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "No file provided." }, { status: 400 });
       }
 
+      // MIME type validation
+      const ALLOWED_MIMES = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      if (!ALLOWED_MIMES.includes(file.type)) {
+        return NextResponse.json({ error: "Only PDF and DOCX files are allowed." }, { status: 400 });
+      }
+
+      // Verify magic bytes
+      const headerBytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+      const isPDF = headerBytes[0] === 0x25 && headerBytes[1] === 0x50 && headerBytes[2] === 0x44 && headerBytes[3] === 0x46;
+      const isZip = headerBytes[0] === 0x50 && headerBytes[1] === 0x4B && headerBytes[2] === 0x03 && headerBytes[3] === 0x04;
+      if (!isPDF && !isZip) {
+        return NextResponse.json({ error: "Invalid file format." }, { status: 400 });
+      }
+
       // File size validation
       if (file.size > MAX_FILE_SIZE_BYTES) {
         return NextResponse.json(
@@ -89,15 +107,10 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Priority AI processing: Business users skip queue, Pro gets shorter delay
-      if (!planFeatures.priorityProcessing) {
-        const delay = usage.plan === "pro" ? 1500 : 3000;
-        await new Promise((r) => setTimeout(r, delay));
-      }
-
       // If we have a scanned PDF, send it directly to Gemini Vision
       if (pdfFallbackBuffer) {
         const result = await analyzeContractFromPDF(pdfFallbackBuffer, language);
+        result.language = language;
 
         const aiScore = typeof result.riskScore === "number" ? result.riskScore : null;
         const highCount = result.risks.filter((r) => r.severity === "high").length;
@@ -156,13 +169,8 @@ export async function POST(req: NextRequest) {
       contractText = words.slice(0, MAX_WORD_COUNT).join(" ") + "\n[... document truncated for analysis ...]";
     }
 
-    // Priority AI processing: Business users skip queue, Pro gets shorter delay
-    if (!planFeatures.priorityProcessing) {
-      const delay = usage.plan === "pro" ? 1500 : 3000;
-      await new Promise((r) => setTimeout(r, delay));
-    }
-
     const result = await analyzeContract(contractText, language);
+    result.language = language;
 
     // Use AI-generated risk score; fallback to calculation only if missing
     const aiScore = typeof result.riskScore === "number" ? result.riskScore : null;
