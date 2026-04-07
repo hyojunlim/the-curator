@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "./supabase";
-import { FREE_ANALYSIS_LIMIT, PRO_ANALYSIS_LIMIT } from "./config";
+import { PLAN_FEATURES } from "./config";
 import type { PlanType } from "./config";
 
 export interface Subscription {
@@ -61,11 +61,8 @@ export async function getSubscription(userId: string): Promise<Subscription> {
 
 /** Get the analysis limit for a plan (-1 = unlimited) */
 function getPlanLimit(plan: PlanType): number {
-  switch (plan) {
-    case "business": return -1; // unlimited
-    case "pro": return PRO_ANALYSIS_LIMIT;
-    default: return FREE_ANALYSIS_LIMIT;
-  }
+  const limit = PLAN_FEATURES[plan].analysisLimit;
+  return limit === null ? -1 : limit;
 }
 
 /** Check if user can analyze (returns remaining count or -1 for unlimited) */

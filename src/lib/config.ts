@@ -39,14 +39,18 @@ export const FREE_LANGUAGES: string[] = ["English", "Korean"];
 // ── History ──
 export const FREE_HISTORY_DAYS = 7;
 
+// ── MVP Mode: unlock all features for free users ──
+// TODO: Revert to restricted free plan before public launch
+export const MVP_MODE = true;
+
 // ── Plan feature matrix ──
 export const PLAN_FEATURES = {
   free: {
-    analysisLimit: FREE_ANALYSIS_LIMIT,
-    languages: FREE_LANGUAGES,
-    historyDays: FREE_HISTORY_DAYS,
-    search: false,
-    pdfExport: false,
+    analysisLimit: MVP_MODE ? null : FREE_ANALYSIS_LIMIT,
+    languages: MVP_MODE ? ALLOWED_LANGUAGES : FREE_LANGUAGES,
+    historyDays: MVP_MODE ? null : FREE_HISTORY_DAYS,
+    search: MVP_MODE ? true : false,
+    pdfExport: MVP_MODE ? true : false,
     priorityProcessing: false,
   },
   pro: {
