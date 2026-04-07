@@ -461,7 +461,7 @@ export async function generateContractPDF(contract: {
         // General Suggestion
         if (risk.suggestion) {
           ensureSpace(doc, 20);
-          doc.font("Bold").fontSize(9).fillColor(COLOR.success).text("💡 General Advice:", MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Bold").fontSize(9).fillColor(COLOR.success).text("[Advice]", MARGIN, doc.y, { width: CONTENT_W });
           doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
           doc.y += 4;
         }
@@ -470,7 +470,7 @@ export async function generateContractPDF(contract: {
         if (risk.suggestion_party_a) {
           ensureSpace(doc, 20);
           const partyAName = result.parties?.[0]?.name || "Party A";
-          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text(`🏢 ${partyAName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text(`[A] ${partyAName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
           doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion_party_a, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
           doc.y += 4;
         }
@@ -479,7 +479,7 @@ export async function generateContractPDF(contract: {
         if (risk.suggestion_party_b) {
           ensureSpace(doc, 20);
           const partyBName = result.parties?.[1]?.name || "Party B";
-          doc.font("Bold").fontSize(9).fillColor("#6B4C9A").text(`👤 ${partyBName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Bold").fontSize(9).fillColor("#6B4C9A").text(`[B] ${partyBName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
           doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion_party_b, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
           doc.y += 4;
         }
@@ -488,7 +488,7 @@ export async function generateContractPDF(contract: {
         if (risk.rewrite && risk.clause) {
           ensureSpace(doc, 60);
 
-          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text("✏️ Suggested Rewrite", MARGIN, doc.y, { width: CONTENT_W });
+          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text("Suggested Rewrite", MARGIN, doc.y, { width: CONTENT_W });
           doc.y += 2;
 
           // Before (original clause)
@@ -497,7 +497,7 @@ export async function generateContractPDF(contract: {
           doc.save();
           doc.roundedRect(MARGIN, beforeY, CONTENT_W, beforeH + 20, 3).fill("#fff5f5");
           doc.restore();
-          doc.font("Bold").fontSize(7).fillColor(COLOR.error).text("✕ BEFORE (Original)", MARGIN + 8, beforeY + 4, { width: CONTENT_W - 16 });
+          doc.font("Bold").fontSize(7).fillColor(COLOR.error).text("X BEFORE (Original)", MARGIN + 8, beforeY + 4, { width: CONTENT_W - 16 });
           doc.font("Regular").fontSize(8).fillColor(COLOR.muted).text(risk.clause, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
           doc.y += 4;
 
@@ -507,7 +507,7 @@ export async function generateContractPDF(contract: {
           doc.save();
           doc.roundedRect(MARGIN, afterY, CONTENT_W, afterH + 20, 3).fill("#f0f4ff");
           doc.restore();
-          doc.font("Bold").fontSize(7).fillColor(COLOR.success).text("✓ AFTER (Balanced)", MARGIN + 8, afterY + 4, { width: CONTENT_W - 16 });
+          doc.font("Bold").fontSize(7).fillColor(COLOR.success).text("V AFTER (Balanced)", MARGIN + 8, afterY + 4, { width: CONTENT_W - 16 });
           doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
           doc.y += 4;
 
@@ -520,7 +520,7 @@ export async function generateContractPDF(contract: {
             doc.roundedRect(MARGIN, paY, CONTENT_W, paH + 20, 3).fill("#f5f5ff");
             doc.restore();
             const paName = result.parties?.[0]?.name || "Party A";
-            doc.font("Bold").fontSize(7).fillColor(COLOR.primary).text(`✓ AFTER (Favors ${paName})`, MARGIN + 8, paY + 4, { width: CONTENT_W - 16 });
+            doc.font("Bold").fontSize(7).fillColor(COLOR.primary).text(`V AFTER (Favors ${paName})`, MARGIN + 8, paY + 4, { width: CONTENT_W - 16 });
             doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite_party_a, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
             doc.y += 4;
           }
@@ -534,7 +534,7 @@ export async function generateContractPDF(contract: {
             doc.roundedRect(MARGIN, pbY, CONTENT_W, pbH + 20, 3).fill("#faf5ff");
             doc.restore();
             const pbName = result.parties?.[1]?.name || "Party B";
-            doc.font("Bold").fontSize(7).fillColor("#6B4C9A").text(`✓ AFTER (Favors ${pbName})`, MARGIN + 8, pbY + 4, { width: CONTENT_W - 16 });
+            doc.font("Bold").fontSize(7).fillColor("#6B4C9A").text(`V AFTER (Favors ${pbName})`, MARGIN + 8, pbY + 4, { width: CONTENT_W - 16 });
             doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite_party_b, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
             doc.y += 6;
           }

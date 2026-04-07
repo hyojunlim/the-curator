@@ -31,7 +31,13 @@ export async function GET(req: NextRequest) {
       { status: 404 }
     );
 
-  const pdfBuffer = await generateContractPDF(data);
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = await generateContractPDF(data);
+  } catch (err) {
+    console.error("[export-pdf] PDF generation error:", err);
+    return NextResponse.json({ error: "PDF generation failed" }, { status: 500 });
+  }
   const uint8 = new Uint8Array(pdfBuffer);
 
   return new NextResponse(uint8, {
