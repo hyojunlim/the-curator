@@ -107,11 +107,6 @@ export async function activatePlan(userId: string, plan: "pro" | "business", pay
     .eq("id", sub.id);
 }
 
-/** Legacy: activate pro (backward compat) */
-export async function activatePro(userId: string, paypalPayerId: string, paypalCaptureId: string): Promise<void> {
-  return activatePlan(userId, "pro", paypalPayerId, paypalCaptureId);
-}
-
 /** Downgrade to free plan */
 export async function deactivatePro(userId: string): Promise<void> {
   await supabaseAdmin

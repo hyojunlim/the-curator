@@ -1,28 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
 
-const ROLES = ["Admin", "Analyst", "Viewer"];
-
 export default function TeamPage() {
   const { user } = useUser();
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("Analyst");
-  const [toast, setToast] = useState<string | null>(null);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  }
-
-  function handleInvite(e: React.FormEvent) {
-    e.preventDefault();
-    showToast(`Invite sent to ${inviteEmail}`);
-    setInviteEmail("");
-  }
 
   const displayName = user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? "You";
   const email = user?.emailAddresses?.[0]?.emailAddress ?? "";
@@ -33,13 +16,6 @@ export default function TeamPage() {
       <AppSidebar />
 
       <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
-        {toast && (
-          <div className="fixed top-6 right-6 z-50 bg-on-surface text-surface text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px] text-secondary">check_circle</span>
-            {toast}
-          </div>
-        )}
-
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-headline font-extrabold text-2xl text-on-surface">Team</h1>
