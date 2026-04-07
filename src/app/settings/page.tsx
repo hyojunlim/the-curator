@@ -34,20 +34,27 @@ export default function SettingsPage() {
     notifications: { email: true, browser: true, weeklyReport: false },
   });
 
-  // Populate form from Clerk user data
+  // Populate form from Clerk user data + localStorage
   useEffect(() => {
     if (user) {
+      const savedLang = typeof window !== "undefined" ? localStorage.getItem("curator-language") || "English" : "English";
+      const savedOrg = typeof window !== "undefined" ? localStorage.getItem("curator-org") || "" : "";
       setForm((prev) => ({
         ...prev,
         name: user.fullName ?? "",
         email: user.emailAddresses?.[0]?.emailAddress ?? "",
-        org: (user.publicMetadata?.org as string) ?? "",
+        org: (user.publicMetadata?.org as string) || savedOrg,
+        language: savedLang,
       }));
     }
   }, [user]);
 
   async function handleSave() {
     try {
+      // Persist language & org to localStorage BEFORE Clerk update
+      // (Clerk update triggers useEffect which reads localStorage)
+      localStorage.setItem("curator-language", form.language);
+      localStorage.setItem("curator-org", form.org);
       await user?.update({
         firstName: form.name.split(" ")[0] || "",
         lastName: form.name.split(" ").slice(1).join(" ") || "",
@@ -114,7 +121,7 @@ export default function SettingsPage() {
                     readOnly
                     className="w-full bg-surface-container-high/50 rounded-lg px-4 py-2.5 text-sm text-on-surface-variant outline-none cursor-not-allowed"
                   />
-                  <p className="text-[10px] text-on-surface-variant/60 mt-1">Managed by Clerk</p>
+                  <p className="text-[11px] text-on-surface-variant/60 mt-1">Managed by Clerk</p>
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
@@ -274,7 +281,7 @@ export default function SettingsPage() {
                   >
                     Delete Account
                   </button>
-                  <p className="text-[10px] text-on-surface-variant mt-2">
+                  <p className="text-[11px] text-on-surface-variant mt-2">
                     Account deletion is managed through Clerk. You will be redirected to your account management page.
                   </p>
                 </div>
@@ -321,7 +328,7 @@ export default function SettingsPage() {
                               style={{ width: `${(sub.usage / sub.limit) * 100}%` }}
                             />
                           </div>
-                          <p className="text-[10px] text-on-surface-variant mt-1">
+                          <p className="text-[11px] text-on-surface-variant mt-1">
                             Resets {new Date(sub.resetsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                           </p>
                         </div>
