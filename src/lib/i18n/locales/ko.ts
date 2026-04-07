@@ -433,6 +433,7 @@ const ko: Translations = {
     suggestion: "\uC81C\uC548",
     advice: "\uC870\uC5B8",
     suggestedRewrite: "\uC218\uC815 \uC81C\uC548",
+    suggestedAddition: "\uCD94\uAC00 \uC81C\uC548",
     before: "\uC218\uC815 \uC804",
     after: "\uC218\uC815 \uD6C4",
     fairness: "\uACC4\uC57D \uACF5\uC815\uC131",

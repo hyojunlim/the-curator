@@ -433,6 +433,7 @@ const ja: Translations = {
     suggestion: "提案",
     advice: "アドバイス",
     suggestedRewrite: "修正案",
+    suggestedAddition: "追加提案",
     before: "修正前",
     after: "修正後",
     fairness: "契約の公正性",

@@ -9,6 +9,7 @@ export interface RiskItem {
   rewrite?: string;
   rewrite_party_a?: string;
   rewrite_party_b?: string;
+  rewrite_type?: "modify" | "add";
 }
 
 export interface ContractParty {

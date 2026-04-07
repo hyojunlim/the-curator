@@ -431,6 +431,7 @@ const en = {
     suggestion: "Suggestion",
     advice: "Advice",
     suggestedRewrite: "Suggested Rewrite",
+    suggestedAddition: "Suggested Addition",
     before: "Before",
     after: "After",
     fairness: "Contract Fairness",

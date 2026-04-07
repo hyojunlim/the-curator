@@ -433,6 +433,7 @@ const zh: Translations = {
     suggestion: "建议",
     advice: "建议",
     suggestedRewrite: "修改建议",
+    suggestedAddition: "建议添加",
     before: "修改前",
     after: "修改后",
     fairness: "合同公平性",

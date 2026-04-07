@@ -433,6 +433,7 @@ const de: Translations = {
     suggestion: "Vorschlag",
     advice: "Empfehlung",
     suggestedRewrite: "Vorgeschlagene Neufassung",
+    suggestedAddition: "Vorgeschlagene Ergänzung",
     before: "Vorher",
     after: "Nachher",
     fairness: "Vertragsgerechtigkeit",

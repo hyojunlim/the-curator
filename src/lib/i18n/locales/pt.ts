@@ -433,6 +433,7 @@ const pt: Translations = {
     suggestion: "Sugest\u00E3o",
     advice: "Conselho",
     suggestedRewrite: "Reescrita sugerida",
+    suggestedAddition: "Adição sugerida",
     before: "Antes",
     after: "Depois",
     fairness: "Equidade do contrato",

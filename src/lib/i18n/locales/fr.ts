@@ -433,6 +433,7 @@ const fr: Translations = {
     suggestion: "Suggestion",
     advice: "Conseil",
     suggestedRewrite: "R\u00E9\u00E9criture sugg\u00E9r\u00E9e",
+    suggestedAddition: "Ajout sugg\u00E9r\u00E9",
     before: "Avant",
     after: "Apr\u00E8s",
     fairness: "\u00C9quit\u00E9 du contrat",
