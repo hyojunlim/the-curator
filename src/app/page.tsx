@@ -288,8 +288,8 @@ export default function HomePage() {
             </div>
             {[
               { title: "Product", links: [["Features", "#features"], ["Pricing", "#pricing"], ["How It Works", "#how-it-works"], ["Dashboard", "/dashboard"]] },
-              { title: "Company", links: [["About", "#"], ["Blog", "#"], ["Careers", "#"], ["Contact", "#"]] },
-              { title: "Legal", links: [["Privacy Policy", "/legal/privacy"], ["Terms of Service", "/legal/terms"], ["Security", "/legal/security"], ["API Docs", "/legal/api"]] },
+              { title: "Resources", links: [["Dashboard", "/dashboard"], ["New Analysis", "/analyze"], ["Sign In", "/sign-in"], ["Sign Up", "/sign-up"]] },
+              { title: "Legal", links: [["Privacy Policy", "/legal/privacy"], ["Terms of Service", "/legal/terms"], ["Security", "/legal/security"]] },
             ].map((col) => (
               <div key={col.title}>
                 <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 mb-5">{col.title}</p>

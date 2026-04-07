@@ -48,6 +48,7 @@ export default function AppSidebar() {
         {/* Mobile close */}
         <button
           onClick={() => setMobileOpen(false)}
+          aria-label="Close navigation menu"
           className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors"
         >
           <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
@@ -150,6 +151,7 @@ export default function AppSidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
+        aria-label="Open navigation menu"
         className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center shadow-md border border-outline-variant/15"
       >
         <span className="material-symbols-outlined text-on-surface">menu</span>

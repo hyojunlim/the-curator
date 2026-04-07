@@ -443,8 +443,8 @@ export default function AnalyzePage() {
           )}
         </div>
 
-        {/* Intelligence Panel — always visible */}
-        <div className="w-80 shrink-0 p-8 bg-surface-container-low border-l border-outline-variant/10 flex flex-col gap-6">
+        {/* Intelligence Panel — hidden on mobile */}
+        <div className="hidden lg:flex w-80 shrink-0 p-8 bg-surface-container-low border-l border-outline-variant/10 flex-col gap-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>

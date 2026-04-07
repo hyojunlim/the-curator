@@ -342,6 +342,7 @@ export default function HistoryPage() {
                     {/* Star button */}
                     <button
                       onClick={() => handleStarClick(c.id, c.starred)}
+                      aria-label={c.starred ? "Unstar contract" : "Star contract"}
                       className={`absolute top-4 right-4 transition-colors ${c.starred ? "text-yellow-400" : "text-on-surface-variant/30 hover:text-yellow-400"}`}
                     >
                       <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: c.starred ? "'FILL' 1" : "'FILL' 0" }}>star</span>
@@ -350,8 +351,8 @@ export default function HistoryPage() {
                     {/* Delete button */}
                     <button
                       onClick={() => setDeleteConfirm(c.id)}
+                      aria-label="Delete contract"
                       className="absolute top-4 right-12 text-on-surface-variant/0 group-hover:text-on-surface-variant/40 hover:!text-error transition-colors"
-                      title="Delete contract"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
@@ -418,7 +419,7 @@ export default function HistoryPage() {
           </div>
 
           {/* Filters panel */}
-          <div className="w-56 shrink-0">
+          <div className="hidden lg:block w-56 shrink-0">
             <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
                 Filter by Label

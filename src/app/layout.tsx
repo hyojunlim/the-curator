@@ -11,6 +11,23 @@ export const metadata: Metadata = {
   title: "The Curator — AI Contract Intelligence",
   description:
     "AI-powered contract review that identifies hidden risks before they become liabilities.",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "The Curator — AI Contract Intelligence",
+    description: "Upload any contract. Our AI reads every clause, flags every risk, and explains every implication in plain language.",
+    url: "https://the-curator-virid.vercel.app",
+    siteName: "The Curator",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: "The Curator — AI Contract Intelligence",
+    description: "Upload any contract. Our AI reads every clause, flags every risk, and explains every implication in plain language.",
+  },
+  metadataBase: new URL("https://the-curator-virid.vercel.app"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -36,7 +36,7 @@ export default function RiskList({ risks, perspective, partyName }: Props) {
       <div className="space-y-3">
         {sorted.map((risk, index) => (
           <RiskItemCard
-            key={index}
+            key={`${risk.severity}-${risk.title}-${index}`}
             risk={risk}
             clauseNumber={index + 1}
             perspective={perspective}

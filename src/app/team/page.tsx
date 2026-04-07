@@ -96,45 +96,20 @@ export default function TeamPage() {
             </div>
           </div>
 
-          {/* Invite form */}
+          {/* Role permissions & info */}
           <div>
             <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-              <h2 className="font-headline font-bold text-on-surface text-sm mb-1">Invite Member</h2>
-              <p className="text-xs text-on-surface-variant mb-4">Invites are queued for when team features launch.</p>
-              <form onSubmit={handleInvite} className="space-y-3">
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="colleague@company.com"
-                    required
-                    className="w-full bg-surface-container-low rounded-lg px-3 py-2 text-sm text-on-surface placeholder-on-surface-variant/50 outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">
-                    Role
-                  </label>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                    className="w-full bg-surface-container-low rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    {ROLES.map((r) => <option key={r}>{r}</option>)}
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  className="w-full btn-primary-gradient text-white font-headline font-bold text-sm py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[16px]">person_add</span>
-                  Send Invite
-                </button>
-              </form>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-primary text-[18px]">schedule</span>
+                <h2 className="font-headline font-bold text-on-surface text-sm">Invitations</h2>
+              </div>
+              <p className="text-xs text-on-surface-variant mb-4">
+                Team invitations will be available once collaboration features launch. Stay tuned for updates.
+              </p>
+              <div className="flex items-center gap-2 px-3 py-2 bg-surface-container-high/30 rounded-lg">
+                <span className="material-symbols-outlined text-on-surface-variant/40 text-[16px]">lock</span>
+                <span className="text-xs text-on-surface-variant/60">Coming soon</span>
+              </div>
             </div>
 
             <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm mt-4">

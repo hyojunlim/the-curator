@@ -46,9 +46,17 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function handleSave() {
+    try {
+      await user?.update({
+        firstName: form.name.split(" ")[0] || "",
+        lastName: form.name.split(" ").slice(1).join(" ") || "",
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaved(false);
+    }
   }
 
   return (
@@ -58,10 +66,10 @@ export default function SettingsPage() {
       <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
         <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-8">Settings</h1>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Section Nav */}
-          <div className="w-48 shrink-0">
-            <nav className="space-y-1">
+          <div className="w-full lg:w-48 shrink-0">
+            <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0">
               {SECTIONS.map((s) => (
                 <button
                   key={s.id}
@@ -85,23 +93,40 @@ export default function SettingsPage() {
               <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-5">
                 <h2 className="font-headline font-bold text-on-surface">Profile</h2>
 
-                {[
-                  { label: "Full Name", key: "name" as const },
-                  { label: "Email Address", key: "email" as const },
-                  { label: "Organization", key: "org" as const },
-                ].map(({ label, key }) => (
-                  <div key={key}>
-                    <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                      {label}
-                    </label>
-                    <input
-                      type="text"
-                      value={form[key]}
-                      onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                      className="w-full bg-surface-container-low rounded-lg px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                  </div>
-                ))}
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    className="w-full bg-surface-container-low rounded-lg px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
+                    Email Address
+                  </label>
+                  <input
+                    type="text"
+                    value={form.email}
+                    readOnly
+                    className="w-full bg-surface-container-high/50 rounded-lg px-4 py-2.5 text-sm text-on-surface-variant outline-none cursor-not-allowed"
+                  />
+                  <p className="text-[10px] text-on-surface-variant/60 mt-1">Managed by Clerk</p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={form.org}
+                    onChange={(e) => setForm((f) => ({ ...f, org: e.target.value }))}
+                    className="w-full bg-surface-container-low rounded-lg px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
 
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
@@ -241,9 +266,17 @@ export default function SettingsPage() {
                   <p className="text-sm text-on-surface-variant mb-4">
                     Permanently delete your account and all associated data. This action cannot be undone.
                   </p>
-                  <button className="px-4 py-2 rounded-lg border border-error/30 text-error text-sm font-bold hover:bg-error/5 transition-colors">
+                  <button
+                    onClick={() => {
+                      window.open("https://accounts.clerk.dev/user", "_blank");
+                    }}
+                    className="px-4 py-2 rounded-lg border border-error/30 text-error text-sm font-bold hover:bg-error/5 transition-colors"
+                  >
                     Delete Account
                   </button>
+                  <p className="text-[10px] text-on-surface-variant mt-2">
+                    Account deletion is managed through Clerk. You will be redirected to your account management page.
+                  </p>
                 </div>
               </div>
             )}
