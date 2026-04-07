@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { getSubscription } from "@/lib/subscription";
-import { FREE_ANALYSIS_LIMIT, PRO_ANALYSIS_LIMIT } from "@/lib/config";
+import { FREE_ANALYSIS_LIMIT, PRO_ANALYSIS_LIMIT, MVP_MODE } from "@/lib/config";
 
 export async function GET() {
   const { userId } = await auth();
@@ -12,7 +12,8 @@ export async function GET() {
     let limit: number | null;
     let remaining: number;
 
-    if (sub.plan === "business") {
+    if (sub.plan === "business" || (MVP_MODE && sub.plan === "free")) {
+      // Business plan or MVP mode free users get unlimited
       limit = null;
       remaining = -1;
     } else if (sub.plan === "pro") {

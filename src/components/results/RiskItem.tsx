@@ -1,4 +1,5 @@
 import type { RiskItem } from "@/types";
+import { t } from "@/lib/i18n";
 
 const severityConfig = {
   high: {
@@ -29,9 +30,11 @@ interface Props {
   clauseNumber?: number;
   perspective: "none" | "party_a" | "party_b";
   partyName?: string;
+  language?: string;
 }
 
-export default function RiskItemCard({ risk, clauseNumber, perspective, partyName }: Props) {
+export default function RiskItemCard({ risk, clauseNumber, perspective, partyName, language }: Props) {
+  const lang = language || "English";
   const config = severityConfig[risk.severity];
 
   // Pick the right suggestion based on selected perspective
@@ -48,11 +51,12 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
         <div className="flex items-center gap-2">
           <h3 className="font-headline font-bold text-on-surface text-sm">{risk.title}</h3>
           {clauseNumber && (
-            <span className="text-[10px] text-on-surface-variant">Clause {clauseNumber}</span>
+            <span className="text-[11px] text-on-surface-variant">{t(lang, "clause")} {clauseNumber}</span>
           )}
         </div>
-        <span className={`shrink-0 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${config.badge}`}>
-          {config.label}
+        <span className={`shrink-0 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-flex items-center gap-0.5 ${config.badge}`}>
+          <span className="material-symbols-outlined text-[12px]">{config.icon}</span>
+          {risk.severity === "high" ? t(lang, "critical") : risk.severity === "medium" ? t(lang, "caution") : t(lang, "advisory")}
         </span>
       </div>
 
@@ -83,8 +87,8 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
               perspective !== "none" ? "text-primary" : "text-on-surface-variant"
             }`}>
               {perspective !== "none" && partyName
-                ? `${partyName} Advice`
-                : "Suggestion"}
+                ? <>{partyName} {t(lang, "advice")}</>
+                : t(lang, "suggestion")}
             </span>
           </div>
           <p className={`text-xs leading-relaxed ${
@@ -100,13 +104,13 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
         <div className="mt-3 rounded-lg border border-secondary/20 overflow-hidden">
           <div className="flex items-center gap-1.5 px-3 py-2 bg-secondary/5">
             <span className="material-symbols-outlined text-[14px] text-secondary">edit_note</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">Suggested Rewrite</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{t(lang, "suggestedRewrite")}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
             <div className="p-3 bg-error/3">
               <div className="flex items-center gap-1 mb-1.5">
                 <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">Before</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
               </div>
               <p className="text-xs text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">
                 {risk.clause}
@@ -115,7 +119,7 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
             <div className="p-3 bg-secondary/3">
               <div className="flex items-center gap-1 mb-1.5">
                 <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">After</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
               </div>
               <p className="text-xs text-on-surface leading-relaxed font-medium">
                 {risk.rewrite}

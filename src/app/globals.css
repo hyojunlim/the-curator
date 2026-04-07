@@ -111,7 +111,7 @@
   --c-inverse-on-surface: 45 49 51;
 
   --c-outline: 144 144 157;
-  --c-outline-variant: 69 70 82;
+  --c-outline-variant: 120 121 140;
 }
 
 @layer utilities {
@@ -133,6 +133,12 @@
   }
   .btn-hero {
     background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  }
+  .dark .btn-hero {
+    background: linear-gradient(135deg, #1a3a8f 0%, #2952c4 100%);
+  }
+  .dark .btn-primary-gradient {
+    background: linear-gradient(135deg, #1a3a8f 0%, #2952c4 50%, #3d6ae0 100%);
   }
   /* Light-mode grid: dark lines on white */
   .bg-grid-pattern {
@@ -182,6 +188,65 @@
   animation: slide-up 0.4s ease-out;
 }
 
+/* Landing page: floating mockup */
+@keyframes float {
+  0%, 100% { transform: perspective(1000px) rotateY(-2deg) rotateX(2deg) translateY(0); }
+  50% { transform: perspective(1000px) rotateY(-2deg) rotateX(2deg) translateY(-10px); }
+}
+.animate-float > * {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Landing page: mockup glow */
+.mockup-glow {
+  box-shadow:
+    0 25px 50px -12px rgba(0, 78, 232, 0.15),
+    0 0 80px -20px rgba(0, 78, 232, 0.1);
+}
+.dark .mockup-glow {
+  box-shadow:
+    0 25px 50px -12px rgba(182, 196, 255, 0.1),
+    0 0 80px -20px rgba(182, 196, 255, 0.08);
+}
+
+/* Landing page: pulsing progress bar */
+@keyframes pulse-bar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse-bar {
+  animation: pulse-bar 2s ease-in-out infinite;
+}
+
+/* Landing page: CSS-only tabs for multilingual demo */
+.lang-tab-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.lang-tab-panel { display: none; }
+
+/* EN tab (1st radio) — panel is 2nd div sibling (after headers div) */
+#tab-en:checked ~ .lang-tab-headers .lang-tab-label:nth-child(1) {
+  border-bottom-color: rgb(var(--c-primary));
+  color: rgb(var(--c-primary));
+}
+#tab-en:checked ~ div.lang-tab-panel:nth-of-type(2) { display: block; }
+
+/* KO tab (2nd radio) — panel is 3rd div sibling */
+#tab-ko:checked ~ .lang-tab-headers .lang-tab-label:nth-child(2) {
+  border-bottom-color: rgb(var(--c-primary));
+  color: rgb(var(--c-primary));
+}
+#tab-ko:checked ~ div.lang-tab-panel:nth-of-type(3) { display: block; }
+
+/* JA tab (3rd radio) — panel is 4th div sibling */
+#tab-ja:checked ~ .lang-tab-headers .lang-tab-label:nth-child(3) {
+  border-bottom-color: rgb(var(--c-primary));
+  color: rgb(var(--c-primary));
+}
+#tab-ja:checked ~ div.lang-tab-panel:nth-of-type(4) { display: block; }
+
 /* ── Scrollbar styling ── */
 ::-webkit-scrollbar {
   width: 6px;
@@ -196,4 +261,11 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--c-outline-variant) / 0.6);
+}
+
+/* ── Focus-visible for keyboard navigation ── */
+*:focus-visible {
+  outline: 2px solid rgb(var(--c-primary));
+  outline-offset: 2px;
+  border-radius: 4px;
 }

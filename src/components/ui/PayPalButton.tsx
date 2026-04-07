@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 interface PayPalButtonProps {
   plan?: "pro" | "business";
@@ -43,6 +44,7 @@ function loadPayPalSDK(clientId: string): Promise<void> {
 }
 
 export default function PayPalButton({ plan = "pro", onSuccess, onError }: PayPalButtonProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -146,7 +148,7 @@ export default function PayPalButton({ plan = "pro", onSuccess, onError }: PayPa
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          Loading PayPal...
+          {t("common.loadingPaypal")}
         </div>
       )}
       <div ref={containerRef} />

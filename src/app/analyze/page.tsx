@@ -7,19 +7,33 @@ import AppFooter from "@/components/layout/AppFooter";
 import ResultsView from "@/components/results/ResultsView";
 import UpgradeBanner from "@/components/ui/UpgradeBanner";
 import { useSubscription } from "@/hooks/useSubscription";
+import { MVP_MODE } from "@/lib/config";
+import { useTranslation } from "@/lib/i18n";
 
 type Tab = "upload" | "paste";
 type Status = "idle" | "loading" | "success" | "error";
 
-function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange: (f: File | null) => void }) {
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+function FileUploadTab({ file, onFileChange, t }: { file: File | null; onFileChange: (f: File | null) => void; t: (key: string, vars?: Record<string, string | number>) => string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [sizeError, setSizeError] = useState("");
+
+  function validateAndSet(f: File | null) {
+    if (f && f.size > MAX_FILE_SIZE) {
+      setSizeError(t("analyze.fileSizeError"));
+      return;
+    }
+    setSizeError("");
+    onFileChange(f);
+  }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped) onFileChange(dropped);
+    if (dropped) validateAndSet(dropped);
   }
 
   return (
@@ -40,7 +54,7 @@ function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange
           type="file"
           accept=".pdf,.docx"
           className="hidden"
-          onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+          onChange={(e) => { validateAndSet(e.target.files?.[0] ?? null); if (inputRef.current) inputRef.current.value = ""; }}
         />
         <div className="w-16 h-16 bg-surface-container-high rounded-2xl flex items-center justify-center mx-auto mb-5">
           <span className="material-symbols-outlined text-on-surface-variant text-[32px]">upload_file</span>
@@ -49,16 +63,16 @@ function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange
           <div>
             <p className="font-headline font-bold text-primary">{file.name}</p>
             <p className="text-xs text-on-surface-variant mt-1">
-              {(file.size / 1024).toFixed(1)} KB &middot; Click to change
+              {(file.size / 1024).toFixed(1)} KB &middot; {t("analyze.clickToChange")}
             </p>
           </div>
         ) : (
           <div>
             <p className="font-headline font-semibold text-on-surface text-base mb-1">
-              Drag and drop your contract
+              {t("analyze.dragAndDrop")}
             </p>
             <p className="text-sm text-on-surface-variant">
-              Support for PDF and DOCX formats. Max file size 10MB
+              {t("analyze.supportFormats")}
             </p>
           </div>
         )}
@@ -67,7 +81,7 @@ function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange
           onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
           className="mt-6 btn-primary-gradient text-white px-8 py-2.5 rounded-lg font-headline font-bold text-sm hover:opacity-90 transition-all shadow-md"
         >
-          Select File
+          {t("analyze.selectFile")}
         </button>
         <div className="mt-6 flex items-center justify-center gap-6 text-xs text-on-surface-variant">
           <span className="flex items-center gap-1">
@@ -79,6 +93,14 @@ function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange
         </div>
       </div>
 
+      {/* File size error */}
+      {sizeError && (
+        <div className="mt-4 flex items-center gap-2 bg-error-container/30 text-on-error-container text-sm rounded-lg px-4 py-3">
+          <span className="material-symbols-outlined text-[18px]">warning</span>
+          {sizeError}
+        </div>
+      )}
+
       {/* Uploading state */}
       {file && (
         <div className="mt-4 flex items-center gap-3 bg-surface-container-low rounded-lg px-4 py-3">
@@ -88,7 +110,7 @@ function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange
             <p className="text-xs text-on-surface-variant">{(file.size / 1024).toFixed(1)} KB</p>
           </div>
           <button onClick={() => onFileChange(null)} className="text-on-surface-variant hover:text-error transition-colors text-xs font-bold">
-            CANCEL
+            {t("analyze.cancelUpload")}
           </button>
         </div>
       )}
@@ -96,14 +118,14 @@ function FileUploadTab({ file, onFileChange }: { file: File | null; onFileChange
   );
 }
 
-function TextPasteTab({ text, onTextChange }: { text: string; onTextChange: (t: string) => void }) {
+function TextPasteTab({ text, onTextChange, t }: { text: string; onTextChange: (v: string) => void; t: (key: string, vars?: Record<string, string | number>) => string }) {
   return (
     <div>
       <textarea
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         rows={16}
-        placeholder="Paste your contract text here..."
+        placeholder={t("analyze.pasteHere")}
         className="w-full bg-surface-container-low border-0 rounded-xl p-5 text-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none font-body leading-relaxed"
       />
       <div className="flex justify-between items-center mt-2 px-1">
@@ -114,25 +136,24 @@ function TextPasteTab({ text, onTextChange }: { text: string; onTextChange: (t: 
             className="flex items-center gap-1 text-xs font-bold text-on-surface-variant hover:text-error transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">close</span>
-            Clear
+            {t("analyze.clear")}
           </button>
         ) : (
           <span />
         )}
-        <span className="text-xs text-on-surface-variant">{text.length.toLocaleString()} characters</span>
+        <span className="text-xs text-on-surface-variant">{text.length.toLocaleString()} {t("analyze.characters")}</span>
       </div>
     </div>
   );
 }
 
-const LOADING_STEPS = [
-  { label: "Extracting text...", icon: "text_snippet" },
-  { label: "Analyzing clauses...", icon: "policy" },
-  { label: "Scoring risks...", icon: "assessment" },
-  { label: "Generating summary...", icon: "summarize" },
-];
-
-function LoadingProgress() {
+function LoadingProgress({ t }: { t: (key: string, vars?: Record<string, string | number>) => string }) {
+  const LOADING_STEPS = [
+    { label: t("analyze.extractingText"), icon: "text_snippet" },
+    { label: t("analyze.analyzingClauses"), icon: "policy" },
+    { label: t("analyze.scoringRisks"), icon: "assessment" },
+    { label: t("analyze.generatingSummary"), icon: "summarize" },
+  ];
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
@@ -144,7 +165,7 @@ function LoadingProgress() {
 
   return (
     <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-      <p className="font-headline font-bold text-on-surface text-sm mb-5">Analysis in Progress</p>
+      <p className="font-headline font-bold text-on-surface text-sm mb-5">{t("analyze.analysisInProgress")}</p>
       <div className="space-y-4">
         {LOADING_STEPS.map((step, i) => {
           const isDone = i < currentStep;
@@ -201,12 +222,18 @@ export default function AnalyzePage() {
   const [activeTab, setActiveTab] = useState<Tab>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState("");
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguage] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("curator-language") || "English";
+    }
+    return "English";
+  });
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [usageLimited, setUsageLimited] = useState(false);
   const { sub, refresh: refreshSub } = useSubscription();
+  const { t } = useTranslation();
 
   function reset() {
     setStatus("idle");
@@ -229,7 +256,7 @@ export default function AnalyzePage() {
         response = await fetch("/api/analyze", { method: "POST", body: formData });
       } else {
         if (pastedText.trim().length < 50) {
-          setErrorMessage("Please paste at least 50 characters of contract text.");
+          setErrorMessage(t("analyze.minCharError"));
           setStatus("error");
           return;
         }
@@ -253,7 +280,7 @@ export default function AnalyzePage() {
       refreshSub();
       setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Unknown error occurred.");
+      setErrorMessage(err instanceof Error ? err.message : t("analyze.unknownError"));
       setStatus("error");
     }
   }
@@ -270,9 +297,9 @@ export default function AnalyzePage() {
       <div className="ml-0 lg:ml-64 flex-1 flex pt-14 lg:pt-0">
         {/* Upload panel */}
         <div className="flex-1 p-10 max-w-2xl">
-          <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-1">New Analysis</h1>
+          <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-1">{t("analyze.title")}</h1>
           <p className="text-sm text-on-surface-variant mb-8">
-            Upload a contract to get an AI-powered risk breakdown.
+            {t("analyze.description")}
           </p>
 
           {/* Tab switcher */}
@@ -281,13 +308,13 @@ export default function AnalyzePage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${
+                className={`px-4 py-2.5 rounded text-xs font-bold transition-all ${
                   activeTab === tab
                     ? "bg-surface-container-lowest text-primary shadow-sm"
                     : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                {tab === "upload" ? "Upload File" : "Paste Text"}
+                {tab === "upload" ? t("analyze.uploadFile") : t("analyze.pasteText")}
               </button>
             ))}
           </div>
@@ -295,19 +322,19 @@ export default function AnalyzePage() {
           {/* Language selector */}
           <div className="mb-6">
             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">
-              Output Language
+              {t("analyze.outputLanguage")}
             </label>
             <div className="flex flex-wrap gap-2">
               {LANGUAGES.map((lang) => {
                 const isPro = !FREE_LANG_CODES.includes(lang.code);
-                const isLocked = isPro && sub?.plan !== "pro" && sub?.plan !== "business";
+                const isLocked = !MVP_MODE && isPro && sub?.plan !== "pro" && sub?.plan !== "business";
                 return (
                   <button
                     key={lang.code}
                     type="button"
-                    onClick={() => !isLocked && setLanguage(lang.code)}
+                    onClick={() => { if (!isLocked) { setLanguage(lang.code); localStorage.setItem("curator-language", lang.code); } }}
                     disabled={isLocked}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border ${
                       isLocked
                         ? "border-outline-variant/30 text-on-surface-variant/40 cursor-not-allowed bg-surface-container-high/30"
                         : language === lang.code
@@ -324,10 +351,10 @@ export default function AnalyzePage() {
                 );
               })}
             </div>
-            {sub?.plan === "free" && (
-              <p className="text-[10px] text-on-surface-variant/60 mt-1.5 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[11px]">lock</span>
-                Upgrade to Pro to unlock all 8 languages
+            {!MVP_MODE && sub?.plan === "free" && (
+              <p className="text-[11px] text-on-surface-variant/60 mt-1.5 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]">lock</span>
+                {t("analyze.unlockLanguages")}
               </p>
             )}
           </div>
@@ -335,9 +362,9 @@ export default function AnalyzePage() {
           {/* Input */}
           <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm mb-6">
             {activeTab === "upload" ? (
-              <FileUploadTab file={file} onFileChange={setFile} />
+              <FileUploadTab file={file} onFileChange={setFile} t={t} />
             ) : (
-              <TextPasteTab text={pastedText} onTextChange={setPastedText} />
+              <TextPasteTab text={pastedText} onTextChange={setPastedText} t={t} />
             )}
           </div>
 
@@ -356,7 +383,7 @@ export default function AnalyzePage() {
                   <span className="material-symbols-outlined text-primary text-[18px]">analytics</span>
                   <div className="flex-1">
                     <div className="flex justify-between text-xs text-on-surface-variant mb-1">
-                      <span>Monthly analyses</span>
+                      <span>{t("analyze.monthlyAnalyses")}</span>
                       <span className="font-bold">{sub.usage} / {sub.limit}</span>
                     </div>
                     <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
@@ -373,15 +400,15 @@ export default function AnalyzePage() {
           {sub?.plan === "pro" && (
             <div className="mb-6 flex items-center gap-2 bg-primary/5 rounded-lg px-4 py-2.5">
               <span className="material-symbols-outlined text-primary text-[16px]">verified</span>
-              <span className="text-xs font-bold text-primary">Pro</span>
-              <span className="text-xs text-on-surface-variant">30 analyses per month</span>
+              <span className="text-xs font-bold text-primary">{t("analyze.proLabel")}</span>
+              <span className="text-xs text-on-surface-variant">{t("analyze.proDesc")}</span>
             </div>
           )}
           {sub?.plan === "business" && (
             <div className="mb-6 flex items-center gap-2 bg-primary/5 rounded-lg px-4 py-2.5">
               <span className="material-symbols-outlined text-primary text-[16px]">verified</span>
-              <span className="text-xs font-bold text-primary">Business</span>
-              <span className="text-xs text-on-surface-variant">Unlimited analyses</span>
+              <span className="text-xs font-bold text-primary">{t("analyze.businessLabel")}</span>
+              <span className="text-xs text-on-surface-variant">{t("analyze.businessDesc")}</span>
             </div>
           )}
 
@@ -410,12 +437,12 @@ export default function AnalyzePage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Analyzing contract...
+                  {t("analyze.analyzingContract")}
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[18px]">psychology</span>
-                  Analyze Contract
+                  {t("analyze.analyzeContract")}
                 </>
               )}
             </button>
@@ -424,7 +451,7 @@ export default function AnalyzePage() {
           {/* Results */}
           {status === "loading" && (
             <div className="mt-8">
-              <LoadingProgress />
+              <LoadingProgress t={t} />
             </div>
           )}
           {status === "success" && result && (
@@ -435,7 +462,7 @@ export default function AnalyzePage() {
                   className="w-full py-3.5 rounded-lg text-sm font-headline font-bold transition-all flex items-center justify-center gap-2 border-2 border-primary text-primary hover:bg-primary/10"
                 >
                   <span className="material-symbols-outlined text-[18px]">restart_alt</span>
-                  New Analysis
+                  {t("analyze.title")}
                 </button>
               </div>
               <ResultsView result={result} onReset={reset} plan={sub?.plan ?? "free"} />
@@ -449,16 +476,16 @@ export default function AnalyzePage() {
             <div className="flex items-center gap-2 mb-3">
               <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                {status === "success" ? "Analysis Complete" : "Live Intelligence"}
+                {status === "success" ? t("analyze.analysisComplete") : t("analyze.liveIntelligence")}
               </span>
             </div>
 
             {/* Idle state */}
             {status === "idle" && (
               <div className="bg-surface-container-lowest rounded-xl p-4">
-                <p className="font-headline font-bold text-on-surface text-sm mb-3">Ready for Analysis</p>
+                <p className="font-headline font-bold text-on-surface text-sm mb-3">{t("analyze.readyForAnalysis")}</p>
                 <p className="text-xs text-on-surface-variant">
-                  Upload a contract to begin AI risk analysis.
+                  {t("analyze.readyDesc")}
                 </p>
               </div>
             )}
@@ -466,13 +493,13 @@ export default function AnalyzePage() {
             {/* Loading state */}
             {status === "loading" && (
               <div className="bg-surface-container-lowest rounded-xl p-4">
-                <p className="font-headline font-bold text-on-surface text-sm mb-3">Analysis in Progress</p>
+                <p className="font-headline font-bold text-on-surface text-sm mb-3">{t("analyze.inProgress")}</p>
                 <div className="space-y-3">
                   {[
-                    { label: "Scanning Provisions...", done: true, pct: true },
-                    { label: "Metadata and party identification complete", done: true },
-                    { label: "Extracting indemnity clauses and liability caps...", done: false },
-                    { label: "Parsing signature blocks from the document", done: false },
+                    { label: t("analyze.scanningProvisions"), done: true, pct: true },
+                    { label: t("analyze.metadataComplete"), done: true },
+                    { label: t("analyze.extractingIndemnity"), done: false },
+                    { label: t("analyze.parsingSignature"), done: false },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <span className={`material-symbols-outlined text-[14px] mt-0.5 ${item.done ? "text-secondary" : "text-on-surface-variant/40"}`}>
@@ -496,7 +523,7 @@ export default function AnalyzePage() {
             {status === "success" && result && (
               <div className="space-y-4">
                 <div className="bg-surface-container-lowest rounded-xl p-4">
-                  <p className="font-headline font-bold text-on-surface text-sm mb-2">Risk Overview</p>
+                  <p className="font-headline font-bold text-on-surface text-sm mb-2">{t("analyze.riskOverview")}</p>
                   <div className="space-y-2">
                     {(["high", "medium", "low"] as const).map((sev) => {
                       const count = result.risks.filter((r) => r.severity === sev).length;
@@ -506,7 +533,7 @@ export default function AnalyzePage() {
                         <div key={sev} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className={`material-symbols-outlined text-[14px] ${colors[sev]}`}>{icons[sev]}</span>
-                            <span className="text-xs text-on-surface-variant capitalize">{sev} Risk</span>
+                            <span className="text-xs text-on-surface-variant capitalize">{t(`analyze.${sev}Risk`)}</span>
                           </div>
                           <span className={`text-xs font-bold ${colors[sev]}`}>{count}</span>
                         </div>
@@ -515,7 +542,7 @@ export default function AnalyzePage() {
                   </div>
                 </div>
                 <div className="bg-surface-container-lowest rounded-xl p-4">
-                  <p className="font-headline font-bold text-on-surface text-sm mb-2">Summary</p>
+                  <p className="font-headline font-bold text-on-surface text-sm mb-2">{t("analyze.summary")}</p>
                   <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-6">
                     {result.summary}
                   </p>
@@ -526,9 +553,9 @@ export default function AnalyzePage() {
             {/* Error state */}
             {status === "error" && (
               <div className="bg-error-container/20 rounded-xl p-4">
-                <p className="font-headline font-bold text-on-surface text-sm mb-2">Analysis Failed</p>
+                <p className="font-headline font-bold text-on-surface text-sm mb-2">{t("analyze.analysisFailed")}</p>
                 <p className="text-xs text-on-surface-variant">
-                  Something went wrong. Please try again or upload a different file.
+                  {t("analyze.analysisSomethingWrong")}
                 </p>
               </div>
             )}
@@ -537,12 +564,12 @@ export default function AnalyzePage() {
           {/* Architecture Trust */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
-              Architecture Trust
+              {t("analyze.architectureTrust")}
             </p>
             <div className="space-y-2">
               {[
-                "Secure, isolated processing",
-                "Data siloed per individual account",
+                t("analyze.secureProcessing"),
+                t("analyze.dataSiloed"),
               ].map((item) => (
                 <div key={item} className="flex items-center gap-2 text-xs text-on-surface-variant">
                   <span className="material-symbols-outlined text-secondary text-[14px]">verified_user</span>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "@/lib/i18n";
+
 export default function GlobalError({
   error,
   reset,
@@ -7,6 +9,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface font-body text-on-surface px-8">
       <div className="max-w-md text-center">
@@ -14,10 +18,10 @@ export default function GlobalError({
           <span className="material-symbols-outlined text-error text-[28px]">error</span>
         </div>
         <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-3">
-          Something went wrong
+          {t("common.somethingWentWrong")}
         </h1>
         <p className="text-on-surface-variant text-sm leading-relaxed mb-8">
-          An unexpected error occurred. This has been logged and we&apos;re working on it.
+          {t("common.unexpectedError")}
           {error.digest && (
             <span className="block mt-2 text-xs text-on-surface-variant/50 font-mono">
               Error ID: {error.digest}
@@ -29,13 +33,13 @@ export default function GlobalError({
             onClick={reset}
             className="btn-primary-gradient text-white px-6 py-3 rounded-xl font-headline font-bold text-sm hover:opacity-90 transition-all"
           >
-            Try Again
+            {t("common.tryAgain")}
           </button>
           <a
             href="/"
             className="border border-outline-variant/30 text-on-surface-variant px-6 py-3 rounded-xl font-headline font-bold text-sm hover:bg-surface-container-low transition-all"
           >
-            Go Home
+            {t("common.goHome")}
           </a>
         </div>
       </div>

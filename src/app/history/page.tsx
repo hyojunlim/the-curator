@@ -6,9 +6,11 @@ import AppFooter from "@/components/layout/AppFooter";
 import Link from "next/link";
 import { PREDEFINED_TAGS, getTagColor } from "@/lib/tags";
 import { useSubscription } from "@/hooks/useSubscription";
+import { MVP_MODE } from "@/lib/config";
+import { useTranslation } from "@/lib/i18n";
 import type { Contract } from "@/types";
 
-const SORT_OPTIONS = ["Most Recent", "Highest Risk", "Lowest Risk", "Alphabetical"];
+const SORT_KEYS = ["sortMostRecent", "sortHighestRisk", "sortLowestRisk", "sortAlphabetical"] as const;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -42,6 +44,7 @@ function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  cancelLabel,
   confirmColor = "bg-primary text-on-primary",
   onConfirm,
   onCancel,
@@ -50,6 +53,7 @@ function ConfirmDialog({
   title: string;
   message: string;
   confirmLabel: string;
+  cancelLabel: string;
   confirmColor?: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -65,7 +69,7 @@ function ConfirmDialog({
             onClick={onCancel}
             className="px-4 py-2 text-sm font-medium rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors"
           >
-            Cancel
+            {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
@@ -81,6 +85,7 @@ function ConfirmDialog({
 
 /* ──────────────────────── Main Page ──────────────────────── */
 export default function HistoryPage() {
+  const { t } = useTranslation();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const { sub } = useSubscription();
@@ -90,8 +95,9 @@ export default function HistoryPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [riskFilter, setRiskFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("Most Recent");
+  const [sortBy, setSortBy] = useState("sortMostRecent");
   const [sortOpen, setSortOpen] = useState(false);
 
   useEffect(() => {
@@ -155,14 +161,22 @@ export default function HistoryPage() {
       list = list.filter((c) => c.title.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
     }
 
+    if (riskFilter !== "all") {
+      list = list.filter((c) => {
+        if (riskFilter === "high") return c.risk_score >= 70;
+        if (riskFilter === "medium") return c.risk_score >= 40 && c.risk_score < 70;
+        return c.risk_score < 40; // low
+      });
+    }
+
     switch (sortBy) {
-      case "Highest Risk":
+      case "sortHighestRisk":
         list = [...list].sort((a, b) => b.risk_score - a.risk_score);
         break;
-      case "Lowest Risk":
+      case "sortLowestRisk":
         list = [...list].sort((a, b) => a.risk_score - b.risk_score);
         break;
-      case "Alphabetical":
+      case "sortAlphabetical":
         list = [...list].sort((a, b) => a.title.localeCompare(b.title));
         break;
       default:
@@ -170,9 +184,9 @@ export default function HistoryPage() {
     }
 
     return list;
-  }, [contracts, activeTag, searchQuery, sortBy]);
+  }, [contracts, activeTag, riskFilter, searchQuery, sortBy]);
 
-  const isFiltered = activeTag !== null || searchQuery.trim() !== "";
+  const isFiltered = activeTag !== null || riskFilter !== "all" || searchQuery.trim() !== "";
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
@@ -181,9 +195,10 @@ export default function HistoryPage() {
       {/* Unstar confirmation */}
       <ConfirmDialog
         open={unstarConfirm !== null}
-        title="Remove from Starred"
-        message="Are you sure you want to unstar this contract? You can always star it again later."
-        confirmLabel="Unstar"
+        title={t("history.removeFromStarred")}
+        message={t("history.unstarMessage")}
+        confirmLabel={t("history.unstar")}
+        cancelLabel={t("common.cancel")}
         onConfirm={confirmUnstar}
         onCancel={() => setUnstarConfirm(null)}
       />
@@ -191,9 +206,10 @@ export default function HistoryPage() {
       {/* Delete confirmation */}
       <ConfirmDialog
         open={deleteConfirm !== null}
-        title="Delete Contract"
-        message="This action cannot be undone. The contract and its analysis results will be permanently deleted."
-        confirmLabel="Delete"
+        title={t("history.deleteContract")}
+        message={t("history.deleteMessage")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
         confirmColor="bg-error text-on-error"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteConfirm(null)}
@@ -203,39 +219,39 @@ export default function HistoryPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-headline font-extrabold text-2xl text-on-surface">Review History</h1>
+            <h1 className="font-headline font-extrabold text-2xl text-on-surface">{t("history.title")}</h1>
             <div className="flex items-center gap-6 mt-2">
               <Link href="/dashboard" className="text-sm font-medium pb-1 transition-colors text-on-surface-variant hover:text-on-surface">
-                Dashboard
+                {t("history.dashboard")}
               </Link>
               <span className="text-sm font-medium pb-1 text-primary border-b-2 border-primary cursor-default">
-                History
+                {t("history.historyTab")}
               </span>
               <Link href="/analyze" className="text-sm font-medium pb-1 transition-colors text-on-surface-variant hover:text-on-surface">
-                New Analysis
+                {t("history.newAnalysis")}
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${sub?.plan !== "free" ? "bg-surface-container-low" : "bg-surface-container-high/30 cursor-not-allowed"}`}>
+            <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${MVP_MODE || sub?.plan !== "free" ? "bg-surface-container-low" : "bg-surface-container-high/30 cursor-not-allowed"}`}>
               <span className="material-symbols-outlined text-on-surface-variant text-[16px]">search</span>
-              {sub?.plan !== "free" ? (
+              {MVP_MODE || sub?.plan !== "free" ? (
                 <input
                   type="text"
-                  placeholder="Search contracts..."
+                  placeholder={t("history.searchContracts")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent text-sm text-on-surface placeholder-on-surface-variant/50 outline-none w-44"
                 />
               ) : (
-                <span className="text-sm text-on-surface-variant/40 w-44">Search (Pro)</span>
+                <span className="text-sm text-on-surface-variant/40 w-44">{t("history.searchPro")}</span>
               )}
-              {searchQuery && sub?.plan !== "free" && (
+              {searchQuery && (MVP_MODE || sub?.plan !== "free") && (
                 <button onClick={() => setSearchQuery("")} className="text-on-surface-variant hover:text-on-surface">
                   <span className="material-symbols-outlined text-[14px]">close</span>
                 </button>
               )}
-              {sub?.plan === "free" && (
+              {!MVP_MODE && sub?.plan === "free" && (
                 <span className="material-symbols-outlined text-[12px] text-on-surface-variant/40">lock</span>
               )}
             </div>
@@ -248,16 +264,16 @@ export default function HistoryPage() {
             {/* Stats */}
             <div className="bg-surface-container-lowest rounded-xl p-5 mb-6 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">
-                Total Analyzed
+                {t("history.totalAnalyzed")}
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="font-headline font-extrabold text-4xl text-on-surface">
                   {loading ? "---" : contracts.length}
                 </span>
-                <span className="text-sm text-on-surface-variant">Contracts</span>
+                <span className="text-sm text-on-surface-variant">{t("history.contracts")}</span>
                 {!loading && isFiltered && (
                   <span className="text-sm text-on-surface-variant ml-2">
-                    (showing {filtered.length} of {contracts.length})
+                    ({t("history.showing", { filtered: filtered.length, total: contracts.length })})
                   </span>
                 )}
               </div>
@@ -268,8 +284,8 @@ export default function HistoryPage() {
               <div className="flex items-center gap-3 bg-tertiary-fixed/20 rounded-lg px-4 py-3 mb-4">
                 <span className="material-symbols-outlined text-tertiary text-[18px]">schedule</span>
                 <p className="text-xs text-on-surface-variant">
-                  Free plan shows contracts from the <strong>last 7 days</strong> only.
-                  <Link href="/settings" className="text-primary font-bold ml-1 hover:underline">Upgrade to Pro</Link> for 90-day history &amp; search.
+                  {t("history.freeHistoryNotice")}
+                  <Link href="/settings" className="text-primary font-bold ml-1 hover:underline">{t("history.upgradeToProHistory")}</Link> {t("history.forNineDayHistory")}
                 </p>
               </div>
             )}
@@ -277,7 +293,7 @@ export default function HistoryPage() {
               <div className="flex items-center gap-2 bg-primary/5 rounded-lg px-4 py-2.5 mb-4">
                 <span className="material-symbols-outlined text-primary text-[14px]">verified</span>
                 <p className="text-xs text-on-surface-variant">
-                  Pro plan — showing contracts from the <strong>last 90 days</strong>.
+                  {t("history.proHistoryNotice")}
                 </p>
               </div>
             )}
@@ -297,16 +313,16 @@ export default function HistoryPage() {
                 <div className="w-20 h-20 rounded-full bg-primary-fixed/20 flex items-center justify-center mb-6">
                   <span className="material-symbols-outlined text-[40px] text-primary/60">description</span>
                 </div>
-                <p className="font-headline font-bold text-on-surface text-lg mb-2">No contracts yet</p>
+                <p className="font-headline font-bold text-on-surface text-lg mb-2">{t("history.noContractsTitle")}</p>
                 <p className="text-sm text-on-surface-variant max-w-xs mb-6">
-                  Upload your first contract to get an AI-powered analysis of risks, clauses, and key terms.
+                  {t("history.noContractsDesc")}
                 </p>
                 <Link
                   href="/analyze"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
                 >
                   <span className="material-symbols-outlined text-[18px]">add</span>
-                  Start Your First Analysis
+                  {t("history.startFirstAnalysis")}
                 </Link>
               </div>
             )}
@@ -317,16 +333,16 @@ export default function HistoryPage() {
                 <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center mb-6">
                   <span className="material-symbols-outlined text-[40px] text-on-surface-variant/40">search_off</span>
                 </div>
-                <p className="font-headline font-bold text-on-surface text-lg mb-2">No matching contracts</p>
+                <p className="font-headline font-bold text-on-surface text-lg mb-2">{t("history.noMatchTitle")}</p>
                 <p className="text-sm text-on-surface-variant max-w-xs mb-6">
-                  No contracts match your current search or filter. Try adjusting your criteria.
+                  {t("history.noMatchDesc")}
                 </p>
                 <button
-                  onClick={() => { setSearchQuery(""); setActiveTag(null); }}
+                  onClick={() => { setSearchQuery(""); setActiveTag(null); setRiskFilter("all"); }}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-container-high text-on-surface text-sm font-medium hover:bg-surface-container-highest transition-colors"
                 >
                   <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
-                  Clear All Filters
+                  {t("history.clearAllFilters")}
                 </button>
               </div>
             )}
@@ -342,7 +358,8 @@ export default function HistoryPage() {
                     {/* Star button */}
                     <button
                       onClick={() => handleStarClick(c.id, c.starred)}
-                      aria-label={c.starred ? "Unstar contract" : "Star contract"}
+                      aria-label={c.starred ? t("history.unstarContract") : t("history.starContract")}
+                      title={c.starred ? t("history.unstarContract") : t("history.starContract")}
                       className={`absolute top-4 right-4 transition-colors ${c.starred ? "text-yellow-400" : "text-on-surface-variant/30 hover:text-yellow-400"}`}
                     >
                       <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: c.starred ? "'FILL' 1" : "'FILL' 0" }}>star</span>
@@ -352,6 +369,7 @@ export default function HistoryPage() {
                     <button
                       onClick={() => setDeleteConfirm(c.id)}
                       aria-label="Delete contract"
+                      title="Delete contract"
                       className="absolute top-4 right-12 text-on-surface-variant/0 group-hover:text-on-surface-variant/40 hover:!text-error transition-colors"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -379,7 +397,7 @@ export default function HistoryPage() {
                           <button
                             key={tag}
                             onClick={(e) => handleTagClick(tag, e)}
-                            className={`text-[10px] px-1.5 py-0.5 rounded border font-medium cursor-pointer hover:opacity-80 transition-opacity ${getTagColor(tag)} ${activeTag === tag ? "ring-1 ring-primary" : ""}`}
+                            className={`text-[11px] px-1.5 py-0.5 rounded border font-medium cursor-pointer hover:opacity-80 transition-opacity ${getTagColor(tag)} ${activeTag === tag ? "ring-1 ring-primary" : ""}`}
                           >
                             {tag}
                           </button>
@@ -388,13 +406,13 @@ export default function HistoryPage() {
                     )}
 
                     <Link href={`/contracts/${c.id}`} className="block">
-                      <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
+                      <div className="flex items-center justify-between text-[11px] text-on-surface-variant">
                         <div>
-                          <span className="uppercase tracking-wider">Analyzed</span>
+                          <span className="uppercase tracking-wider">{t("history.analyzed")}</span>
                           <p className="font-medium text-on-surface">{formatDate(c.created_at)}</p>
                         </div>
                         <div className="text-right">
-                          <span className="uppercase tracking-wider">Risk Score</span>
+                          <span className="uppercase tracking-wider">{t("history.riskScore")}</span>
                           <p className={`font-headline font-bold text-sm ${c.risk_high ? "text-error" : "text-secondary"}`}>
                             {c.risk_score}/100
                           </p>
@@ -411,8 +429,8 @@ export default function HistoryPage() {
                   <div className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center mb-3 group-hover:bg-primary-fixed transition-colors">
                     <span className="material-symbols-outlined text-on-surface-variant text-[20px] group-hover:text-primary transition-colors">add</span>
                   </div>
-                  <p className="font-headline font-bold text-on-surface text-sm mb-1">New Analysis</p>
-                  <p className="text-xs text-on-surface-variant">Upload PDF or DOCX</p>
+                  <p className="font-headline font-bold text-on-surface text-sm mb-1">{t("history.newAnalysis")}</p>
+                  <p className="text-xs text-on-surface-variant">{t("history.uploadPdfDocx")}</p>
                 </Link>
               </div>
             )}
@@ -422,7 +440,7 @@ export default function HistoryPage() {
           <div className="hidden lg:block w-56 shrink-0">
             <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
-                Filter by Label
+                {t("history.filterByLabel")}
               </p>
               <div className="flex flex-col gap-1.5 mb-4">
                 <button
@@ -433,7 +451,7 @@ export default function HistoryPage() {
                       : "text-on-surface-variant hover:bg-surface-container-high"
                   }`}
                 >
-                  All Contracts
+                  {t("history.allContracts")}
                 </button>
                 {PREDEFINED_TAGS.map(({ label, color }) => {
                   const count = contracts.filter((c) => (c.tags ?? []).includes(label)).length;
@@ -453,27 +471,48 @@ export default function HistoryPage() {
                 })}
               </div>
 
+              <div className="border-t border-outline-variant/10 pt-3 mb-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                  {t("history.riskLevel")}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(["all", "high", "medium", "low"] as const).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setRiskFilter(level)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
+                        riskFilter === level
+                          ? "bg-primary text-on-primary"
+                          : "bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="border-t border-outline-variant/10 pt-3 relative">
                 <button
                   onClick={() => setSortOpen((o) => !o)}
                   className="flex items-center justify-between w-full text-xs text-on-surface-variant hover:text-on-surface transition-colors"
                 >
-                  <span>Sort: <span className="font-medium text-on-surface">{sortBy}</span></span>
+                  <span>{t("history.sort")}: <span className="font-medium text-on-surface">{t(`history.${sortBy}`)}</span></span>
                   <span className={`material-symbols-outlined text-[16px] transition-transform ${sortOpen ? "rotate-180" : ""}`}>
                     expand_more
                   </span>
                 </button>
                 {sortOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/10 overflow-hidden z-10">
-                    {SORT_OPTIONS.map((opt) => (
+                  <div className="absolute top-full right-0 mt-1 min-w-[200px] max-h-60 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/10 z-10">
+                    {SORT_KEYS.map((key) => (
                       <button
-                        key={opt}
-                        onClick={() => { setSortBy(opt); setSortOpen(false); }}
+                        key={key}
+                        onClick={() => { setSortBy(key); setSortOpen(false); }}
                         className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                          sortBy === opt ? "bg-primary-fixed text-primary font-bold" : "text-on-surface-variant hover:bg-surface-container-low"
+                          sortBy === key ? "bg-primary-fixed text-primary font-bold" : "text-on-surface-variant hover:bg-surface-container-low"
                         }`}
                       >
-                        {opt}
+                        {t(`history.${key}`)}
                       </button>
                     ))}
                   </div>

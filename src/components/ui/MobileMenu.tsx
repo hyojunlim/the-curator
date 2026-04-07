@@ -3,16 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-
-const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
-];
+import { useTranslation } from "@/lib/i18n";
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const { isSignedIn } = useUser();
+  const { t } = useTranslation();
+
+  const NAV_LINKS = [
+    { label: t("landing.features"), href: "#features" },
+    { label: t("landing.howItWorks"), href: "#how-it-works" },
+    { label: t("landing.pricing"), href: "#pricing" },
+  ];
 
   return (
     <>
@@ -53,7 +55,7 @@ export default function MobileMenu() {
                   onClick={() => setOpen(false)}
                   className="block px-4 py-3 rounded-lg text-sm font-bold text-center bg-inverse-surface text-inverse-on-surface hover:opacity-90 transition-all font-headline"
                 >
-                  Dashboard
+                  {t("landing.dashboard")}
                 </Link>
               ) : (
                 <>
@@ -62,14 +64,14 @@ export default function MobileMenu() {
                     onClick={() => setOpen(false)}
                     className="block px-4 py-3 rounded-lg text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all"
                   >
-                    Sign in
+                    {t("landing.signIn")}
                   </Link>
                   <Link
                     href="/sign-up"
                     onClick={() => setOpen(false)}
                     className="block px-4 py-3 rounded-lg text-sm font-bold text-center bg-inverse-surface text-inverse-on-surface hover:opacity-90 transition-all font-headline"
                   >
-                    Get Started Free
+                    {t("landing.getStartedFree")}
                   </Link>
                 </>
               )}

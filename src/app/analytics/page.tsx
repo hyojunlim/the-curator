@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 import type { Contract } from "@/types";
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,8 +50,8 @@ export default function AnalyticsPage() {
 
       <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24">
         <div className="mb-8">
-          <h1 className="font-headline font-extrabold text-2xl text-on-surface">Analytics</h1>
-          <p className="text-sm text-on-surface-variant mt-1">Risk trends and contract analysis overview.</p>
+          <h1 className="font-headline font-extrabold text-2xl text-on-surface">{t("analytics.title")}</h1>
+          <p className="text-sm text-on-surface-variant mt-1">{t("analytics.description")}</p>
         </div>
 
         {loading ? (
@@ -85,10 +87,10 @@ export default function AnalyticsPage() {
         ) : total === 0 ? (
           <div className="text-center py-24 text-on-surface-variant">
             <span className="material-symbols-outlined text-[48px] block mb-3 opacity-30">bar_chart</span>
-            <p className="font-headline font-bold text-on-surface">No data yet</p>
-            <p className="text-sm mt-1 mb-4">Analyze your first contract to see insights here.</p>
+            <p className="font-headline font-bold text-on-surface">{t("analytics.noDataTitle")}</p>
+            <p className="text-sm mt-1 mb-4">{t("analytics.noDataDesc")}</p>
             <Link href="/analyze" className="inline-flex items-center gap-2 btn-primary-gradient text-white px-5 py-2 rounded-lg text-sm font-bold">
-              <span className="material-symbols-outlined text-[16px]">add</span>Start Analysis
+              <span className="material-symbols-outlined text-[16px]">add</span>{t("analytics.startAnalysis")}
             </Link>
           </div>
         ) : (
@@ -96,10 +98,10 @@ export default function AnalyticsPage() {
             {/* Summary stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Total Contracts", value: total, color: "text-on-surface" },
-                { label: "Avg Risk Score", value: avgScore, color: avgScore >= 60 ? "text-error" : "text-secondary" },
-                { label: "High Risk", value: high, color: "text-error" },
-                { label: "Low Risk", value: low, color: "text-secondary" },
+                { label: t("analytics.totalContracts"), value: total, color: "text-on-surface" },
+                { label: t("analytics.avgRiskScore"), value: avgScore, color: avgScore >= 60 ? "text-error" : "text-secondary" },
+                { label: t("analytics.highRisk"), value: high, color: "text-error" },
+                { label: t("analytics.lowRisk"), value: low, color: "text-secondary" },
               ].map((s) => (
                 <div key={s.label} className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{s.label}</p>
@@ -110,12 +112,12 @@ export default function AnalyticsPage() {
 
             {/* Risk distribution */}
             <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-              <h2 className="font-headline font-bold text-on-surface mb-5">Risk Distribution</h2>
+              <h2 className="font-headline font-bold text-on-surface mb-5">{t("analytics.riskDistribution")}</h2>
               <div className="space-y-3">
                 {[
-                  { label: "High Risk (70+)", count: high, color: "bg-error", textColor: "text-error" },
-                  { label: "Medium Risk (40–69)", count: medium, color: "bg-tertiary", textColor: "text-tertiary" },
-                  { label: "Low Risk (0–39)", count: low, color: "bg-secondary", textColor: "text-secondary" },
+                  { label: t("analytics.highRiskLabel"), count: high, color: "bg-error", textColor: "text-error" },
+                  { label: t("analytics.mediumRiskLabel"), count: medium, color: "bg-tertiary", textColor: "text-tertiary" },
+                  { label: t("analytics.lowRiskLabel"), count: low, color: "bg-secondary", textColor: "text-secondary" },
                 ].map((r) => (
                   <div key={r.label}>
                     <div className="flex items-center justify-between text-xs mb-1">
@@ -135,7 +137,7 @@ export default function AnalyticsPage() {
 
             {/* Monthly activity */}
             <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-              <h2 className="font-headline font-bold text-on-surface mb-5">Monthly Activity</h2>
+              <h2 className="font-headline font-bold text-on-surface mb-5">{t("analytics.monthlyActivity")}</h2>
               <div className="flex items-end gap-3 h-32">
                 {monthlyData.map((m) => (
                   <div key={m.label} className="flex-1 flex flex-col items-center gap-2">
@@ -146,7 +148,7 @@ export default function AnalyticsPage() {
                         style={{ height: `${(m.count / maxMonthly) * 100}%`, marginTop: `${100 - (m.count / maxMonthly) * 100}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-on-surface-variant">{m.label}</span>
+                    <span className="text-[11px] text-on-surface-variant">{m.label}</span>
                   </div>
                 ))}
               </div>
@@ -155,7 +157,7 @@ export default function AnalyticsPage() {
             {/* Highest risk contracts */}
             {highestRisk.length > 0 && (
               <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                <h2 className="font-headline font-bold text-on-surface mb-4">Highest Risk Contracts</h2>
+                <h2 className="font-headline font-bold text-on-surface mb-4">{t("analytics.highestRiskContracts")}</h2>
                 <div className="space-y-3">
                   {highestRisk.map((c, i) => (
                     <Link

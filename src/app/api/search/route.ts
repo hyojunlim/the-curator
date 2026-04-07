@@ -24,6 +24,11 @@ export async function GET(request: Request) {
 
   if (!q || q.length < 1) return Response.json([]);
 
+  // Validate search characters (block dangerous chars)
+  if (/[<>"';\\\/\x00-\x1f]/.test(q)) {
+    return Response.json({ error: "Invalid search query" }, { status: 400 });
+  }
+
   // Limit search query length to prevent abuse
   const safeQuery = q.slice(0, 100);
 

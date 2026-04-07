@@ -6,21 +6,19 @@ import AppFooter from "@/components/layout/AppFooter";
 import PayPalButton from "@/components/ui/PayPalButton";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUser } from "@clerk/nextjs";
+import { useTranslation } from "@/lib/i18n";
 
-const PLAN_LABELS = {
-  free: "Free",
-  pro: "Pro",
-  business: "Business",
+const PLAN_KEYS = {
+  free: "free",
+  pro: "pro",
+  business: "business",
 } as const;
 
-const SECTIONS = [
-  { id: "profile", label: "Profile", icon: "person" },
-  { id: "notifications", label: "Notifications", icon: "notifications" },
-  { id: "security", label: "Security", icon: "security" },
-  { id: "billing", label: "Billing", icon: "credit_card" },
-];
+const SECTION_IDS = ["profile", "notifications", "security", "billing"] as const;
+const SECTION_ICONS: Record<string, string> = { profile: "person", notifications: "notifications", security: "security", billing: "credit_card" };
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState("profile");
   const [saved, setSaved] = useState(false);
   const { sub, loading: subLoading, refresh: refreshSub } = useSubscription();
@@ -71,24 +69,24 @@ export default function SettingsPage() {
       <AppSidebar />
 
       <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
-        <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-8">Settings</h1>
+        <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-8">{t("settings.title")}</h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Section Nav */}
           <div className="w-full lg:w-48 shrink-0">
             <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0">
-              {SECTIONS.map((s) => (
+              {SECTION_IDS.map((id) => (
                 <button
-                  key={s.id}
-                  onClick={() => setActiveSection(s.id)}
+                  key={id}
+                  onClick={() => setActiveSection(id)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all text-left ${
-                    activeSection === s.id
+                    activeSection === id
                       ? "bg-surface-container-lowest text-primary font-semibold shadow-sm"
                       : "text-on-surface-variant hover:translate-x-1"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">{s.icon}</span>
-                  {s.label}
+                  <span className="material-symbols-outlined text-[18px]">{SECTION_ICONS[id]}</span>
+                  {t(`settings.${id}`)}
                 </button>
               ))}
             </nav>
@@ -98,11 +96,11 @@ export default function SettingsPage() {
           <div className="flex-1 max-w-xl">
             {activeSection === "profile" && (
               <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-5">
-                <h2 className="font-headline font-bold text-on-surface">Profile</h2>
+                <h2 className="font-headline font-bold text-on-surface">{t("settings.profile")}</h2>
 
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                    Full Name
+                    {t("settings.fullName")}
                   </label>
                   <input
                     type="text"
@@ -113,7 +111,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                    Email Address
+                    {t("settings.emailAddress")}
                   </label>
                   <input
                     type="text"
@@ -121,11 +119,11 @@ export default function SettingsPage() {
                     readOnly
                     className="w-full bg-surface-container-high/50 rounded-lg px-4 py-2.5 text-sm text-on-surface-variant outline-none cursor-not-allowed"
                   />
-                  <p className="text-[11px] text-on-surface-variant/60 mt-1">Managed by Clerk</p>
+                  <p className="text-[11px] text-on-surface-variant/60 mt-1">{t("settings.managedByClerk")}</p>
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                    Organization
+                    {t("settings.organization")}
                   </label>
                   <input
                     type="text"
@@ -137,22 +135,25 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                    Report Language
+                    {t("settings.reportLanguage")}
                   </label>
                   <select
                     value={form.language}
                     onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}
                     className="w-full bg-surface-container-low rounded-lg px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   >
-                    <option>English</option>
-                    <option>Korean</option>
-                    <option>Spanish</option>
-                    <option>French</option>
-                    <option>Japanese</option>
-                    <option>Chinese</option>
-                    <option>German</option>
-                    <option>Portuguese</option>
+                    <option value="English">🇺🇸 English</option>
+                    <option value="Korean">🇰🇷 한국어</option>
+                    <option value="Spanish">🇪🇸 Español</option>
+                    <option value="French">🇫🇷 Français</option>
+                    <option value="Japanese">🇯🇵 日本語</option>
+                    <option value="Chinese">🇨🇳 中文</option>
+                    <option value="German">🇩🇪 Deutsch</option>
+                    <option value="Portuguese">🇧🇷 Português</option>
                   </select>
+                  <p className="text-[11px] text-on-surface-variant/60 mt-1">
+                    {t("settings.reportLanguageNote")}
+                  </p>
                 </div>
 
                 <button
@@ -162,12 +163,12 @@ export default function SettingsPage() {
                   {saved ? (
                     <>
                       <span className="material-symbols-outlined text-[16px]">check</span>
-                      Saved
+                      {t("settings.saved")}
                     </>
                   ) : (
                     <>
                       <span className="material-symbols-outlined text-[16px]">save</span>
-                      Save Changes
+                      {t("settings.saveChanges")}
                     </>
                   )}
                 </button>
@@ -176,11 +177,11 @@ export default function SettingsPage() {
 
             {activeSection === "notifications" && (
               <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-5">
-                <h2 className="font-headline font-bold text-on-surface">Notifications</h2>
+                <h2 className="font-headline font-bold text-on-surface">{t("settings.notifications")}</h2>
                 {[
-                  { key: "email" as const, label: "Email Notifications", desc: "Receive analysis reports via email" },
-                  { key: "browser" as const, label: "Browser Notifications", desc: "Push notifications when analysis completes" },
-                  { key: "weeklyReport" as const, label: "Weekly Digest", desc: "Summary of all analyses from the past week" },
+                  { key: "email" as const, label: t("settings.emailNotifications"), desc: t("settings.emailNotificationsDesc") },
+                  { key: "browser" as const, label: t("settings.browserNotifications"), desc: t("settings.browserNotificationsDesc") },
+                  { key: "weeklyReport" as const, label: t("settings.weeklyDigest"), desc: t("settings.weeklyDigestDesc") },
                 ].map(({ key, label, desc }) => (
                   <div key={key} className="flex items-center justify-between">
                     <div>
@@ -207,7 +208,7 @@ export default function SettingsPage() {
                   </div>
                 ))}
                 <button onClick={handleSave} className="btn-primary-gradient text-white font-headline font-bold text-sm px-6 py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-2">
-                  {saved ? <><span className="material-symbols-outlined text-[16px]">check</span>Saved</> : <><span className="material-symbols-outlined text-[16px]">save</span>Save Changes</>}
+                  {saved ? <><span className="material-symbols-outlined text-[16px]">check</span>{t("settings.saved")}</> : <><span className="material-symbols-outlined text-[16px]">save</span>{t("settings.saveChanges")}</>}
                 </button>
               </div>
             )}
@@ -216,45 +217,45 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 {/* Active Sessions */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                  <h2 className="font-headline font-bold text-on-surface mb-4">Active Sessions</h2>
+                  <h2 className="font-headline font-bold text-on-surface mb-4">{t("settings.activeSessions")}</h2>
                   <div className="flex items-center gap-4 bg-surface-container-low rounded-lg p-4">
                     <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
                       <span className="material-symbols-outlined text-secondary text-[20px]">computer</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-on-surface">Current Session</p>
-                      <p className="text-xs text-on-surface-variant">Active now · Managed by Clerk</p>
+                      <p className="text-sm font-medium text-on-surface">{t("settings.currentSession")}</p>
+                      <p className="text-xs text-on-surface-variant">{t("settings.activeNow")}</p>
                     </div>
-                    <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase">Active</span>
+                    <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase">{t("settings.active")}</span>
                   </div>
                   <p className="text-xs text-on-surface-variant mt-3">
-                    Session management is handled by Clerk. You can manage all devices from your profile.
+                    {t("settings.sessionManagement")}
                   </p>
                 </div>
 
                 {/* Two-Factor Authentication */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                  <h2 className="font-headline font-bold text-on-surface mb-2">Two-Factor Authentication</h2>
+                  <h2 className="font-headline font-bold text-on-surface mb-2">{t("settings.twoFactorAuth")}</h2>
                   <p className="text-sm text-on-surface-variant mb-4">
-                    Add an extra layer of security to your account. 2FA is managed through Clerk.
+                    {t("settings.twoFactorDesc")}
                   </p>
                   <div className="flex items-center gap-3 bg-primary/5 rounded-lg p-4">
                     <span className="material-symbols-outlined text-primary text-[20px]">shield</span>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-on-surface">Enable 2FA via Clerk</p>
-                      <p className="text-xs text-on-surface-variant">Click the profile icon in the sidebar to manage 2FA settings.</p>
+                      <p className="text-sm font-medium text-on-surface">{t("settings.enable2FA")}</p>
+                      <p className="text-xs text-on-surface-variant">{t("settings.enable2FADesc")}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Data & Privacy */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                  <h2 className="font-headline font-bold text-on-surface mb-4">Data &amp; Privacy</h2>
+                  <h2 className="font-headline font-bold text-on-surface mb-4">{t("settings.dataPrivacy")}</h2>
                   <div className="space-y-3">
                     {[
-                      { icon: "encrypted", label: "TLS 1.3 encryption", desc: "All data in transit is encrypted" },
-                      { icon: "database", label: "Isolated data storage", desc: "Your contracts are siloed per account" },
-                      { icon: "auto_delete", label: "Ephemeral processing", desc: "AI analysis is not stored by Google" },
+                      { icon: "encrypted", label: t("settings.tlsEncryption"), desc: t("settings.tlsDesc") },
+                      { icon: "database", label: t("settings.isolatedStorage"), desc: t("settings.isolatedDesc") },
+                      { icon: "auto_delete", label: t("settings.ephemeralProcessing"), desc: t("settings.ephemeralDesc") },
                     ].map((item) => (
                       <div key={item.label} className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-secondary text-[18px]">{item.icon}</span>
@@ -269,9 +270,9 @@ export default function SettingsPage() {
 
                 {/* Danger Zone */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-error/20">
-                  <h2 className="font-headline font-bold text-error mb-2">Danger Zone</h2>
+                  <h2 className="font-headline font-bold text-error mb-2">{t("settings.dangerZone")}</h2>
                   <p className="text-sm text-on-surface-variant mb-4">
-                    Permanently delete your account and all associated data. This action cannot be undone.
+                    {t("settings.dangerZoneDesc")}
                   </p>
                   <button
                     onClick={() => {
@@ -279,10 +280,10 @@ export default function SettingsPage() {
                     }}
                     className="px-4 py-2 rounded-lg border border-error/30 text-error text-sm font-bold hover:bg-error/5 transition-colors"
                   >
-                    Delete Account
+                    {t("settings.deleteAccount")}
                   </button>
                   <p className="text-[11px] text-on-surface-variant mt-2">
-                    Account deletion is managed through Clerk. You will be redirected to your account management page.
+                    {t("settings.deleteAccountNote")}
                   </p>
                 </div>
               </div>
@@ -292,7 +293,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 {/* Current Plan */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                  <h2 className="font-headline font-bold text-on-surface mb-4">Current Plan</h2>
+                  <h2 className="font-headline font-bold text-on-surface mb-4">{t("settings.currentPlan")}</h2>
                   {subLoading ? (
                     <div className="animate-pulse space-y-3">
                       <div className="h-4 bg-surface-container-high rounded w-32" />
@@ -306,10 +307,10 @@ export default function SettingsPage() {
                             ? "bg-primary/10 text-primary"
                             : "bg-surface-container-high text-on-surface-variant"
                         }`}>
-                          {PLAN_LABELS[sub.plan as keyof typeof PLAN_LABELS] ?? "Free"}
+                          {t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`)}
                         </span>
                         <span className="text-xs text-on-surface-variant">
-                          {sub.plan === "business" ? "Unlimited analyses" : sub.plan === "pro" ? "30 analyses/month" : "5 analyses/month"}
+                          {sub.plan === "business" ? t("settings.unlimitedAnalyses") : sub.plan === "pro" ? t("settings.proAnalyses") : t("settings.freeAnalyses")}
                         </span>
                       </div>
 
@@ -317,7 +318,7 @@ export default function SettingsPage() {
                       {sub.plan !== "business" && sub.limit && (
                         <div className="mb-4">
                           <div className="flex justify-between text-xs text-on-surface-variant mb-1.5">
-                            <span>Monthly Usage</span>
+                            <span>{t("settings.monthlyUsage")}</span>
                             <span>{sub.usage} / {sub.limit}</span>
                           </div>
                           <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
@@ -329,7 +330,7 @@ export default function SettingsPage() {
                             />
                           </div>
                           <p className="text-[11px] text-on-surface-variant mt-1">
-                            Resets {new Date(sub.resetsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                            {t("settings.resets", { date: new Date(sub.resetsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) })}
                           </p>
                         </div>
                       )}
@@ -340,17 +341,17 @@ export default function SettingsPage() {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
                             <span className="font-headline font-bold text-sm text-on-surface">
-                              {PLAN_LABELS[sub.plan as keyof typeof PLAN_LABELS]} Plan Active
+                              {t("settings.planActive", { plan: t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`) })}
                             </span>
                           </div>
                           <p className="text-xs text-on-surface-variant mb-3">
                             {sub.plan === "business"
-                              ? "Unlimited analyses, priority AI processing, all languages, unlimited history."
-                              : "30 analyses/month, all 8 languages, 90-day history, PDF export & sharing."}
+                              ? t("settings.businessPlanDesc")
+                              : t("settings.proPlanDesc")}
                           </p>
                           <button
                             onClick={async () => {
-                              if (!confirm(`Are you sure you want to cancel your ${PLAN_LABELS[sub.plan as keyof typeof PLAN_LABELS]} plan? You will be downgraded to Free.`)) return;
+                              if (!confirm(t("settings.cancelConfirm", { plan: t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`) }))) return;
                               setCancelling(true);
                               try {
                                 const res = await fetch("/api/subscription/cancel", { method: "POST" });
@@ -361,7 +362,7 @@ export default function SettingsPage() {
                             disabled={cancelling}
                             className="text-xs text-on-surface-variant hover:text-error transition-colors underline"
                           >
-                            {cancelling ? "Cancelling..." : "Cancel subscription"}
+                            {cancelling ? t("settings.cancelling") : t("settings.cancelSubscription")}
                           </button>
                         </div>
                       )}
@@ -374,10 +375,10 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Pro */}
                     <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/15">
-                      <h2 className="font-headline font-bold text-on-surface mb-1">Pro</h2>
+                      <h2 className="font-headline font-bold text-on-surface mb-1">{t("settings.pro")}</h2>
                       <p className="text-lg font-headline font-extrabold text-on-surface mb-3">$29<span className="text-xs font-normal text-on-surface-variant">/mo</span></p>
                       <ul className="text-xs text-on-surface-variant space-y-2 mb-5">
-                        {["30 analyses/month", "All 8 languages", "90-day history & search", "PDF export & sharing"].map((f) => (
+                        {(t("settings.proFeatures") as unknown as string[]).map((f: string) => (
                           <li key={f} className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-secondary text-[14px]">check</span>{f}
                           </li>
@@ -387,10 +388,10 @@ export default function SettingsPage() {
                     </div>
                     {/* Business */}
                     <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-2 border-primary">
-                      <h2 className="font-headline font-bold text-primary mb-1">Business</h2>
+                      <h2 className="font-headline font-bold text-primary mb-1">{t("settings.business")}</h2>
                       <p className="text-lg font-headline font-extrabold text-on-surface mb-3">$79<span className="text-xs font-normal text-on-surface-variant">/mo</span></p>
                       <ul className="text-xs text-on-surface-variant space-y-2 mb-5">
-                        {["Unlimited analyses", "Priority AI processing", "Unlimited history", "Everything in Pro"].map((f) => (
+                        {(t("settings.businessFeatures") as unknown as string[]).map((f: string) => (
                           <li key={f} className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-secondary text-[14px]">check</span>{f}
                           </li>
@@ -404,10 +405,10 @@ export default function SettingsPage() {
                 {/* Pro user can upgrade to Business */}
                 {sub && sub.plan === "pro" && (
                   <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-2 border-primary">
-                    <h2 className="font-headline font-bold text-on-surface mb-1">Upgrade to Business</h2>
+                    <h2 className="font-headline font-bold text-on-surface mb-1">{t("settings.upgradeToBusiness")}</h2>
                     <p className="text-lg font-headline font-extrabold text-on-surface mb-3">$79<span className="text-xs font-normal text-on-surface-variant">/mo</span></p>
                     <ul className="text-xs text-on-surface-variant space-y-2 mb-5">
-                      {["Unlimited analyses", "Priority AI processing", "Unlimited history", "Everything in Pro"].map((f) => (
+                      {(t("settings.businessFeatures") as unknown as string[]).map((f: string) => (
                         <li key={f} className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-secondary text-[14px]">check</span>{f}
                         </li>
@@ -419,11 +420,11 @@ export default function SettingsPage() {
 
                 {/* Payment History */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                  <h2 className="font-headline font-bold text-on-surface mb-2">Payment History</h2>
+                  <h2 className="font-headline font-bold text-on-surface mb-2">{t("settings.paymentHistory")}</h2>
                   <p className="text-sm text-on-surface-variant">
                     {sub?.plan !== "free"
-                      ? `Your ${PLAN_LABELS[sub?.plan as keyof typeof PLAN_LABELS] ?? ""} plan is active. Payment details are managed through PayPal.`
-                      : "No payment history yet."}
+                      ? t("settings.paymentHistoryActive", { plan: t(`settings.${PLAN_KEYS[sub?.plan as keyof typeof PLAN_KEYS] ?? "free"}`) })
+                      : t("settings.noPaymentHistory")}
                   </p>
                 </div>
               </div>

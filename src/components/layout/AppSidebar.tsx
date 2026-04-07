@@ -7,26 +7,30 @@ import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import SearchPalette from "@/components/ui/SearchPalette";
 import { useSubscription } from "@/hooks/useSubscription";
-
-const navItems = [
-  { label: "Overview", icon: "dashboard", href: "/dashboard" },
-  { label: "Contracts", icon: "inventory_2", href: "/history" },
-  { label: "Starred", icon: "star", href: "/starred" },
-  { label: "Analytics", icon: "bar_chart", href: "/analytics" },
-];
-
-const bottomItems = [
-  { label: "Support", icon: "help", href: "/legal/security" },
-  { label: "Settings", icon: "settings", href: "/settings" },
-];
+import { MVP_MODE } from "@/lib/config";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export default function AppSidebar() {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { label: t("sidebar.overview"), icon: "dashboard", href: "/dashboard" },
+    { label: t("sidebar.contracts"), icon: "inventory_2", href: "/history" },
+    { label: t("sidebar.starred"), icon: "star", href: "/starred" },
+    { label: t("sidebar.analytics"), icon: "bar_chart", href: "/analytics" },
+  ];
+
+  const bottomItems = [
+    { label: t("sidebar.helpCenter"), icon: "help", href: "/support" },
+    { label: t("sidebar.settings"), icon: "settings", href: "/settings" },
+  ];
   const pathname = usePathname();
   const { user } = useUser();
   const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { sub } = useSubscription();
-  const isPaid = sub?.plan === "pro" || sub?.plan === "business";
+  const isPaid = MVP_MODE || sub?.plan === "pro" || sub?.plan === "business";
 
   function isActive(href: string) {
     if (href === "/history") return pathname.startsWith("/history") || pathname.startsWith("/contracts/");
@@ -39,16 +43,16 @@ export default function AppSidebar() {
       <div className="px-2 pt-2 flex items-center justify-between">
         <Link href="/" onClick={() => setMobileOpen(false)}>
           <h1 className="font-headline font-extrabold text-primary text-2xl tracking-tighter hover:opacity-80 transition-opacity">
-            The Curator
+            {t("common.appName")}
           </h1>
           <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/60 mt-0.5">
-            Legal Intelligence
+            {t("common.tagline")}
           </p>
         </Link>
         {/* Mobile close */}
         <button
           onClick={() => setMobileOpen(false)}
-          aria-label="Close navigation menu"
+          aria-label={t("sidebar.closeMenu")}
           className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors"
         >
           <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
@@ -62,7 +66,7 @@ export default function AppSidebar() {
         className="flex items-center justify-center gap-2 mx-2 py-2.5 rounded-xl btn-primary-gradient text-white font-headline font-bold text-sm hover:opacity-90 transition-all shadow-md"
       >
         <span className="material-symbols-outlined text-[18px]">add</span>
-        New Analysis
+        {t("sidebar.newAnalysis")}
       </Link>
 
       {/* Search shortcut button */}
@@ -76,7 +80,7 @@ export default function AppSidebar() {
             className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs hover:bg-surface-container-high hover:text-on-surface transition-all border border-outline-variant/15"
           >
             <span className="material-symbols-outlined text-[16px]">search</span>
-            <span className="flex-1 text-left">Search contracts</span>
+            <span className="flex-1 text-left">{t("sidebar.searchContracts")}</span>
             <kbd className="text-[10px] px-1 py-0.5 rounded border border-outline-variant/20 font-mono">Ctrl+K</kbd>
           </button>
           <SearchPalette />
@@ -84,7 +88,7 @@ export default function AppSidebar() {
       ) : (
         <div className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container-high/30 text-on-surface-variant/40 text-xs border border-outline-variant/10 cursor-not-allowed">
           <span className="material-symbols-outlined text-[16px]">search</span>
-          <span className="flex-1 text-left">Search contracts</span>
+          <span className="flex-1 text-left">{t("sidebar.searchContracts")}</span>
           <span className="material-symbols-outlined text-[12px]">lock</span>
         </div>
       )}
@@ -110,6 +114,10 @@ export default function AppSidebar() {
 
       {/* Bottom */}
       <div className="space-y-1 border-t border-outline-variant/10 pt-4">
+        {/* Language Switcher */}
+        <div className="px-4 py-2">
+          <LanguageSwitcher />
+        </div>
         {bottomItems.map((item) => (
           <Link
             key={item.label}
@@ -129,8 +137,8 @@ export default function AppSidebar() {
         <div className="flex items-center gap-3 px-4 py-3 mt-2 border-t border-outline-variant/10">
           <UserButton />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-on-surface truncate">{user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? "Account"}</p>
-            <p className="text-[10px] text-on-surface-variant truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
+            <p className="text-xs font-semibold text-on-surface truncate">{user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? t("sidebar.account")}</p>
+            <p className="text-[11px] text-on-surface-variant truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
           </div>
           <ThemeToggle />
         </div>
@@ -140,7 +148,7 @@ export default function AppSidebar() {
           className="flex items-center gap-2 mx-2 px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-error/10 hover:text-error transition-all"
         >
           <span className="material-symbols-outlined text-[20px]">logout</span>
-          Sign Out
+          {t("common.signOut")}
         </button>
       </div>
     </>
@@ -151,8 +159,8 @@ export default function AppSidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        aria-label="Open navigation menu"
-        className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center shadow-md border border-outline-variant/15"
+        aria-label={t("sidebar.openMenu")}
+        className="lg:hidden fixed top-[max(16px,env(safe-area-inset-top))] left-[max(16px,env(safe-area-inset-left))] z-50 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center shadow-md border border-outline-variant/15"
       >
         <span className="material-symbols-outlined text-on-surface">menu</span>
       </button>

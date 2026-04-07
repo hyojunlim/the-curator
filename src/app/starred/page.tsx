@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 import type { Contract } from "@/types";
 
 function formatDate(iso: string) {
@@ -11,6 +12,7 @@ function formatDate(iso: string) {
 }
 
 export default function StarredPage() {
+  const { t } = useTranslation();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,8 +42,8 @@ export default function StarredPage() {
 
       <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24">
         <div className="mb-8">
-          <h1 className="font-headline font-extrabold text-2xl text-on-surface">Starred</h1>
-          <p className="text-sm text-on-surface-variant mt-1">Contracts you've marked as important.</p>
+          <h1 className="font-headline font-extrabold text-2xl text-on-surface">{t("starred.title")}</h1>
+          <p className="text-sm text-on-surface-variant mt-1">{t("starred.description")}</p>
         </div>
 
         {loading && (
@@ -63,10 +65,10 @@ export default function StarredPage() {
         {!loading && contracts.length === 0 && (
           <div className="text-center py-24 text-on-surface-variant">
             <span className="material-symbols-outlined text-[56px] block mb-3 opacity-30">star</span>
-            <p className="font-headline font-bold text-on-surface">No starred contracts</p>
-            <p className="text-sm mt-1 mb-4">Star contracts from the history page to find them here quickly.</p>
+            <p className="font-headline font-bold text-on-surface">{t("starred.noStarredTitle")}</p>
+            <p className="text-sm mt-1 mb-4">{t("starred.noStarredDesc")}</p>
             <Link href="/history" className="text-sm text-primary font-medium hover:underline">
-              Go to Contracts →
+              {t("starred.goToContracts")} →
             </Link>
           </div>
         )}
@@ -78,7 +80,7 @@ export default function StarredPage() {
                 <button
                   onClick={() => handleUnstar(c.id)}
                   className="absolute top-4 right-4 text-yellow-400 hover:text-on-surface-variant transition-colors"
-                  title="Remove star"
+                  title={t("starred.removeStar")}
                 >
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                 </button>
@@ -92,13 +94,13 @@ export default function StarredPage() {
                     {c.title}
                   </h3>
                   <p className="text-xs text-on-surface-variant mb-4">{c.type}</p>
-                  <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
+                  <div className="flex items-center justify-between text-[11px] text-on-surface-variant">
                     <div>
-                      <span className="uppercase tracking-wider">Analyzed</span>
+                      <span className="uppercase tracking-wider">{t("starred.analyzed")}</span>
                       <p className="font-medium text-on-surface">{formatDate(c.created_at)}</p>
                     </div>
                     <div className="text-right">
-                      <span className="uppercase tracking-wider">Risk Score</span>
+                      <span className="uppercase tracking-wider">{t("starred.riskScore")}</span>
                       <p className={`font-headline font-bold text-sm ${c.risk_high ? "text-error" : "text-secondary"}`}>
                         {c.risk_score}/100
                       </p>

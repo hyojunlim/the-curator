@@ -93,13 +93,23 @@ export async function POST(req: NextRequest) {
       let pdfFallbackBuffer: Buffer | null = null;
 
       if (lowerName.endsWith(".pdf")) {
-        contractText = await extractPDF(buffer);
+        try {
+          contractText = await extractPDF(buffer);
+        } catch (extractErr) {
+          console.error("[/api/analyze] PDF extraction failed, using vision fallback:", extractErr);
+          contractText = "";
+        }
         // If text extraction fails (scanned/image PDF), we'll use Gemini's vision
         if (!contractText || contractText.trim().length < 50) {
           pdfFallbackBuffer = buffer;
         }
       } else if (lowerName.endsWith(".docx")) {
-        contractText = await extractDOCX(buffer);
+        try {
+          contractText = await extractDOCX(buffer);
+        } catch (extractErr) {
+          console.error("[/api/analyze] DOCX extraction failed:", extractErr);
+          return NextResponse.json({ error: "Failed to extract text from DOCX file." }, { status: 400 });
+        }
       } else {
         return NextResponse.json(
           { error: "Unsupported file type. Please upload a PDF or DOCX file." },
@@ -232,10 +242,16 @@ export async function POST(req: NextRequest) {
         { status: 429 }
       );
     }
-    if (msg === "INVALID_JSON") {
+    if (msg.startsWith("INVALID_JSON") || msg === "EMPTY_RESPONSE") {
       return NextResponse.json(
         { error: "The AI returned an invalid response. Please try again." },
         { status: 502 }
+      );
+    }
+    if (msg === "SAFETY_BLOCKED") {
+      return NextResponse.json(
+        { error: "The AI could not process this contract due to content restrictions. Try a different document." },
+        { status: 422 }
       );
     }
 

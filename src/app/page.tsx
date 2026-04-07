@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import LandingNav from "@/components/layout/LandingNav";
+import { useTranslation } from "@/lib/i18n";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface transition-colors duration-200">
 
@@ -16,49 +20,135 @@ export default function HomePage() {
         <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-xs font-bold tracking-widest uppercase text-primary mb-10">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" />
-            AI-Powered Legal Intelligence · Now in Beta
+            {t("landing.aiPoweredBadge")}
           </div>
 
-          <h1 className="text-6xl md:text-[88px] font-headline font-extrabold tracking-tighter leading-[0.88] mb-8">
-            <span className="text-on-surface">Contract Risk,</span>
+          <h1 className="text-4xl md:text-6xl lg:text-[88px] font-headline font-extrabold tracking-tighter leading-[0.88] mb-8">
+            <span className="text-on-surface">{t("landing.heroTitle1")}</span>
             <br />
-            <span className="gradient-text">Made Visible.</span>
+            <span className="gradient-text">{t("landing.heroTitle2")}</span>
           </h1>
 
           <p className="text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed mb-12 font-body">
-            Upload any contract. Our AI reads every clause, flags every risk,
-            and explains every implication — in plain language, in seconds.
+            {t("landing.heroDesc")}
           </p>
 
-          <div className="flex flex-wrap gap-4 justify-center mb-24">
+          <div className="flex flex-wrap gap-4 justify-center mb-16">
             <Link
               href="/analyze"
               className="btn-hero inline-flex items-center gap-2 text-white px-8 py-4 rounded-xl font-headline font-bold text-base shadow-xl hover:-translate-y-0.5 transition-all"
             >
               <span className="material-symbols-outlined text-[18px]">psychology</span>
-              Analyze a Contract Free
+              {t("landing.analyzeContractFree")}
             </Link>
             <Link
               href="/dashboard"
               className="inline-flex items-center gap-2 border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high px-8 py-4 rounded-xl font-headline font-bold text-base transition-all"
             >
-              View Dashboard
+              {t("landing.viewDashboard")}
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-outline-variant/20 pt-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-outline-variant/20 pt-12 mb-20">
             {[
-              { n: "< 30s", label: "Average Analysis Time" },
-              { n: "8", label: "Supported Languages" },
-              { n: "PDF & DOCX", label: "File Formats" },
+              { n: "< 60s", label: t("landing.avgAnalysisTime") },
+              { n: "8", label: t("landing.supportedLanguages") },
+              { n: "PDF & DOCX", label: t("landing.fileFormats") },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-4xl font-headline font-extrabold text-on-surface mb-1">{s.n}</p>
                 <p className="text-xs text-on-surface-variant/60 font-body uppercase tracking-widest">{s.label}</p>
               </div>
             ))}
+          </div>
+
+          {/* ── Analysis Demo Mockup ── */}
+          <div className="relative mx-auto max-w-2xl animate-float">
+            <div
+              className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl shadow-2xl shadow-primary/10 overflow-hidden mockup-glow"
+              style={{ transform: "perspective(1000px) rotateY(-2deg) rotateX(2deg)" }}
+            >
+              {/* Title bar */}
+              <div className="flex items-center gap-2 px-5 py-3 border-b border-outline-variant/15 bg-surface-container">
+                <div className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-error/60" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim/60" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
+                </div>
+                <span className="text-xs font-headline font-bold text-on-surface-variant/60 ml-2">The Curator — Analysis Result</span>
+              </div>
+
+              <div className="p-6 space-y-5 text-left">
+                {/* Risk Score */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">Risk Score</span>
+                    <span className="text-xs font-bold text-error px-2 py-0.5 rounded-full bg-error/10">High</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-headline font-extrabold text-on-surface">72<span className="text-sm text-on-surface-variant/50">/100</span></span>
+                    <div className="flex-1 h-2.5 bg-surface-container rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-tertiary-fixed-dim to-error rounded-full" style={{ width: "72%" }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Items */}
+                <div className="space-y-2">
+                  {[
+                    { icon: "warning", label: "Auto-Renewal Clause", severity: "high", color: "error" },
+                    { icon: "warning", label: "Unlimited Liability", severity: "high", color: "error" },
+                    { icon: "change_history", label: "Non-Compete (2 years)", severity: "medium", color: "tertiary-fixed-dim" },
+                  ].map((r) => (
+                    <div key={r.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-surface-container/50">
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-[16px] text-${r.color}`}>{r.icon}</span>
+                        <span className="text-sm text-on-surface font-medium">{r.label}</span>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider text-${r.color}`}>{r.severity}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Fairness */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">Fairness</span>
+                    <span className="text-xs text-on-surface-variant">35/100 · Favors Party A</span>
+                  </div>
+                  <div className="relative h-2 bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-error/80 to-tertiary-fixed-dim/60 rounded-full" style={{ width: "35%" }} />
+                  </div>
+                </div>
+
+                {/* Bottom row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/15">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary-fixed-dim block mb-1.5">Missing Clauses</span>
+                    <p className="text-xs text-on-surface-variant">Force Majeure · Data Protection</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1.5">Action Items</span>
+                    <div className="space-y-1">
+                      <p className="text-xs text-on-surface-variant flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px] text-primary">check_box</span>
+                        Negotiate liability cap
+                      </p>
+                      <p className="text-xs text-on-surface-variant flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px] text-primary">check_box</span>
+                        Add termination clause
+                      </p>
+                      <p className="text-xs text-on-surface-variant flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px] text-on-surface-variant/40">check_box_outline_blank</span>
+                        Review IP assignment
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -67,7 +157,7 @@ export default function HomePage() {
       <section className="py-14 border-y border-outline-variant/15">
         <div className="max-w-5xl mx-auto px-8">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-on-surface/25 mb-8">
-            Powered by advanced AI technology
+            {t("landing.poweredByAI")}
           </p>
           <div className="flex flex-wrap justify-center items-center gap-12">
             {["Gemini AI", "Next.js", "TypeScript", "Secure Cloud"].map((name) => (
@@ -79,79 +169,377 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── Features — 6 Interactive Mini-Mockups ── */}
       <section id="features" className="py-40 px-8">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-2xl mb-20">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Features</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.features")}</span>
             <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface mb-6">
-              Everything your legal team needs.
+              {t("landing.featuresTitle")}
             </h2>
             <p className="text-on-surface-variant text-lg leading-relaxed">
-              From first draft to final signature, The Curator handles the complexity so your team can focus on strategy.
+              {t("landing.featuresDesc")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Large feature card */}
+
+            {/* 1. Risk Analysis — 2-col span */}
             <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-10 group hover:border-outline-variant/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-8">
                 <span className="material-symbols-outlined text-primary">psychology</span>
               </div>
-              <h3 className="text-2xl font-headline font-bold text-on-surface mb-4">Deep Risk Analysis</h3>
+              <h3 className="text-2xl font-headline font-bold text-on-surface mb-4">{t("landing.deepRiskAnalysis")}</h3>
               <p className="text-on-surface-variant text-base leading-relaxed mb-8">
-                Our AI processes hundreds of legal data points simultaneously — understanding intent, not just keywords.
-                Indemnity clauses, liability caps, IP assignment, non-competes — all surfaced and explained in seconds.
+                {t("landing.deepRiskDesc")}
               </p>
-              <div className="flex gap-1.5 items-end h-20 p-4 bg-surface-container rounded-xl">
-                {[40, 70, 55, 90, 45, 80, 60, 75, 50, 88, 35, 65].map((h, i) => (
+              {/* Risk gauge + severity chips */}
+              <div className="flex flex-col sm:flex-row items-center gap-8">
+                {/* Circular gauge */}
+                <div className="relative w-32 h-32 flex-shrink-0">
                   <div
-                    key={i}
-                    className={`flex-1 rounded-sm transition-all ${
-                      i === 3 || i === 7 || i === 11
-                        ? "bg-error/60"
-                        : i === 1 || i === 5 || i === 9
-                        ? "bg-tertiary-fixed-dim/80"
-                        : "bg-primary/20"
-                    }`}
-                    style={{ height: `${h}%` }}
+                    className="w-full h-full rounded-full"
+                    style={{
+                      background: "conic-gradient(rgb(var(--c-error)) 0% 30%, rgb(var(--c-tertiary-fixed-dim)) 30% 50%, rgb(var(--c-primary)) 50% 72%, rgb(var(--c-surface-container)) 72% 100%)",
+                    }}
                   />
-                ))}
+                  <div className="absolute inset-3 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                    <div className="text-center">
+                      <span className="text-3xl font-headline font-extrabold text-on-surface leading-none">72</span>
+                      <span className="text-xs text-on-surface-variant block">/100</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Severity chips */}
+                <div className="flex flex-wrap gap-3">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-error/10 text-error text-sm font-bold">
+                    <span className="w-2 h-2 rounded-full bg-error" />
+                    3 Critical
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-fixed-dim/10 text-tertiary-fixed-dim text-sm font-bold">
+                    <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim" />
+                    2 Caution
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold">
+                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    1 Advisory
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Language card */}
-            <div className="bg-primary-container/20 border border-primary/15 rounded-2xl p-10 flex flex-col justify-between">
-              <div>
+            {/* 2. Fairness Score */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-primary text-[20px]">balance</span>
+              </div>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Fairness Score</h4>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+                See who the contract favors at a glance with our imbalance detector.
+              </p>
+              {/* Balance bar mockup */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-xs text-on-surface-variant">
+                  <span>Party A</span>
+                  <span>Party B</span>
+                </div>
+                <div className="relative h-3 bg-surface-container rounded-full overflow-hidden">
+                  <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-error/70 to-tertiary-fixed-dim/60 rounded-full" style={{ width: "65%" }} />
+                </div>
+                <div className="relative h-0">
+                  <div className="absolute -top-1 flex flex-col items-center" style={{ left: "35%", transform: "translateX(-50%)" }}>
+                    <span className="material-symbols-outlined text-error text-[16px]">arrow_drop_up</span>
+                    <span className="text-[10px] font-bold text-error whitespace-nowrap">35/100</span>
+                  </div>
+                </div>
+                <p className="text-xs font-bold text-error flex items-center gap-1 pt-3">
+                  <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                  Favors Party A
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Key Dates */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+              </div>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Key Dates</h4>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+                Never miss a deadline — renewal dates, expirations, and notice periods all extracted.
+              </p>
+              {/* Timeline mockup */}
+              <div className="relative pl-5 space-y-4 border-l-2 border-outline-variant/20">
+                <div className="relative">
+                  <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-surface-container-lowest" />
+                  <p className="text-xs font-bold text-on-surface">Jan 1, 2024</p>
+                  <p className="text-[11px] text-on-surface-variant">Effective Date</p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-surface-container-lowest" />
+                  <p className="text-xs font-bold text-on-surface">Dec 31, 2024</p>
+                  <p className="text-[11px] text-on-surface-variant">Expiration</p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-tertiary-fixed-dim border-2 border-surface-container-lowest" />
+                  <p className="text-xs font-bold text-on-surface flex items-center gap-1">
+                    Nov 30, 2024
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim text-[14px]">warning</span>
+                  </p>
+                  <p className="text-[11px] text-tertiary-fixed-dim font-medium">Renewal Deadline</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Missing Clauses */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-primary text-[20px]">search_off</span>
+              </div>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Missing Clauses</h4>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+                Detect critical clauses that should be present but are missing from the contract.
+              </p>
+              {/* Warning items */}
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-tertiary-fixed-dim/8 border border-tertiary-fixed-dim/15">
+                  <span className="material-symbols-outlined text-tertiary-fixed-dim text-[18px] mt-0.5">warning</span>
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">Force Majeure</p>
+                    <p className="text-[11px] text-on-surface-variant">Not found in contract</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-tertiary-fixed-dim/8 border border-tertiary-fixed-dim/15">
+                  <span className="material-symbols-outlined text-tertiary-fixed-dim text-[18px] mt-0.5">warning</span>
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">Data Protection</p>
+                    <p className="text-[11px] text-on-surface-variant">Not found in contract</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Financial Obligations */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-primary text-[20px]">payments</span>
+              </div>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Financial Obligations</h4>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+                Every fee, penalty, and payment term surfaced in a clear summary table.
+              </p>
+              {/* Mini table */}
+              <div className="rounded-xl border border-outline-variant/15 overflow-hidden text-xs">
+                <div className="grid grid-cols-3 gap-0 bg-surface-container px-3 py-2 font-bold text-on-surface-variant/60 uppercase tracking-wider text-[10px]">
+                  <span>Type</span>
+                  <span className="text-right">Amount</span>
+                  <span className="text-right">Party</span>
+                </div>
+                <div className="grid grid-cols-3 gap-0 px-3 py-2.5 border-t border-outline-variant/10">
+                  <span className="text-on-surface font-medium">Monthly Fee</span>
+                  <span className="text-right text-on-surface font-mono font-bold">$2,000</span>
+                  <span className="text-right text-on-surface-variant">Party B</span>
+                </div>
+                <div className="grid grid-cols-3 gap-0 px-3 py-2.5 border-t border-outline-variant/10 bg-error/5">
+                  <span className="text-on-surface font-medium">Penalty</span>
+                  <span className="text-right text-error font-mono font-bold">$5,000</span>
+                  <span className="text-right text-on-surface-variant">Party B</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Action Items */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-primary text-[20px]">checklist</span>
+              </div>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">Action Items</h4>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+                AI-generated to-do list with priority levels so you know what to fix first.
+              </p>
+              {/* Checklist */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-error/5 border border-error/10">
+                  <span className="w-2 h-2 rounded-full bg-error flex-shrink-0" />
+                  <span className="text-sm text-on-surface">Negotiate liability cap</span>
+                  <span className="text-[10px] font-bold text-error ml-auto uppercase">High</span>
+                </div>
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/10">
+                  <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim flex-shrink-0" />
+                  <span className="text-sm text-on-surface">Add termination notice</span>
+                  <span className="text-[10px] font-bold text-tertiary-fixed-dim ml-auto uppercase">Med</span>
+                </div>
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/5 border border-secondary/10">
+                  <span className="w-2 h-2 rounded-full bg-secondary flex-shrink-0" />
+                  <span className="text-sm text-on-surface">Review payment terms</span>
+                  <span className="text-[10px] font-bold text-secondary ml-auto uppercase">Low</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Multilingual Demo (CSS-only tabs) ── */}
+          <div className="mt-5 bg-primary-container/20 border border-primary/15 rounded-2xl p-10">
+            <div className="flex flex-col md:flex-row md:items-start gap-8">
+              <div className="md:w-1/3">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-8">
                   <span className="material-symbols-outlined text-primary">translate</span>
                 </div>
-                <h3 className="text-2xl font-headline font-bold text-on-surface mb-4">8 Languages</h3>
-                <p className="text-on-surface-variant text-base leading-relaxed">
-                  Receive your full risk analysis in English, Korean, Spanish, French, Japanese, Chinese, German, or Portuguese.
+                <h3 className="text-2xl font-headline font-bold text-on-surface mb-4">{t("landing.eightLanguages")}</h3>
+                <p className="text-on-surface-variant text-base leading-relaxed mb-6">
+                  {t("landing.eightLanguagesDesc")}
                 </p>
+                <div className="flex flex-wrap gap-2">
+                  {["EN", "KO", "ES", "FR", "JA", "ZH", "DE", "PT"].map((l) => (
+                    <span key={l} className="text-xs px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-mono border border-primary/15">{l}</span>
+                  ))}
+                </div>
               </div>
-              <div className="mt-8 flex flex-wrap gap-2">
-                {["🇺🇸 EN", "🇰🇷 KO", "🇪🇸 ES", "🇫🇷 FR", "🇯🇵 JA", "🇨🇳 ZH"].map((l) => (
-                  <span key={l} className="text-xs px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-mono border border-primary/15">{l}</span>
-                ))}
+
+              {/* CSS-only tab switching demo */}
+              <div className="md:w-2/3">
+                <div className="lang-tabs bg-surface-container-lowest border border-outline-variant/15 rounded-xl overflow-hidden">
+                  <input type="radio" name="lang-tab" id="tab-en" className="lang-tab-input" defaultChecked />
+                  <input type="radio" name="lang-tab" id="tab-ko" className="lang-tab-input" />
+                  <input type="radio" name="lang-tab" id="tab-ja" className="lang-tab-input" />
+
+                  {/* Tab headers */}
+                  <div className="lang-tab-headers flex border-b border-outline-variant/15">
+                    <label htmlFor="tab-en" className="lang-tab-label flex-1 text-center py-3 text-sm font-headline font-bold cursor-pointer text-on-surface-variant hover:text-on-surface transition-colors border-b-2 border-transparent">
+                      EN
+                    </label>
+                    <label htmlFor="tab-ko" className="lang-tab-label flex-1 text-center py-3 text-sm font-headline font-bold cursor-pointer text-on-surface-variant hover:text-on-surface transition-colors border-b-2 border-transparent">
+                      KO
+                    </label>
+                    <label htmlFor="tab-ja" className="lang-tab-label flex-1 text-center py-3 text-sm font-headline font-bold cursor-pointer text-on-surface-variant hover:text-on-surface transition-colors border-b-2 border-transparent">
+                      JA
+                    </label>
+                  </div>
+
+                  {/* Tab content — EN */}
+                  <div className="lang-tab-panel p-5">
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
+                      <span className="material-symbols-outlined text-error mt-0.5">warning</span>
+                      <div>
+                        <p className="text-sm font-bold text-on-surface mb-1">Auto-Renewal Clause</p>
+                        <p className="text-sm text-on-surface-variant leading-relaxed">
+                          This contract renews automatically every 12 months unless either party provides 30-day written notice before expiration.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Tab content — KO */}
+                  <div className="lang-tab-panel p-5">
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
+                      <span className="material-symbols-outlined text-error mt-0.5">warning</span>
+                      <div>
+                        <p className="text-sm font-bold text-on-surface mb-1">자동 갱신 조항</p>
+                        <p className="text-sm text-on-surface-variant leading-relaxed">
+                          이 계약은 만료 전 30일 이내에 서면 통지를 하지 않는 한 매 12개월마다 자동으로 갱신됩니다.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Tab content — JA */}
+                  <div className="lang-tab-panel p-5">
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
+                      <span className="material-symbols-outlined text-error mt-0.5">warning</span>
+                      <div>
+                        <p className="text-sm font-bold text-on-surface mb-1">自動更新条項</p>
+                        <p className="text-sm text-on-surface-variant leading-relaxed">
+                          本契約は、いずれかの当事者が満了の30日前までに書面で通知しない限り、12ヶ月ごとに自動的に更新されます。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Bottom 3 */}
-            {[
-              { icon: "upload_file", title: "PDF & DOCX Upload", desc: "Drag and drop any contract format. Secure, server-side extraction with no persistent data storage." },
-              { icon: "verified_user", title: "Secure Processing", desc: "Your documents are processed securely and never shared. Each analysis is isolated per account." },
-              { icon: "history", title: "Full Contract History", desc: "Every analysis saved, searchable, and star-able. Your entire legal archive in one secure place." },
-            ].map((f) => (
-              <div key={f.title} className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
-                <div className="w-10 h-10 bg-surface-container-high rounded-lg flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-on-surface-variant text-[20px]">{f.icon}</span>
-                </div>
-                <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{f.title}</h4>
-                <p className="text-on-surface-variant text-sm leading-relaxed">{f.desc}</p>
+      {/* ── Before / After ── */}
+      <section className="py-32 px-8 border-t border-outline-variant/15">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Transformation</span>
+            <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
+              From Complex Contracts to Clear Insights
+            </h2>
+            <p className="text-on-surface-variant text-lg">See how The Curator transforms dense legal text into actionable intelligence.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-6 md:gap-4 items-center">
+            {/* Before — blurred contract */}
+            <div className="relative bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 overflow-hidden">
+              <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/40 block mb-4">Before</span>
+              <div className="space-y-3 select-none" style={{ filter: "blur(1.5px)" }}>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  제7조 (계약의 해지) 본 계약의 당사자는 상대방이 본 계약에서 정한 의무를 위반한 경우 서면으로 시정을 요구하고, 시정요구를 받은 날로부터 30일 이내에 이를 시정하지 아니한 때에는 본 계약을 해지할 수 있다.
+                </p>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  제8조 (손해배상) 본 계약을 위반한 당사자는 그 위반으로 인하여 상대방에게 발생한 모든 손해를 배상하여야 한다. 손해배상의 범위는 직접손해에 한정되지 아니하며, 간접손해 및 기대이익의 상실도 포함한다.
+                </p>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  제9조 (비밀유지) 각 당사자는 본 계약의 체결 및 이행 과정에서 알게 된 상대방의 경영, 기술, 영업 등에 관한 비밀정보를 제3자에게 누설하거나 본 계약의 목적 이외에 사용하여서는 아니된다.
+                </p>
               </div>
-            ))}
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent pointer-events-none" />
+            </div>
+
+            {/* Arrow divider */}
+            <div className="flex flex-col items-center justify-center gap-2 py-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-[24px]">arrow_forward</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary whitespace-nowrap">AI Analysis</span>
+            </div>
+
+            {/* After — clean analysis */}
+            <div className="bg-surface-container-lowest border border-primary/20 rounded-2xl p-8 shadow-lg shadow-primary/5">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-4">After</span>
+              <div className="space-y-4">
+                {/* Risk score mini */}
+                <div className="flex items-center gap-3">
+                  <div className="relative w-14 h-14 flex-shrink-0">
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{
+                        background: "conic-gradient(rgb(var(--c-error)) 0% 72%, rgb(var(--c-surface-container)) 72% 100%)",
+                      }}
+                    />
+                    <div className="absolute inset-1.5 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                      <span className="text-sm font-headline font-extrabold text-on-surface">72</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">High Risk Detected</p>
+                    <p className="text-xs text-on-surface-variant">5 issues found across 3 categories</p>
+                  </div>
+                </div>
+                {/* Key findings */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined text-error text-[16px]">warning</span>
+                    <span className="text-on-surface">Unlimited liability exposure</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined text-error text-[16px]">warning</span>
+                    <span className="text-on-surface">No damages cap specified</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim text-[16px]">info</span>
+                    <span className="text-on-surface">Broad confidentiality scope</span>
+                  </div>
+                </div>
+                {/* Action */}
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  <p className="text-xs font-bold text-primary mb-1">Recommended Action</p>
+                  <p className="text-xs text-on-surface-variant">Add a liability cap and specify damages limitation clause.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -160,29 +548,124 @@ export default function HomePage() {
       <section id="how-it-works" className="py-40 px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-24">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Process</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.process")}</span>
             <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
-              Three steps to clarity.
+              {t("landing.threeSteps")}
             </h2>
-            <p className="text-on-surface-variant text-lg">From raw document to risk insights — in under a minute.</p>
+            <p className="text-on-surface-variant text-lg">{t("landing.threeStepsDesc")}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { n: "01", icon: "cloud_upload", title: "Upload", desc: "Drop in any PDF or DOCX. Our extractor parses every page, table, and clause automatically — no setup needed." },
-              { n: "02", icon: "psychology", title: "Analyze", desc: "Gemini AI performs a deep structural audit, scoring each clause by risk level and explaining the implications in plain language." },
-              { n: "03", icon: "task_alt", title: "Act", desc: "Review your risk report, export it as a PDF, share with your team, and sign your contract with total confidence." },
-            ].map((step) => (
-              <div key={step.n} className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
-                <div className="flex items-start justify-between mb-8">
-                  <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">{step.n}</span>
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-[20px]">{step.icon}</span>
+            {/* Step 1 — Upload */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="flex items-start justify-between mb-8">
+                <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">01</span>
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-[20px]">cloud_upload</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-headline font-bold text-on-surface mb-3">{t("landing.upload")}</h3>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">{t("landing.uploadDesc")}</p>
+              {/* Mini upload area */}
+              <div className="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center bg-surface-container/30">
+                <span className="material-symbols-outlined text-on-surface-variant/30 text-[32px] mb-2 block">description</span>
+                <p className="text-xs text-on-surface-variant/50 font-medium">Drop PDF or DOCX here</p>
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">.pdf</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">.docx</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 — Analyze */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="flex items-start justify-between mb-8">
+                <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">02</span>
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-headline font-bold text-on-surface mb-3">{t("landing.analyzeStep")}</h3>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">{t("landing.analyzeDesc")}</p>
+              {/* Mini progress bars */}
+              <div className="space-y-3 p-4 bg-surface-container/30 rounded-xl">
+                <div>
+                  <div className="flex justify-between text-[10px] mb-1">
+                    <span className="text-on-surface-variant">Risk Scanning</span>
+                    <span className="text-primary font-bold">Done</span>
+                  </div>
+                  <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full w-full" />
                   </div>
                 </div>
-                <h3 className="text-xl font-headline font-bold text-on-surface mb-3">{step.title}</h3>
-                <p className="text-on-surface-variant text-sm leading-relaxed">{step.desc}</p>
+                <div>
+                  <div className="flex justify-between text-[10px] mb-1">
+                    <span className="text-on-surface-variant">Clause Analysis</span>
+                    <span className="text-primary font-bold">Done</span>
+                  </div>
+                  <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full w-full" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] mb-1">
+                    <span className="text-on-surface-variant">Financial Extraction</span>
+                    <span className="text-tertiary-fixed-dim font-bold">85%</span>
+                  </div>
+                  <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-tertiary-fixed-dim rounded-full animate-progress-85" style={{ width: "85%" }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] mb-1">
+                    <span className="text-on-surface-variant">Report Generation</span>
+                    <span className="text-on-surface-variant/50 font-bold">42%</span>
+                  </div>
+                  <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-primary/40 rounded-full animate-pulse-bar" style={{ width: "42%" }} />
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Step 3 — Act */}
+            <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+              <div className="flex items-start justify-between mb-8">
+                <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">03</span>
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-[20px]">task_alt</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-headline font-bold text-on-surface mb-3">{t("landing.act")}</h3>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">{t("landing.actDesc")}</p>
+              {/* Mini dashboard */}
+              <div className="p-4 bg-surface-container/30 rounded-xl space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10 flex-shrink-0">
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{
+                        background: "conic-gradient(rgb(var(--c-error)) 0% 72%, rgb(var(--c-surface-container)) 72% 100%)",
+                      }}
+                    />
+                    <div className="absolute inset-1 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                      <span className="text-[10px] font-headline font-extrabold text-on-surface">72</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-on-surface">Risk Score: 72/100</p>
+                    <p className="text-[10px] text-on-surface-variant">5 items need attention</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-error/5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-error" />
+                  <span className="text-on-surface">Unlimited liability clause</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-tertiary-fixed-dim/5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim" />
+                  <span className="text-on-surface">Auto-renewal without notice</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -191,18 +674,28 @@ export default function HomePage() {
       <section id="pricing" className="py-40 px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Pricing</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.pricing")}</span>
             <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
-              Simple, transparent pricing.
+              {t("landing.pricingTitle")}
             </h2>
-            <p className="text-on-surface-variant text-lg">Start for free. Upgrade when you&apos;re ready.</p>
+            <p className="text-on-surface-variant text-lg">{t("landing.pricingDesc")}</p>
+          </div>
+
+          {/* Beta Banner */}
+          <div className="mb-10 p-5 rounded-2xl bg-primary/5 border border-primary/20 text-center">
+            <p className="text-base font-headline font-bold text-primary mb-1">
+              Beta Special — All features are currently FREE for early adopters!
+            </p>
+            <p className="text-sm text-on-surface-variant">
+              Sign up now to lock in unlimited access while we&apos;re in beta.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: "Starter", price: "Free", sub: "Forever free", features: ["5 analyses per month", "English & Korean", "Risk scoring & severity", "7-day contract history"], cta: "Get Started", href: "/sign-up", featured: false },
-              { name: "Pro", price: "$29", sub: "per month", features: ["30 analyses per month", "All 8 output languages", "90-day history & search", "PDF export & sharing"], cta: "Start Free Trial", href: "/sign-up", featured: true },
-              { name: "Business", price: "$79", sub: "per month", features: ["Unlimited analyses", "Priority AI processing", "Unlimited history", "Everything in Pro"], cta: "Get Business", href: "/sign-up", featured: false },
+              { name: t("landing.starter"), price: t("landing.starterPrice"), sub: t("landing.starterSub"), features: t("landing.starterFeatures") as unknown as string[], cta: t("landing.getStarted"), href: "/sign-up", featured: false },
+              { name: t("landing.proName"), price: t("landing.proPrice"), sub: t("landing.proSub"), features: t("landing.proFeatures") as unknown as string[], cta: t("landing.startFreeTrial"), href: "/sign-up", featured: true },
+              { name: t("landing.businessName"), price: t("landing.businessPrice"), sub: t("landing.businessSub"), features: t("landing.businessFeatures") as unknown as string[], cta: t("landing.getBusiness"), href: "/sign-up", featured: false },
             ].map((plan) => (
               <div
                 key={plan.name}
@@ -214,7 +707,7 @@ export default function HomePage() {
               >
                 <div className="mb-8">
                   {plan.featured && (
-                    <span className="text-xs font-bold uppercase tracking-widest text-primary mb-3 block">Most Popular</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary mb-3 block">{t("landing.mostPopular")}</span>
                   )}
                   <p className={`text-sm font-bold mb-3 ${plan.featured ? "text-primary" : "text-on-surface-variant"}`}>
                     {plan.name}
@@ -259,19 +752,18 @@ export default function HomePage() {
       <section className="py-40 px-8 border-t border-outline-variant/15">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface mb-6 leading-[0.95]">
-            Ready to protect your{" "}
-            <span className="gradient-text">business?</span>
+            {t("landing.ctaTitle1")}{" "}
+            <span className="gradient-text">{t("landing.ctaTitle2")}</span>
           </h2>
           <p className="text-on-surface-variant text-lg mb-12 leading-relaxed">
-            Use The Curator to read contracts smarter,
-            faster, and with total confidence.
+            {t("landing.ctaDesc")}
           </p>
           <Link
             href="/analyze"
             className="btn-hero inline-flex items-center gap-3 text-white px-10 py-5 rounded-xl font-headline font-bold text-lg shadow-2xl hover:-translate-y-0.5 transition-all"
           >
             <span className="material-symbols-outlined text-[22px]">rocket_launch</span>
-            Start Your First Analysis — Free
+            {t("landing.ctaButton")}
           </Link>
         </div>
       </section>
@@ -279,17 +771,17 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className="border-t border-outline-variant/15 py-16 px-8 bg-surface-container-low">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-2 md:col-span-1">
-              <span className="text-lg font-headline font-black text-on-surface mb-4 block">The Curator</span>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div>
+              <span className="text-lg font-headline font-black text-on-surface mb-4 block">{t("common.appName")}</span>
               <p className="text-on-surface-variant text-sm leading-relaxed">
-                AI-powered contract intelligence for modern legal teams.
+                {t("landing.footerDesc")}
               </p>
             </div>
             {[
-              { title: "Product", links: [["Features", "#features"], ["Pricing", "#pricing"], ["How It Works", "#how-it-works"], ["Dashboard", "/dashboard"]] },
-              { title: "Resources", links: [["Dashboard", "/dashboard"], ["New Analysis", "/analyze"], ["Sign In", "/sign-in"], ["Sign Up", "/sign-up"]] },
-              { title: "Legal", links: [["Privacy Policy", "/legal/privacy"], ["Terms of Service", "/legal/terms"], ["Security", "/legal/security"]] },
+              { title: t("landing.product"), links: [[t("landing.features"), "#features"], [t("landing.pricing"), "#pricing"], [t("landing.process"), "#how-it-works"], [t("landing.viewDashboard"), "/dashboard"]] },
+              { title: t("landing.resources"), links: [[t("landing.viewDashboard"), "/dashboard"], [t("sidebar.newAnalysis"), "/analyze"], [t("landing.signIn"), "/sign-in"], [t("landing.signUp"), "/sign-up"]] },
+              { title: t("landing.legal"), links: [[t("support.privacyPolicy"), "/legal/privacy"], [t("support.termsOfService"), "/legal/terms"], [t("support.securityLink"), "/legal/security"]] },
             ].map((col) => (
               <div key={col.title}>
                 <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 mb-5">{col.title}</p>
@@ -306,8 +798,8 @@ export default function HomePage() {
             ))}
           </div>
           <div className="border-t border-outline-variant/15 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-on-surface-variant/40 text-xs">© {new Date().getFullYear()} The Curator. All rights reserved.</p>
-            <p className="text-on-surface-variant/40 text-xs">Built with AI · Powered by Gemini</p>
+            <p className="text-on-surface-variant/40 text-xs">&copy; {new Date().getFullYear()} {t("common.copyright")}. {t("common.allRightsReserved")}</p>
+            <p className="text-on-surface-variant/40 text-xs">{t("common.builtWithAI")}</p>
           </div>
         </div>
       </footer>
