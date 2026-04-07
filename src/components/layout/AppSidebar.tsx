@@ -16,7 +16,7 @@ const navItems = [
 ];
 
 const bottomItems = [
-  { label: "Support", icon: "help", href: "/legal/api" },
+  { label: "Support", icon: "help", href: "/legal/security" },
   { label: "Settings", icon: "settings", href: "/settings" },
 ];
 

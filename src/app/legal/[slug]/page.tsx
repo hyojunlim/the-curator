@@ -15,7 +15,7 @@ const CONTENT: Record<string, { title: string; updated: string; sections: Sectio
       { heading: "Data Retention", text: "Your analysis results and contract metadata are retained in your account until you delete them. You may delete individual contracts or request complete account deletion at any time through Settings." },
       { heading: "Third-Party Services", text: "We use Clerk for authentication, Supabase for data storage, Google Gemini for AI analysis, and PayPal for payment processing. Each service has its own privacy policy governing their handling of data." },
       { heading: "Data Security", text: "All data in transit is encrypted with TLS 1.3. Database access is restricted via Row Level Security policies. API keys and secrets are stored as server-side environment variables and never exposed to clients." },
-      { heading: "Your Rights", text: "You may access, export, or delete your data at any time. For GDPR or CCPA requests, contact us at privacy@thecurator.ai." },
+      { heading: "Your Rights", text: "You may access, export, or delete your data at any time through your account Settings page. For GDPR or CCPA requests, please reach out via the contact information in your account settings." },
     ],
   },
   terms: {
@@ -26,7 +26,7 @@ const CONTENT: Record<string, { title: string; updated: string; sections: Sectio
       { heading: "Service Description", text: "The Curator provides AI-powered contract risk analysis. The service identifies potential risks, summarizes clauses, and provides suggestions. This is an assistive tool and does not constitute legal advice." },
       { heading: "No Legal Advice", text: "The Curator is not a law firm and does not provide legal advice. All analysis output is for informational purposes only. You should consult a qualified attorney before making legal decisions based on any analysis." },
       { heading: "User Responsibilities", text: "You are responsible for the content you upload. You must have the legal right to upload and analyze any documents submitted. You must not upload illegal, malicious, or unauthorized content." },
-      { heading: "Subscription & Billing", text: "Free tier includes 5 analyses per month. Pro plan ($29/month) provides unlimited analyses. Payments are processed via PayPal. You may cancel at any time through your account settings." },
+      { heading: "Subscription & Billing", text: "Free tier includes a limited number of analyses per month. Paid plans (Pro at $29/month, Business at $79/month) provide increased or unlimited analyses along with additional features. Payments are processed via PayPal. You may cancel at any time through your account settings." },
       { heading: "Limitation of Liability", text: "The Curator is provided 'as is' without warranties of any kind. We are not liable for any damages arising from the use of or inability to use the service, including missed risks or incorrect analysis." },
     ],
   },
@@ -39,7 +39,7 @@ const CONTENT: Record<string, { title: string; updated: string; sections: Sectio
       { heading: "Data Isolation", text: "Each user's data is isolated using Supabase Row Level Security (RLS) policies. Server-side operations use service role keys that bypass RLS only for authorized operations." },
       { heading: "API Security", text: "All API endpoints require authentication via Clerk middleware. Rate limiting (20 requests/hour) prevents abuse. File upload is limited to 10MB with type validation." },
       { heading: "Environment Security", text: "All secrets (API keys, database credentials) are stored as environment variables, never committed to source control. A .env.example file documents required variables without values." },
-      { heading: "Reporting Vulnerabilities", text: "If you discover a security vulnerability, please report it to security@thecurator.ai. We take all reports seriously and will respond within 48 hours." },
+      { heading: "Reporting Vulnerabilities", text: "If you discover a security vulnerability, please report it through the contact information available in your account settings. We take all reports seriously and will respond promptly." },
     ],
   },
   api: {

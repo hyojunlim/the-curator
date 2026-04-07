@@ -19,6 +19,11 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
           },
+          // Content Security Policy
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://*.clerk.accounts.dev https://*.clerk.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://www.paypal.com https://*.clerk.accounts.dev https://*.clerk.com https://generativelanguage.googleapis.com; frame-src https://www.paypal.com https://*.clerk.accounts.dev https://*.clerk.com;",
+          },
           // Strict Transport Security (HTTPS only in production)
           {
             key: "Strict-Transport-Security",

@@ -86,7 +86,7 @@ export default function DashboardPage() {
   // Greeting based on time of day
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const displayName = userLoaded && user ? (user.firstName ?? user.username ?? "there") : null;
+  const displayName = userLoaded && user ? (user.firstName ?? user.username ?? null) : null;
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
@@ -97,7 +97,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-headline font-extrabold text-2xl text-on-surface">
-              {displayName ? `${greeting}, ${displayName}` : "Overview"}
+              {displayName ? `${greeting}, ${displayName}` : greeting}
             </h1>
             <p className="text-sm text-on-surface-variant mt-1">
               {lastAnalyzed && !loading
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Plan</p>
                 <span className="font-headline font-extrabold text-4xl text-primary">
-                  {sub ? (sub.plan === "business" ? "Biz" : sub.plan === "pro" ? "Pro" : "Free") : "—"}
+                  {sub ? (sub.plan === "business" ? "Business" : sub.plan === "pro" ? "Pro" : "Free") : "—"}
                 </span>
                 <p className="text-xs text-on-surface-variant mt-1">
                   {sub?.plan === "business" ? "Unlimited analyses" : sub?.plan === "pro" ? `${sub.remaining} of 30 left` : sub ? `${sub.remaining} analyses left` : "Loading..."}
