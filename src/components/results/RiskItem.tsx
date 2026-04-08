@@ -52,14 +52,14 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
           {/* Clause quote */}
           {risk.clause && (
             <div className="bg-surface-container-low rounded-lg p-3 border-l-2 border-outline-variant">
-              <p className="text-xs text-on-surface-variant italic leading-relaxed font-body">
+              <p className="text-sm text-on-surface-variant italic leading-relaxed font-body">
                 &ldquo;{risk.clause}&rdquo;
               </p>
             </div>
           )}
 
           {/* Explanation */}
-          <p className="text-xs text-on-surface-variant leading-relaxed">{risk.explanation}</p>
+          <p className="text-base text-on-surface-variant leading-relaxed">{risk.explanation}</p>
 
           {/* Suggestion */}
           {activeSuggestion && (
@@ -107,7 +107,7 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
                 </div>
                 {isAdd ? (
                   <div className="p-3 bg-secondary/3">
-                    <p className="text-xs text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
+                    <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
                   </div>
                 ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
@@ -116,7 +116,7 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
                       <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
                       <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
                     </div>
-                    <p className="text-xs text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">
+                    <p className="text-sm text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">
                       {risk.clause}
                     </p>
                   </div>
@@ -125,7 +125,7 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
                       <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
                       <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
                     </div>
-                    <p className="text-xs text-on-surface leading-relaxed font-medium">
+                    <p className="text-sm text-on-surface leading-relaxed font-medium">
                       {activeRewrite}
                     </p>
                   </div>

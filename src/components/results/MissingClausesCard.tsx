@@ -28,12 +28,12 @@ export default function MissingClausesCard({ clauses, language }: Props) {
               <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
                 {c.importance === "high" ? "warning" : "info"}
               </span>
-              <span className="text-sm font-semibold text-on-surface">{c.title}</span>
+              <span className="text-base font-semibold text-on-surface">{c.title}</span>
               {c.importance === "high" && (
                 <span className="text-[10px] font-bold uppercase tracking-wider text-error">{t(lang, "important")}</span>
               )}
             </div>
-            <p className="text-xs text-on-surface-variant leading-relaxed ml-[22px]">{c.reason}</p>
+            <p className="text-base text-on-surface-variant leading-relaxed ml-[22px]">{c.reason}</p>
           </div>
         ))}
       </div>

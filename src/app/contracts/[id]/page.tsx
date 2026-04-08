@@ -370,7 +370,7 @@ export default function ContractDetailPage() {
               </div>
               <h3 className="font-headline font-bold text-on-surface">{t(lang, "summary")}</h3>
             </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{result.summary}</p>
+            <p className="text-base text-on-surface-variant leading-relaxed">{result.summary}</p>
           </div>
 
           {/* Contract Type Badge */}
@@ -378,7 +378,7 @@ export default function ContractDetailPage() {
             <div className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-lowest rounded-xl shadow-sm">
               <span className="material-symbols-outlined text-[16px] text-primary">description</span>
               <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t(lang, "contractType")}</span>
-              <span className="text-sm font-semibold text-on-surface">{result.contractType}</span>
+              <span className="text-base font-semibold text-on-surface">{result.contractType}</span>
             </div>
           )}
 
@@ -460,10 +460,10 @@ export default function ContractDetailPage() {
                           </div>
                           {risk.clause && (
                             <div className="bg-surface-container-low rounded-lg p-3 mb-3 border-l-2 border-outline-variant">
-                              <p className="text-xs text-on-surface-variant italic leading-relaxed">&ldquo;{risk.clause}&rdquo;</p>
+                              <p className="text-sm text-on-surface-variant italic leading-relaxed">&ldquo;{risk.clause}&rdquo;</p>
                             </div>
                           )}
-                          <p className="text-xs text-on-surface-variant leading-relaxed">{risk.explanation}</p>
+                          <p className="text-base text-on-surface-variant leading-relaxed">{risk.explanation}</p>
                           {activeSuggestion && (
                             <div className={`mt-3 rounded-lg p-3 ${perspective !== "none" ? "bg-primary/5 border border-primary/20" : "bg-surface-container-low"}`}>
                               <div className="flex items-center gap-1.5 mb-1.5">
@@ -494,7 +494,7 @@ export default function ContractDetailPage() {
                                 </div>
                                 {isAdd ? (
                                   <div className="p-3 bg-secondary/3">
-                                    <p className="text-xs text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
+                                    <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
                                   </div>
                                 ) : (
                                   <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
@@ -503,14 +503,14 @@ export default function ContractDetailPage() {
                                         <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
                                       </div>
-                                      <p className="text-xs text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">{risk.clause}</p>
+                                      <p className="text-sm text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">{risk.clause}</p>
                                     </div>
                                     <div className="p-3 bg-secondary/3">
                                       <div className="flex items-center gap-1 mb-1.5">
                                         <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
                                       </div>
-                                      <p className="text-xs text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
+                                      <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
                                     </div>
                                   </div>
                                 )}
@@ -535,7 +535,7 @@ export default function ContractDetailPage() {
             </Link>
             <Link
               href="/analyze"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-surface-container-high/50 hover:bg-surface-container-high transition-colors text-on-surface"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-base font-semibold bg-surface-container-high/50 hover:bg-surface-container-high transition-colors text-on-surface"
             >
               <span className="material-symbols-outlined text-[18px]">refresh</span>
               {tr("contractDetail.reAnalyze")}
@@ -559,13 +559,13 @@ export default function ContractDetailPage() {
                     setShowDeleteConfirm(false);
                   }}
                   disabled={deleting}
-                  className="px-3 py-1.5 rounded-lg bg-error text-on-error text-sm font-semibold"
+                  className="px-3 py-1.5 rounded-lg bg-error text-on-error text-base font-semibold"
                 >
                   {deleting ? tr("contractDetail.deleting") : tr("common.delete")}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface text-sm font-semibold"
+                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface text-base font-semibold"
                 >
                   {tr("common.cancel")}
                 </button>

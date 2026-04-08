@@ -22,7 +22,7 @@ export default function FinancialCard({ obligations, language }: Props) {
         {obligations.map((o, i) => (
           <div key={i} className="rounded-lg bg-surface-container-low p-3">
             <div className="flex items-start justify-between gap-3 mb-1">
-              <span className="text-sm font-semibold text-on-surface">{o.description}</span>
+              <span className="text-base font-semibold text-on-surface">{o.description}</span>
               <span className="text-sm font-bold text-primary shrink-0">{o.amount}</span>
             </div>
             <div className="flex items-center gap-3 text-xs text-on-surface-variant">

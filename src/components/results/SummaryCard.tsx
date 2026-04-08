@@ -15,7 +15,7 @@ export default function SummaryCard({ summary, language }: Props) {
         </div>
         <h3 className="font-headline font-bold text-on-surface">{t(lang, "summary")}</h3>
       </div>
-      <p className="text-sm text-on-surface-variant leading-relaxed">{summary}</p>
+      <p className="text-base text-on-surface-variant leading-relaxed">{summary}</p>
     </div>
   );
 }
