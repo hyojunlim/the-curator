@@ -21,12 +21,12 @@ export default function KeyDatesCard({ dates, language }: Props) {
       <div className="space-y-3">
         {dates.map((d, i) => (
           <div key={i} className="flex items-start gap-3">
-            <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${d.importance === "critical" ? "bg-error" : "bg-primary"}`} />
+            <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${d.importance === "critical" ? "bg-primary" : "bg-on-surface-variant/30"}`} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold text-on-surface">{d.label}</span>
                 {d.importance === "critical" && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-error bg-error-container px-2 py-0.5 rounded-full">{t(lang, "critical")}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">{t(lang, "important")}</span>
                 )}
               </div>
               <p className="text-xs text-on-surface-variant mt-0.5">{d.date}</p>
