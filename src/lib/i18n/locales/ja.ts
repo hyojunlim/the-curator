@@ -366,6 +366,8 @@ const ja: Translations = {
     analysisCopied: "分析結果がクリップボードにコピーされました",
     copyFailed: "コピーに失敗しました \u2014 もう一度お試しください",
     allowPopups: "PDFエクスポートにはポップアップを許可してください",
+    exporting: "エクスポート中...",
+    pdfExportFailed: "PDFエクスポートに失敗しました。もう一度お試しください。",
     reAnalyze: "再分析",
     deleteThisContract: "この契約書を削除しますか？",
     deleting: "削除中...",

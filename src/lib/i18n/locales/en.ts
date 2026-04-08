@@ -364,6 +364,8 @@ const en = {
     analysisCopied: "Analysis copied to clipboard",
     copyFailed: "Copy failed \u2014 try again",
     allowPopups: "Allow pop-ups to export PDF",
+    exporting: "Exporting...",
+    pdfExportFailed: "PDF export failed. Please try again.",
     reAnalyze: "Re-analyze",
     deleteThisContract: "Delete this contract?",
     deleting: "Deleting...",

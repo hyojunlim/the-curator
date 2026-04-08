@@ -366,6 +366,8 @@ const de: Translations = {
     analysisCopied: "Analyse in die Zwischenablage kopiert",
     copyFailed: "Kopieren fehlgeschlagen \u2014 erneut versuchen",
     allowPopups: "Pop-ups erlauben, um PDF zu exportieren",
+    exporting: "Exportieren...",
+    pdfExportFailed: "PDF-Export fehlgeschlagen. Bitte erneut versuchen.",
     reAnalyze: "Erneut analysieren",
     deleteThisContract: "Diesen Vertrag l\u00F6schen?",
     deleting: "Wird gel\u00F6scht...",

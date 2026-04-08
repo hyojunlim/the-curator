@@ -366,6 +366,8 @@ const fr: Translations = {
     analysisCopied: "Analyse copi\u00E9e dans le presse-papiers",
     copyFailed: "\u00C9chec de la copie \u2014 r\u00E9essayez",
     allowPopups: "Autorisez les pop-ups pour exporter en PDF",
+    exporting: "Exportation...",
+    pdfExportFailed: "Echec de l'exportation PDF. Veuillez reessayer.",
     reAnalyze: "R\u00E9-analyser",
     deleteThisContract: "Supprimer ce contrat ?",
     deleting: "Suppression...",

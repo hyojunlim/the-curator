@@ -366,6 +366,8 @@ const ko: Translations = {
     analysisCopied: "\uBD84\uC11D \uACB0\uACFC\uAC00 \uD074\uB9BD\uBCF4\uB4DC\uC5D0 \uBCF5\uC0AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4",
     copyFailed: "\uBCF5\uC0AC \uC2E4\uD328 \u2014 \uB2E4\uC2DC \uC2DC\uB3C4\uD558\uC138\uC694",
     allowPopups: "PDF \uB0B4\uBCF4\uB0B4\uAE30\uB97C \uC704\uD574 \uD31D\uC5C5\uC744 \uD5C8\uC6A9\uD574 \uC8FC\uC138\uC694",
+    exporting: "내보내는 중...",
+    pdfExportFailed: "PDF 내보내기 실패. 다시 시도해주세요.",
     reAnalyze: "\uC7AC\uBD84\uC11D",
     deleteThisContract: "\uC774 \uACC4\uC57D\uC11C\uB97C \uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?",
     deleting: "\uC0AD\uC81C \uC911...",

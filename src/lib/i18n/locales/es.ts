@@ -366,6 +366,8 @@ const es: Translations = {
     analysisCopied: "An\u00E1lisis copiado al portapapeles",
     copyFailed: "Error al copiar \u2014 intenta de nuevo",
     allowPopups: "Permite ventanas emergentes para exportar PDF",
+    exporting: "Exportando...",
+    pdfExportFailed: "Error al exportar PDF. Intente de nuevo.",
     reAnalyze: "Re-analizar",
     deleteThisContract: "\u00BFEliminar este contrato?",
     deleting: "Eliminando...",

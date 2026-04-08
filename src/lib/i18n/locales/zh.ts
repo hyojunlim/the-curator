@@ -366,6 +366,8 @@ const zh: Translations = {
     analysisCopied: "分析结果已复制到剪贴板",
     copyFailed: "复制失败 \u2014 请重试",
     allowPopups: "请允许弹窗以导出PDF",
+    exporting: "导出中...",
+    pdfExportFailed: "PDF导出失败，请重试。",
     reAnalyze: "重新分析",
     deleteThisContract: "删除此合同？",
     deleting: "删除中...",

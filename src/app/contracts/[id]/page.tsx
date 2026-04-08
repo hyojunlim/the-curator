@@ -136,7 +136,7 @@ export default function ContractDetailPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      showToast("PDF export failed. Please try again.");
+      showToast(tr("contractDetail.pdfExportFailed"));
     }
     setExporting(false);
   }
@@ -374,7 +374,7 @@ export default function ContractDetailPage() {
                       <span className="material-symbols-outlined text-[14px]">share</span>{t(lang, "share")}
                     </button>
                     <button onClick={handleExportPDF} disabled={exporting} className="text-xs font-bold btn-primary-gradient text-white px-3 py-1 rounded flex items-center gap-1 hover:opacity-90 transition-opacity disabled:opacity-50">
-                      <span className="material-symbols-outlined text-[14px]">{exporting ? "hourglass_empty" : "picture_as_pdf"}</span>{exporting ? "Exporting..." : t(lang, "exportPdf")}
+                      <span className="material-symbols-outlined text-[14px]">{exporting ? "hourglass_empty" : "picture_as_pdf"}</span>{exporting ? tr("contractDetail.exporting") : t(lang, "exportPdf")}
                     </button>
                   </>
                 ) : (
