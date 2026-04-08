@@ -27,6 +27,7 @@ const COLOR = {
   white: "#ffffff",
   divider: "#e6e6e6",
   dividerLight: "#dcdcdc",
+  partyB: "#6B4C9A",
 };
 
 // ── Layout constants (A4 in points: 595.28 x 841.89) ──────────────────────
@@ -34,7 +35,8 @@ const MARGIN = 50;
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const SAFE_BOTTOM = 750; // trigger page break before this Y
+const FOOTER_Y = PAGE_H - 40;
+const SAFE_BOTTOM = FOOTER_Y - 30; // leave room for footer
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -66,22 +68,24 @@ function formatDate(iso: string): string {
   }
 }
 
-/** Check page space; add a new page if needed. */
-function ensureSpace(doc: PDFKit.PDFDocument, needed: number): void {
+/** Ensure enough vertical space; add new page if needed. Returns true if a page was added. */
+function ensureSpace(doc: PDFKit.PDFDocument, needed: number): boolean {
   if (doc.y + needed > SAFE_BOTTOM) {
     doc.addPage();
+    return true;
   }
+  return false;
 }
 
-/** Draw a section header with an underline. */
+/**
+ * Draw a section header with underline. Uses automatic flow.
+ */
 function sectionHeader(doc: PDFKit.PDFDocument, title: string): void {
-  ensureSpace(doc, 30);
-  doc
-    .font("Bold")
-    .fontSize(16)
-    .fillColor(COLOR.primary)
-    .text(title, MARGIN, doc.y, { width: CONTENT_W });
+  ensureSpace(doc, 36);
+  doc.font("Bold").fontSize(16).fillColor(COLOR.primary);
+  doc.text(title, { width: CONTENT_W });
 
+  // Draw underline at current Y
   const lineY = doc.y + 2;
   doc
     .moveTo(MARGIN, lineY)
@@ -93,13 +97,78 @@ function sectionHeader(doc: PDFKit.PDFDocument, title: string): void {
   doc.y = lineY + 8;
 }
 
-/** Draw body text block. */
-function bodyText(doc: PDFKit.PDFDocument, text: string): void {
+/**
+ * Draw a gray background box with text inside.
+ * Uses explicit positioning for the rect, then resets doc.y properly.
+ */
+function grayBox(
+  doc: PDFKit.PDFDocument,
+  text: string,
+  opts?: { fontSize?: number; fillColor?: string; bgColor?: string }
+): void {
+  const fontSize = opts?.fontSize ?? 9;
+  const fillColor = opts?.fillColor ?? COLOR.dark;
+  const bgColor = opts?.bgColor ?? COLOR.lightBg;
+
+  doc.font("Regular").fontSize(fontSize);
+  const textH = doc.heightOfString(text, { width: CONTENT_W - 20, lineGap: 2 });
+  const boxY = doc.y;
+  const boxH = textH + 12;
+
+  doc.save();
+  doc.rect(MARGIN, boxY, CONTENT_W, boxH).fill(bgColor);
+  doc.restore();
+
+  doc.fillColor(fillColor);
+  doc.text(text, MARGIN + 10, boxY + 6, { width: CONTENT_W - 20, lineGap: 2 });
+
+  // Manually set Y after the box
+  doc.y = boxY + boxH + 4;
+  // Reset X back to margin (explicit x/y in text() changes doc.x)
+  doc.x = MARGIN;
+}
+
+/**
+ * Draw a colored box for before/after rewrites.
+ */
+function coloredBox(
+  doc: PDFKit.PDFDocument,
+  label: string,
+  labelColor: string,
+  body: string,
+  bgColor: string
+): void {
+  doc.font("Regular").fontSize(8);
+  const bodyH = doc.heightOfString(body, { width: CONTENT_W - 24, lineGap: 2 });
+  const boxY = doc.y;
+  const boxH = bodyH + 22;
+
+  doc.save();
+  doc.rect(MARGIN, boxY, CONTENT_W, boxH).fill(bgColor);
+  doc.restore();
+
+  doc.font("Bold").fontSize(7).fillColor(labelColor);
+  doc.text(label, MARGIN + 8, boxY + 4, { width: CONTENT_W - 16 });
+
+  doc.font("Regular").fontSize(8).fillColor(COLOR.dark);
+  doc.text(body, MARGIN + 12, boxY + 16, { width: CONTENT_W - 24, lineGap: 2 });
+
+  doc.y = boxY + boxH + 4;
+  doc.x = MARGIN;
+}
+
+/**
+ * Draw a horizontal divider line.
+ */
+function divider(doc: PDFKit.PDFDocument): void {
+  const y = doc.y;
   doc
-    .font("Regular")
-    .fontSize(10)
-    .fillColor(COLOR.dark)
-    .text(text, MARGIN, doc.y, { width: CONTENT_W, lineGap: 2 });
+    .moveTo(MARGIN, y)
+    .lineTo(PAGE_W - MARGIN, y)
+    .strokeColor(COLOR.divider)
+    .lineWidth(0.3)
+    .stroke();
+  doc.y = y + 8;
 }
 
 // ── Main generator ─────────────────────────────────────────────────────────
@@ -120,766 +189,489 @@ export async function generateContractPDF(contract: {
   }
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({
-      size: "A4",
-      margin: MARGIN,
-      bufferPages: true, // needed for footer pass
-      info: {
-        Title: contract.title || "Contract Analysis Report",
-        Author: "The Curator",
-      },
-    });
-
-    const chunks: Buffer[] = [];
-    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-
-    // Register Korean fonts
-    doc.registerFont("Regular", FONT_REGULAR);
-    doc.registerFont("Bold", FONT_BOLD);
-    doc.font("Regular");
-
-    const result = contract.result;
-    const dateStr = formatDate(contract.created_at);
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // PAGE 1: COVER / SUMMARY
-    // ═════════════════════════════════════════════════════════════════════════
-
-    // Brand header bar
-    doc.save();
-    doc.rect(0, 0, PAGE_W, 80).fill(COLOR.primary);
-    doc.restore();
-
-    doc
-      .font("Bold")
-      .fontSize(22)
-      .fillColor(COLOR.white)
-      .text("The Curator", MARGIN, 25, { width: CONTENT_W });
-
-    doc
-      .font("Regular")
-      .fontSize(12)
-      .fillColor(COLOR.white)
-      .text("Contract Analysis Report", MARGIN, 50, { width: CONTENT_W });
-
-    doc.y = 100;
-
-    // Contract title
-    doc
-      .font("Bold")
-      .fontSize(20)
-      .fillColor(COLOR.dark)
-      .text(contract.title || "Untitled Contract", MARGIN, doc.y, {
-        width: CONTENT_W,
+    try {
+      const doc = new PDFDocument({
+        size: "A4",
+        margin: MARGIN,
+        bufferPages: true,
+        info: {
+          Title: contract.title || "Contract Analysis Report",
+          Author: "The Curator",
+        },
       });
 
-    doc.y += 6;
+      const chunks: Buffer[] = [];
+      doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
 
-    // Contract type badge
-    const typeText = contract.type || result.contractType || "";
-    if (typeText) {
-      const badgeY = doc.y;
-      const badgeTextW = doc.font("Bold").fontSize(9).widthOfString(typeText);
-      const badgePadX = 10;
-      const badgeH = 18;
-      const badgeW = badgeTextW + badgePadX * 2;
+      // Register Korean fonts
+      doc.registerFont("Regular", FONT_REGULAR);
+      doc.registerFont("Bold", FONT_BOLD);
+      doc.font("Regular");
 
-      doc.save();
-      doc
-        .roundedRect(MARGIN, badgeY, badgeW, badgeH, 4)
-        .fill(COLOR.lightBg);
-      doc.restore();
+      const result = contract.result;
+      const dateStr = formatDate(contract.created_at);
 
-      doc
-        .font("Bold")
-        .fontSize(9)
-        .fillColor(COLOR.primary)
-        .text(typeText, MARGIN + badgePadX, badgeY + 5);
+      // ═══════════════════════════════════════════════════════════════════
+      // PAGE 1: COVER / SUMMARY
+      // ═══════════════════════════════════════════════════════════════════
 
-      doc.y = badgeY + badgeH + 8;
-    }
-
-    // Date
-    doc
-      .font("Regular")
-      .fontSize(10)
-      .fillColor(COLOR.muted)
-      .text(`Analyzed on ${dateStr}`, MARGIN, doc.y, { width: CONTENT_W });
-
-    doc.y += 16;
-
-    // ── Score cards row ──────────────────────────────────────────────────
-    const cardGap = 20;
-    const cardW = (CONTENT_W - cardGap) / 2;
-    const cardH = 80;
-    const cardX1 = MARGIN;
-    const cardX2 = MARGIN + cardW + cardGap;
-    const cardY = doc.y;
-
-    // Risk score card
-    doc.save();
-    doc.roundedRect(cardX1, cardY, cardW, cardH, 6).fill(COLOR.lightBg);
-    doc.restore();
-
-    doc
-      .font("Bold")
-      .fontSize(9)
-      .fillColor(COLOR.muted)
-      .text("RISK SCORE", cardX1, cardY + 10, {
-        width: cardW,
-        align: "center",
-      });
-
-    const riskScore = contract.risk_score ?? result.riskScore ?? 0;
-    const riskColor =
-      riskScore >= 70
-        ? COLOR.error
-        : riskScore >= 40
-          ? COLOR.warning
-          : COLOR.success;
-
-    doc
-      .font("Bold")
-      .fontSize(28)
-      .fillColor(riskColor)
-      .text(`${riskScore}`, cardX1, cardY + 26, {
-        width: cardW,
-        align: "center",
-      });
-
-    const riskLabel =
-      riskScore >= 70
-        ? "High Risk"
-        : riskScore >= 40
-          ? "Medium Risk"
-          : "Low Risk";
-    doc
-      .font("Regular")
-      .fontSize(9)
-      .fillColor(riskColor)
-      .text(riskLabel, cardX1, cardY + 58, {
-        width: cardW,
-        align: "center",
-      });
-
-    // Fairness score card
-    doc.save();
-    doc.roundedRect(cardX2, cardY, cardW, cardH, 6).fill(COLOR.lightBg);
-    doc.restore();
-
-    doc
-      .font("Bold")
-      .fontSize(9)
-      .fillColor(COLOR.muted)
-      .text("FAIRNESS SCORE", cardX2, cardY + 10, {
-        width: cardW,
-        align: "center",
-      });
-
-    const fairness = result.fairnessScore ?? 50;
-    const fairnessColor =
-      fairness >= 40 && fairness <= 60
-        ? COLOR.success
-        : fairness >= 25 && fairness <= 75
-          ? COLOR.warning
-          : COLOR.error;
-
-    doc
-      .font("Bold")
-      .fontSize(28)
-      .fillColor(fairnessColor)
-      .text(`${fairness}`, cardX2, cardY + 26, {
-        width: cardW,
-        align: "center",
-      });
-
-    const fairLabel =
-      fairness >= 40 && fairness <= 60
-        ? "Balanced"
-        : fairness < 40
-          ? "Favors Party A"
-          : "Favors Party B";
-    doc
-      .font("Regular")
-      .fontSize(9)
-      .fillColor(fairnessColor)
-      .text(fairLabel, cardX2, cardY + 58, {
-        width: cardW,
-        align: "center",
-      });
-
-    doc.y = cardY + cardH + 20;
-
-    // Executive summary
-    sectionHeader(doc, "Executive Summary");
-    if (result.summary) {
-      // Light gray background box for summary
-      const summaryY = doc.y;
-      const summaryHeight = doc
-        .font("Regular")
-        .fontSize(10)
-        .heightOfString(result.summary, { width: CONTENT_W - 20, lineGap: 2 });
-
-      doc.save();
-      doc
-        .roundedRect(
-          MARGIN,
-          summaryY - 4,
-          CONTENT_W,
-          summaryHeight + 16,
-          4
-        )
-        .fill(COLOR.lightBg);
-      doc.restore();
-
-      doc
-        .font("Regular")
-        .fontSize(10)
-        .fillColor(COLOR.dark)
-        .text(result.summary, MARGIN + 10, summaryY + 4, {
-          width: CONTENT_W - 20,
-          lineGap: 2,
-        });
-    }
-
-    // Fairness summary
-    if (result.fairnessSummary) {
-      doc.y += 6;
-      doc
-        .font("Regular")
-        .fontSize(9)
-        .fillColor(COLOR.muted)
-        .text(result.fairnessSummary, MARGIN, doc.y, {
-          width: CONTENT_W,
-          lineGap: 2,
-        });
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // RISK ANALYSIS
-    // ═════════════════════════════════════════════════════════════════════════
-
-    const risks = result.risks ?? [];
-    if (risks.length > 0) {
-      doc.addPage();
-
-      sectionHeader(
-        doc,
-        `Risk Analysis (${risks.length} risk${risks.length > 1 ? "s" : ""})`
-      );
-
-      for (let i = 0; i < risks.length; i++) {
-        const risk: RiskItem = risks[i];
-        ensureSpace(doc, 60);
-
-        const rowStartY = doc.y;
-
-        // Severity badge
-        const sColor = severityColor(risk.severity);
-        const sLabel = severityLabel(risk.severity);
-        const badgeTextW = doc
-          .font("Bold")
-          .fontSize(8)
-          .widthOfString(sLabel);
-        const badgePad = 8;
-        const badgeW = badgeTextW + badgePad * 2;
-        const badgeH = 14;
-
+      try {
+        // Brand header bar (absolute positioning OK for decorative rect)
         doc.save();
-        doc
-          .roundedRect(MARGIN, rowStartY, badgeW, badgeH, 3)
-          .fill(sColor);
+        doc.rect(0, 0, PAGE_W, 80).fill(COLOR.primary);
         doc.restore();
 
         doc
           .font("Bold")
-          .fontSize(8)
+          .fontSize(22)
           .fillColor(COLOR.white)
-          .text(sLabel, MARGIN + badgePad, rowStartY + 3);
+          .text("The Curator", MARGIN, 25, { width: CONTENT_W });
 
-        // Risk title (same line as badge)
         doc
-          .font("Bold")
-          .fontSize(11)
-          .fillColor(COLOR.dark)
-          .text(risk.title, MARGIN + badgeW + 8, rowStartY + 1, {
-            width: CONTENT_W - badgeW - 8,
-          });
+          .font("Regular")
+          .fontSize(12)
+          .fillColor(COLOR.white)
+          .text("Contract Analysis Report", MARGIN, 50, { width: CONTENT_W });
 
-        doc.y = Math.max(doc.y, rowStartY + badgeH) + 4;
+        // Move below header bar
+        doc.y = 100;
+        doc.x = MARGIN;
 
-        // Clause (quoted, gray background box)
-        if (risk.clause) {
-          ensureSpace(doc, 30);
-          const clauseText = `"${risk.clause}"`;
-          const clauseHeight = doc
-            .font("Regular")
-            .fontSize(9)
-            .heightOfString(clauseText, { width: CONTENT_W - 20, lineGap: 2 });
+        // Contract title — use automatic flow from here on
+        doc.font("Bold").fontSize(20).fillColor(COLOR.dark);
+        doc.text(contract.title || "Untitled Contract", { width: CONTENT_W });
+        doc.moveDown(0.3);
 
-          const clauseBoxY = doc.y;
-          doc.save();
-          doc
-            .roundedRect(
-              MARGIN,
-              clauseBoxY,
-              CONTENT_W,
-              clauseHeight + 12,
-              3
-            )
-            .fill(COLOR.lightBg);
-          doc.restore();
-
-          doc
-            .font("Regular")
-            .fontSize(9)
-            .fillColor(COLOR.muted)
-            .text(clauseText, MARGIN + 10, clauseBoxY + 6, {
-              width: CONTENT_W - 20,
-              lineGap: 2,
-            });
-
-          doc.y += 4;
+        // Contract type badge (simple text, no complex rounded rect)
+        const typeText = contract.type || result.contractType || "";
+        if (typeText) {
+          doc.font("Bold").fontSize(9).fillColor(COLOR.primary);
+          doc.text(`[ ${typeText} ]`, { width: CONTENT_W });
+          doc.moveDown(0.4);
         }
 
-        // Explanation
-        if (risk.explanation) {
-          ensureSpace(doc, 20);
-          doc
-            .font("Regular")
-            .fontSize(9)
-            .fillColor(COLOR.dark)
-            .text(risk.explanation, MARGIN, doc.y, {
-              width: CONTENT_W,
-              lineGap: 2,
-            });
-          doc.y += 4;
+        // Date
+        doc.font("Regular").fontSize(10).fillColor(COLOR.muted);
+        doc.text(`Analyzed on ${dateStr}`, { width: CONTENT_W });
+        doc.moveDown(1);
+
+        // ── Scores (simple text layout, no complex card) ──────────────
+        const riskScore = contract.risk_score ?? result.riskScore ?? 0;
+        const riskColor =
+          riskScore >= 70
+            ? COLOR.error
+            : riskScore >= 40
+              ? COLOR.warning
+              : COLOR.success;
+        const riskLabel =
+          riskScore >= 70
+            ? "High Risk"
+            : riskScore >= 40
+              ? "Medium Risk"
+              : "Low Risk";
+
+        const fairness = result.fairnessScore ?? 50;
+        const fairnessColor =
+          fairness >= 40 && fairness <= 60
+            ? COLOR.success
+            : fairness >= 25 && fairness <= 75
+              ? COLOR.warning
+              : COLOR.error;
+        const fairLabel =
+          fairness >= 40 && fairness <= 60
+            ? "Balanced"
+            : fairness < 40
+              ? "Favors Party A"
+              : "Favors Party B";
+
+        // Score cards as a gray box with text
+        const scoreBoxY = doc.y;
+        const scoreText = `Risk Score: ${riskScore}/100 (${riskLabel})    |    Fairness Score: ${fairness}/100 (${fairLabel})`;
+        doc.font("Regular").fontSize(10);
+        const scoreH = doc.heightOfString(scoreText, { width: CONTENT_W - 20 });
+        const scoreBoxH = scoreH + 16;
+
+        doc.save();
+        doc.rect(MARGIN, scoreBoxY, CONTENT_W, scoreBoxH).fill(COLOR.lightBg);
+        doc.restore();
+
+        // Risk score part
+        doc.font("Bold").fontSize(20).fillColor(riskColor);
+        doc.text(`${riskScore}`, MARGIN + 15, scoreBoxY + 8, { continued: true, width: CONTENT_W / 2 - 20 });
+        doc.font("Regular").fontSize(10).fillColor(COLOR.muted);
+        doc.text(` /100  ${riskLabel}`, { continued: false });
+
+        // Fairness score part
+        doc.font("Bold").fontSize(20).fillColor(fairnessColor);
+        doc.text(`${fairness}`, MARGIN + 15, scoreBoxY + 36, { continued: true, width: CONTENT_W / 2 - 20 });
+        doc.font("Regular").fontSize(10).fillColor(COLOR.muted);
+        doc.text(` /100  ${fairLabel}`, { continued: false });
+
+        doc.y = scoreBoxY + Math.max(scoreBoxH, 64) + 12;
+        doc.x = MARGIN;
+
+        // ── Executive Summary ─────────────────────────────────────────
+        sectionHeader(doc, "Executive Summary");
+
+        if (result.summary) {
+          grayBox(doc, result.summary, { fontSize: 10 });
         }
 
-        // General Suggestion
-        if (risk.suggestion) {
-          ensureSpace(doc, 20);
-          doc.font("Bold").fontSize(9).fillColor(COLOR.success).text("[Advice]", MARGIN, doc.y, { width: CONTENT_W });
-          doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
-          doc.y += 4;
+        // Fairness summary
+        if (result.fairnessSummary) {
+          doc.font("Regular").fontSize(9).fillColor(COLOR.muted);
+          doc.text(result.fairnessSummary, { width: CONTENT_W, lineGap: 2 });
+          doc.moveDown(0.5);
         }
+      } catch (err) {
+        console.error("[PDF] Error generating cover page:", err);
+      }
 
-        // Party A Advice
-        if (risk.suggestion_party_a) {
-          ensureSpace(doc, 20);
-          const partyAName = result.parties?.[0]?.name || "Party A";
-          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text(`[A] ${partyAName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
-          doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion_party_a, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
-          doc.y += 4;
+      // ═══════════════════════════════════════════════════════════════════
+      // RISK ANALYSIS
+      // ═══════════════════════════════════════════════════════════════════
+
+      const risks = result.risks ?? [];
+      if (risks.length > 0) {
+        try {
+          doc.addPage();
+          sectionHeader(
+            doc,
+            `Risk Analysis (${risks.length} risk${risks.length > 1 ? "s" : ""})`
+          );
+
+          for (let i = 0; i < risks.length; i++) {
+            const risk: RiskItem = risks[i];
+            ensureSpace(doc, 60);
+
+            // Severity + Title on one line
+            const sColor = severityColor(risk.severity);
+            const sLabel = severityLabel(risk.severity);
+
+            doc.font("Bold").fontSize(11).fillColor(sColor);
+            doc.text(`[${sLabel}] `, { width: CONTENT_W, continued: true });
+            doc.fillColor(COLOR.dark);
+            doc.text(risk.title, { continued: false });
+            doc.moveDown(0.3);
+
+            // Clause (gray box)
+            if (risk.clause) {
+              ensureSpace(doc, 30);
+              grayBox(doc, `"${risk.clause}"`, {
+                fontSize: 9,
+                fillColor: COLOR.muted,
+              });
+            }
+
+            // Explanation
+            if (risk.explanation) {
+              ensureSpace(doc, 20);
+              doc.font("Regular").fontSize(9).fillColor(COLOR.dark);
+              doc.text(risk.explanation, { width: CONTENT_W, lineGap: 2 });
+              doc.moveDown(0.3);
+            }
+
+            // General Suggestion / Advice
+            if (risk.suggestion) {
+              ensureSpace(doc, 20);
+              doc.font("Bold").fontSize(9).fillColor(COLOR.success);
+              doc.text("[Advice]", { width: CONTENT_W });
+              doc.font("Regular").fontSize(9).fillColor(COLOR.dark);
+              doc.text(risk.suggestion, { width: CONTENT_W, indent: 10, lineGap: 2 });
+              doc.moveDown(0.3);
+            }
+
+            // Party A Advice
+            if (risk.suggestion_party_a) {
+              ensureSpace(doc, 20);
+              const partyAName = result.parties?.[0]?.name || "Party A";
+              doc.font("Bold").fontSize(9).fillColor(COLOR.primary);
+              doc.text(`[A] ${partyAName} Advice:`, { width: CONTENT_W });
+              doc.font("Regular").fontSize(9).fillColor(COLOR.dark);
+              doc.text(risk.suggestion_party_a, { width: CONTENT_W, indent: 10, lineGap: 2 });
+              doc.moveDown(0.3);
+            }
+
+            // Party B Advice
+            if (risk.suggestion_party_b) {
+              ensureSpace(doc, 20);
+              const partyBName = result.parties?.[1]?.name || "Party B";
+              doc.font("Bold").fontSize(9).fillColor(COLOR.partyB);
+              doc.text(`[B] ${partyBName} Advice:`, { width: CONTENT_W });
+              doc.font("Regular").fontSize(9).fillColor(COLOR.dark);
+              doc.text(risk.suggestion_party_b, { width: CONTENT_W, indent: 10, lineGap: 2 });
+              doc.moveDown(0.3);
+            }
+
+            // Suggested Rewrite / Addition
+            if (risk.rewrite) {
+              ensureSpace(doc, 60);
+
+              const isAdd = risk.rewrite_type === "add";
+              doc.font("Bold").fontSize(9).fillColor(COLOR.primary);
+              doc.text(isAdd ? "Suggested Addition:" : "Suggested Rewrite:", { width: CONTENT_W });
+              doc.moveDown(0.2);
+
+              if (!isAdd && risk.clause) {
+                // BEFORE box
+                ensureSpace(doc, 30);
+                coloredBox(doc, "BEFORE (Original)", COLOR.error, risk.clause, "#fff5f5");
+              }
+
+              // AFTER — Balanced
+              ensureSpace(doc, 30);
+              coloredBox(doc, isAdd ? "NEW CLAUSE (Balanced)" : "AFTER (Balanced)", COLOR.success, risk.rewrite, "#f0f4ff");
+
+              // Party A version
+              if (risk.rewrite_party_a) {
+                ensureSpace(doc, 30);
+                const paName = result.parties?.[0]?.name || "Party A";
+                coloredBox(doc, isAdd ? `NEW CLAUSE (Favors ${paName})` : `AFTER (Favors ${paName})`, COLOR.primary, risk.rewrite_party_a, "#f5f5ff");
+              }
+
+              // Party B version
+              if (risk.rewrite_party_b) {
+                ensureSpace(doc, 30);
+                const pbName = result.parties?.[1]?.name || "Party B";
+                coloredBox(doc, isAdd ? `NEW CLAUSE (Favors ${pbName})` : `AFTER (Favors ${pbName})`, COLOR.partyB, risk.rewrite_party_b, "#faf5ff");
+              }
+            }
+
+            // Divider between risks
+            if (i < risks.length - 1) {
+              ensureSpace(doc, 12);
+              doc.moveDown(0.3);
+              divider(doc);
+            }
+          }
+        } catch (err) {
+          console.error("[PDF] Error generating risk analysis:", err);
         }
+      }
 
-        // Party B Advice
-        if (risk.suggestion_party_b) {
-          ensureSpace(doc, 20);
-          const partyBName = result.parties?.[1]?.name || "Party B";
-          doc.font("Bold").fontSize(9).fillColor("#6B4C9A").text(`[B] ${partyBName} Advice:`, MARGIN, doc.y, { width: CONTENT_W });
-          doc.font("Regular").fontSize(9).fillColor(COLOR.dark).text(risk.suggestion_party_b, MARGIN + 10, doc.y, { width: CONTENT_W - 10, lineGap: 2 });
-          doc.y += 4;
-        }
+      // ═══════════════════════════════════════════════════════════════════
+      // KEY DATES
+      // ═══════════════════════════════════════════════════════════════════
 
-        // Suggested Rewrite — Before/After with all 3 versions
-        if (risk.rewrite && risk.clause) {
-          ensureSpace(doc, 60);
+      const keyDates = result.keyDates ?? [];
+      if (keyDates.length > 0) {
+        try {
+          doc.addPage();
+          sectionHeader(doc, "Key Dates");
 
-          doc.font("Bold").fontSize(9).fillColor(COLOR.primary).text("Suggested Rewrite", MARGIN, doc.y, { width: CONTENT_W });
-          doc.y += 2;
+          for (const kd of keyDates) {
+            ensureSpace(doc, 20);
 
-          // Before (original clause)
-          const beforeH = doc.font("Regular").fontSize(8).heightOfString(risk.clause, { width: CONTENT_W - 24, lineGap: 2 });
-          const beforeY = doc.y;
-          doc.save();
-          doc.roundedRect(MARGIN, beforeY, CONTENT_W, beforeH + 20, 3).fill("#fff5f5");
-          doc.restore();
-          doc.font("Bold").fontSize(7).fillColor(COLOR.error).text("X BEFORE (Original)", MARGIN + 8, beforeY + 4, { width: CONTENT_W - 16 });
-          doc.font("Regular").fontSize(8).fillColor(COLOR.muted).text(risk.clause, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
-          doc.y += 4;
+            const impColor =
+              kd.importance === "critical" ? COLOR.error : COLOR.muted;
+            const impTag =
+              kd.importance === "critical" ? "[CRITICAL]" : "[Notable]";
 
-          // After — Balanced
-          const afterH = doc.font("Regular").fontSize(8).heightOfString(risk.rewrite, { width: CONTENT_W - 24, lineGap: 2 });
-          const afterY = doc.y;
-          doc.save();
-          doc.roundedRect(MARGIN, afterY, CONTENT_W, afterH + 20, 3).fill("#f0f4ff");
-          doc.restore();
-          doc.font("Bold").fontSize(7).fillColor(COLOR.success).text("V AFTER (Balanced)", MARGIN + 8, afterY + 4, { width: CONTENT_W - 16 });
-          doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
-          doc.y += 4;
+            doc.font("Bold").fontSize(9).fillColor(impColor);
+            doc.text(impTag, { width: CONTENT_W, continued: true });
 
-          // Party A version
-          if (risk.rewrite_party_a) {
-            ensureSpace(doc, 30);
-            const paH = doc.font("Regular").fontSize(8).heightOfString(risk.rewrite_party_a, { width: CONTENT_W - 24, lineGap: 2 });
-            const paY = doc.y;
-            doc.save();
-            doc.roundedRect(MARGIN, paY, CONTENT_W, paH + 20, 3).fill("#f5f5ff");
-            doc.restore();
-            const paName = result.parties?.[0]?.name || "Party A";
-            doc.font("Bold").fontSize(7).fillColor(COLOR.primary).text(`V AFTER (Favors ${paName})`, MARGIN + 8, paY + 4, { width: CONTENT_W - 16 });
-            doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite_party_a, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
-            doc.y += 4;
+            doc.font("Bold").fontSize(9).fillColor(COLOR.dark);
+            doc.text(` ${kd.label}: `, { continued: true });
+
+            doc.font("Regular").fontSize(9).fillColor(COLOR.muted);
+            doc.text(kd.date, { continued: false });
+
+            doc.moveDown(0.3);
           }
 
-          // Party B version
-          if (risk.rewrite_party_b) {
-            ensureSpace(doc, 30);
-            const pbH = doc.font("Regular").fontSize(8).heightOfString(risk.rewrite_party_b, { width: CONTENT_W - 24, lineGap: 2 });
-            const pbY = doc.y;
-            doc.save();
-            doc.roundedRect(MARGIN, pbY, CONTENT_W, pbH + 20, 3).fill("#faf5ff");
-            doc.restore();
-            const pbName = result.parties?.[1]?.name || "Party B";
-            doc.font("Bold").fontSize(7).fillColor("#6B4C9A").text(`V AFTER (Favors ${pbName})`, MARGIN + 8, pbY + 4, { width: CONTENT_W - 16 });
-            doc.font("Regular").fontSize(8).fillColor(COLOR.dark).text(risk.rewrite_party_b, MARGIN + 12, doc.y + 2, { width: CONTENT_W - 24, lineGap: 2 });
-            doc.y += 6;
-          }
+          doc.moveDown(1);
+        } catch (err) {
+          console.error("[PDF] Error generating key dates:", err);
         }
+      }
 
-        // Divider between risks
-        if (i < risks.length - 1) {
-          ensureSpace(doc, 12);
-          const divY = doc.y + 2;
+      // ═══════════════════════════════════════════════════════════════════
+      // FINANCIAL OBLIGATIONS
+      // ═══════════════════════════════════════════════════════════════════
+
+      const financials = result.financialObligations ?? [];
+      if (financials.length > 0) {
+        try {
+          ensureSpace(doc, 80);
+          sectionHeader(doc, "Financial Obligations");
+
+          for (const fo of financials) {
+            ensureSpace(doc, 30);
+
+            doc.font("Bold").fontSize(9).fillColor(COLOR.dark);
+            doc.text(fo.description, { width: CONTENT_W });
+
+            const details: string[] = [];
+            if (fo.amount) details.push(`Amount: ${fo.amount}`);
+            if (fo.party) details.push(`Party: ${fo.party}`);
+            if (fo.condition) details.push(`Condition: ${fo.condition}`);
+
+            doc.font("Regular").fontSize(8).fillColor(COLOR.muted);
+            doc.text(details.join("  |  "), { width: CONTENT_W, indent: 10 });
+            doc.moveDown(0.5);
+          }
+
+          doc.moveDown(0.5);
+        } catch (err) {
+          console.error("[PDF] Error generating financial obligations:", err);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // MISSING CLAUSES
+      // ═══════════════════════════════════════════════════════════════════
+
+      const missing = result.missingClauses ?? [];
+      if (missing.length > 0) {
+        try {
+          doc.addPage();
+          sectionHeader(doc, "Missing Clauses");
+
+          for (const mc of missing) {
+            ensureSpace(doc, 40);
+
+            const impColor =
+              mc.importance === "high" ? COLOR.error : COLOR.warning;
+            const impTag = mc.importance === "high" ? "[HIGH]" : "[MEDIUM]";
+
+            doc.font("Bold").fontSize(10).fillColor(impColor);
+            doc.text(impTag, { width: CONTENT_W, continued: true });
+
+            doc.fillColor(COLOR.dark);
+            doc.text(` ${mc.title}`, { continued: false });
+
+            doc.font("Regular").fontSize(9).fillColor(COLOR.muted);
+            doc.text(mc.reason, { width: CONTENT_W, indent: 10, lineGap: 2 });
+            doc.moveDown(0.5);
+          }
+
+          doc.moveDown(0.5);
+        } catch (err) {
+          console.error("[PDF] Error generating missing clauses:", err);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // ACTION ITEMS
+      // ═══════════════════════════════════════════════════════════════════
+
+      const actions = result.actionItems ?? [];
+      if (actions.length > 0) {
+        try {
+          ensureSpace(doc, 80);
+          sectionHeader(doc, "Action Items");
+
+          // Sort by priority: high -> medium -> low
+          const priorityOrder: Record<string, number> = {
+            high: 0,
+            medium: 1,
+            low: 2,
+          };
+          const sorted = [...actions].sort(
+            (a, b) =>
+              (priorityOrder[a.priority] ?? 2) -
+              (priorityOrder[b.priority] ?? 2)
+          );
+
+          for (const ai of sorted) {
+            ensureSpace(doc, 30);
+
+            const pColor = severityColor(ai.priority);
+
+            doc.font("Bold").fontSize(9).fillColor(pColor);
+            doc.text(`[${priorityLabel(ai.priority)}] `, { width: CONTENT_W, continued: true });
+
+            doc.fillColor(COLOR.dark);
+            doc.text(ai.action, { continued: false });
+
+            // Meta line
+            const meta: string[] = [];
+            if (ai.party) meta.push(`Party: ${ai.party}`);
+            if (ai.deadline) meta.push(`Deadline: ${ai.deadline}`);
+
+            if (meta.length > 0) {
+              doc.font("Regular").fontSize(8).fillColor(COLOR.muted);
+              doc.text(meta.join("  |  "), { width: CONTENT_W, indent: 10 });
+            }
+
+            doc.moveDown(0.5);
+          }
+        } catch (err) {
+          console.error("[PDF] Error generating action items:", err);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // FOOTERS (drawn on every page using buffered pages)
+      // ═══════════════════════════════════════════════════════════════════
+
+      try {
+        const totalPages = doc.bufferedPageRange().count;
+        for (let i = 0; i < totalPages; i++) {
+          doc.switchToPage(i);
+
+          // Footer line
           doc
-            .moveTo(MARGIN, divY)
-            .lineTo(PAGE_W - MARGIN, divY)
-            .strokeColor(COLOR.divider)
+            .moveTo(MARGIN, FOOTER_Y)
+            .lineTo(PAGE_W - MARGIN, FOOTER_Y)
+            .strokeColor(COLOR.dividerLight)
             .lineWidth(0.3)
             .stroke();
-          doc.y = divY + 10;
-        }
-      }
-    }
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // KEY DATES & FINANCIAL OBLIGATIONS
-    // ═════════════════════════════════════════════════════════════════════════
-
-    const keyDates = result.keyDates ?? [];
-    const financials = result.financialObligations ?? [];
-
-    if (keyDates.length > 0 || financials.length > 0) {
-      doc.addPage();
-
-      // Key Dates table
-      if (keyDates.length > 0) {
-        sectionHeader(doc, "Key Dates");
-
-        const col1 = MARGIN;
-        const col2W = 150;
-        const col3W = 100;
-        const col1W = CONTENT_W - col2W - col3W;
-        const col2 = MARGIN + col1W;
-        const col3 = col2 + col2W;
-        const rowH = 22;
-
-        // Table header
-        const headerY = doc.y;
-        doc.save();
-        doc
-          .roundedRect(MARGIN, headerY, CONTENT_W, rowH, 3)
-          .fill(COLOR.primary);
-        doc.restore();
-
-        doc.font("Bold").fontSize(8).fillColor(COLOR.white);
-        doc.text("LABEL", col1 + 8, headerY + 7);
-        doc.text("DATE", col2 + 8, headerY + 7);
-        doc.text("IMPORTANCE", col3 + 8, headerY + 7);
-        doc.y = headerY + rowH;
-
-        for (const kd of keyDates) {
-          ensureSpace(doc, 20);
-          const ry = doc.y + 2;
-
-          doc.font("Regular").fontSize(9).fillColor(COLOR.dark);
-          doc.text(kd.label, col1 + 8, ry, { width: col1W - 12 });
-          doc.text(kd.date, col2 + 8, ry, { width: col2W - 12 });
-
-          const impColor =
-            kd.importance === "critical" ? COLOR.error : COLOR.muted;
-          const impText =
-            kd.importance === "critical" ? "Critical" : "Notable";
-          doc.font("Bold").fontSize(9).fillColor(impColor);
-          doc.text(impText, col3 + 8, ry, { width: col3W - 12 });
-
-          doc.y = ry + 14;
-
-          // Row divider
-          doc
-            .moveTo(MARGIN, doc.y)
-            .lineTo(PAGE_W - MARGIN, doc.y)
-            .strokeColor(COLOR.divider)
-            .lineWidth(0.2)
-            .stroke();
-
-          doc.y += 2;
-        }
-
-        doc.y += 12;
-      }
-
-      // Financial Obligations table
-      if (financials.length > 0) {
-        sectionHeader(doc, "Financial Obligations");
-
-        const fCol1W = 140;
-        const fCol2W = 100;
-        const fCol3W = 80;
-        const fCol4W = CONTENT_W - fCol1W - fCol2W - fCol3W;
-        const fCol1 = MARGIN;
-        const fCol2 = fCol1 + fCol1W;
-        const fCol3 = fCol2 + fCol2W;
-        const fCol4 = fCol3 + fCol3W;
-        const rowH = 22;
-
-        // Table header
-        const headerY = doc.y;
-        doc.save();
-        doc
-          .roundedRect(MARGIN, headerY, CONTENT_W, rowH, 3)
-          .fill(COLOR.primary);
-        doc.restore();
-
-        doc.font("Bold").fontSize(8).fillColor(COLOR.white);
-        doc.text("DESCRIPTION", fCol1 + 8, headerY + 7);
-        doc.text("AMOUNT", fCol2 + 8, headerY + 7);
-        doc.text("PARTY", fCol3 + 8, headerY + 7);
-        doc.text("CONDITION", fCol4 + 8, headerY + 7);
-        doc.y = headerY + rowH;
-
-        for (const fo of financials) {
-          ensureSpace(doc, 30);
-          const ry = doc.y + 2;
-
-          doc.font("Regular").fontSize(8).fillColor(COLOR.dark);
-
-          // Calculate heights to handle wrapping
-          const descH = doc.heightOfString(fo.description, {
-            width: fCol1W - 16,
-          });
-          const amtH = doc.heightOfString(fo.amount, {
-            width: fCol2W - 16,
-          });
-          const condText = fo.condition || "-";
-          const condH = doc.heightOfString(condText, {
-            width: fCol4W - 16,
-          });
-          const maxH = Math.max(descH, amtH, condH, 12);
-
-          doc.text(fo.description, fCol1 + 8, ry, { width: fCol1W - 16 });
-          doc.text(fo.amount, fCol2 + 8, ry, { width: fCol2W - 16 });
-          doc.text(fo.party, fCol3 + 8, ry, { width: fCol3W - 16 });
-          doc.text(condText, fCol4 + 8, ry, { width: fCol4W - 16 });
-
-          doc.y = ry + maxH + 6;
-
-          // Row divider
-          doc
-            .moveTo(MARGIN, doc.y)
-            .lineTo(PAGE_W - MARGIN, doc.y)
-            .strokeColor(COLOR.divider)
-            .lineWidth(0.2)
-            .stroke();
-
-          doc.y += 2;
-        }
-
-        doc.y += 12;
-      }
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // MISSING CLAUSES & ACTION ITEMS
-    // ═════════════════════════════════════════════════════════════════════════
-
-    const missing = result.missingClauses ?? [];
-    const actions = result.actionItems ?? [];
-
-    if (missing.length > 0 || actions.length > 0) {
-      doc.addPage();
-
-      // Missing Clauses
-      if (missing.length > 0) {
-        sectionHeader(doc, "Missing Clauses");
-
-        for (const mc of missing) {
-          ensureSpace(doc, 40);
-
-          const mcY = doc.y;
-
-          // Importance badge
-          const impColor =
-            mc.importance === "high" ? COLOR.error : COLOR.warning;
-          const impLabel = mc.importance === "high" ? "HIGH" : "MEDIUM";
-          const impTextW = doc
-            .font("Bold")
-            .fontSize(7)
-            .widthOfString(impLabel);
-          const impBadgeW = impTextW + 10;
-          const impBadgeH = 13;
-
-          doc.save();
-          doc
-            .roundedRect(MARGIN, mcY, impBadgeW, impBadgeH, 3)
-            .fill(impColor);
-          doc.restore();
-
-          doc
-            .font("Bold")
-            .fontSize(7)
-            .fillColor(COLOR.white)
-            .text(impLabel, MARGIN + 5, mcY + 3);
-
-          // Title
-          doc
-            .font("Bold")
-            .fontSize(10)
-            .fillColor(COLOR.dark)
-            .text(mc.title, MARGIN + impBadgeW + 8, mcY + 1, {
-              width: CONTENT_W - impBadgeW - 8,
-            });
-
-          doc.y = Math.max(doc.y, mcY + impBadgeH) + 4;
-
-          // Reason
+          // Page number (left)
           doc
             .font("Regular")
-            .fontSize(9)
+            .fontSize(7)
             .fillColor(COLOR.muted)
-            .text(mc.reason, MARGIN, doc.y, {
-              width: CONTENT_W,
-              lineGap: 2,
+            .text(`Page ${i + 1} of ${totalPages}`, MARGIN, FOOTER_Y + 6, {
+              width: CONTENT_W / 3,
+              align: "left",
+              lineBreak: false,
             });
 
-          doc.y += 8;
-        }
-
-        doc.y += 6;
-      }
-
-      // Action Items
-      if (actions.length > 0) {
-        // Sort by priority: high -> medium -> low
-        const priorityOrder: Record<string, number> = {
-          high: 0,
-          medium: 1,
-          low: 2,
-        };
-        const sorted = [...actions].sort(
-          (a, b) =>
-            (priorityOrder[a.priority] ?? 2) -
-            (priorityOrder[b.priority] ?? 2)
-        );
-
-        sectionHeader(doc, "Action Items");
-
-        for (const ai of sorted) {
-          ensureSpace(doc, 30);
-
-          const aiY = doc.y;
-
-          // Priority indicator circle
-          const pColor = severityColor(ai.priority);
-          doc.save();
-          doc.circle(MARGIN + 5, aiY + 4, 4).fill(pColor);
-          doc.restore();
-
-          // Action text
-          doc
-            .font("Bold")
-            .fontSize(9)
-            .fillColor(COLOR.dark)
-            .text(ai.action, MARGIN + 16, aiY, {
-              width: CONTENT_W - 16,
-              lineGap: 2,
-            });
-
-          // Meta line (party, deadline, priority)
-          const meta: string[] = [];
-          if (ai.party) meta.push(`Party: ${ai.party}`);
-          if (ai.deadline) meta.push(`Deadline: ${ai.deadline}`);
-          meta.push(`Priority: ${priorityLabel(ai.priority)}`);
-
+          // Generated by (center)
           doc
             .font("Regular")
-            .fontSize(8)
+            .fontSize(7)
             .fillColor(COLOR.muted)
-            .text(meta.join("  |  "), MARGIN + 16, doc.y + 2, {
-              width: CONTENT_W - 16,
-            });
+            .text(
+              `Generated by The Curator \u00B7 ${dateStr}`,
+              MARGIN + CONTENT_W / 3,
+              FOOTER_Y + 6,
+              {
+                width: CONTENT_W / 3,
+                align: "center",
+                lineBreak: false,
+              }
+            );
 
-          doc.y += 10;
+          // Disclaimer (right)
+          doc
+            .font("Regular")
+            .fontSize(7)
+            .fillColor(COLOR.muted)
+            .text(
+              "For informational purposes only \u2014 not legal advice.",
+              MARGIN + (CONTENT_W * 2) / 3,
+              FOOTER_Y + 6,
+              {
+                width: CONTENT_W / 3,
+                align: "right",
+                lineBreak: false,
+              }
+            );
         }
+      } catch (err) {
+        console.error("[PDF] Error generating footers:", err);
       }
+
+      // Finalize
+      doc.end();
+    } catch (err) {
+      console.error("[PDF] Fatal error generating PDF:", err);
+      reject(err);
     }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // FOOTERS (drawn on every page using buffered pages)
-    // ═════════════════════════════════════════════════════════════════════════
-
-    const totalPages = doc.bufferedPageRange().count;
-    for (let i = 0; i < totalPages; i++) {
-      doc.switchToPage(i);
-
-      const footerY = PAGE_H - 40;
-
-      // Footer line
-      doc
-        .moveTo(MARGIN, footerY)
-        .lineTo(PAGE_W - MARGIN, footerY)
-        .strokeColor(COLOR.dividerLight)
-        .lineWidth(0.3)
-        .stroke();
-
-      // Page number (left)
-      doc
-        .font("Regular")
-        .fontSize(7)
-        .fillColor(COLOR.muted)
-        .text(`Page ${i + 1} of ${totalPages}`, MARGIN, footerY + 6, {
-          width: CONTENT_W / 3,
-          align: "left",
-          lineBreak: false,
-        });
-
-      // Generated by (center)
-      doc
-        .font("Regular")
-        .fontSize(7)
-        .fillColor(COLOR.muted)
-        .text(
-          `Generated by The Curator \u00B7 ${dateStr}`,
-          MARGIN + CONTENT_W / 3,
-          footerY + 6,
-          {
-            width: CONTENT_W / 3,
-            align: "center",
-            lineBreak: false,
-          }
-        );
-
-      // Disclaimer (right)
-      doc
-        .font("Regular")
-        .fontSize(7)
-        .fillColor(COLOR.muted)
-        .text(
-          "For informational purposes only \u2014 not legal advice.",
-          MARGIN + (CONTENT_W * 2) / 3,
-          footerY + 6,
-          {
-            width: CONTENT_W / 3,
-            align: "right",
-            lineBreak: false,
-          }
-        );
-    }
-
-    // Finalize
-    doc.end();
   });
 }
