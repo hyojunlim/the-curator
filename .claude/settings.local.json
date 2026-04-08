@@ -71,7 +71,20 @@
       "Bash(taskkill /F /PID 190248)",
       "Bash(powershell -Command \"Stop-Process -Id 190248 -Force\")",
       "Bash(npx vercel:*)",
-      "Bash(curl -s -X POST http://localhost:3000/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"\"plan\"\":\"\"pro\"\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"\"plan\"\":\"\"pro\"\"}')",
+      "Bash(find 'C:\\\\Users\\\\임효준\\\\Desktop\\\\업무\\\\기타\\\\AI Contract Simplifier' -type f -name favicon*)",
+      "Bash(grep -r \"AIzaSy\\\\|sk_test\\\\|pk_test\\\\|eyJ\" /c/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -r NEXT_PUBLIC /c/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"window.location\\\\|eval\\\\|innerHTML\\\\|dangerouslySetInnerHTML\" '/c/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/src' --include=*.tsx --include=*.ts)",
+      "Bash(grep \"use client\" \"C:\\\\Users\\\\임효준\\\\Desktop\\\\업무\\\\기타\\\\AI Contract Simplifier\\\\src\\\\app\"/*.tsx)",
+      "Bash(grep -E \"\\\\.tsx$|^[a-z].*\")",
+      "Bash(vercel --version)",
+      "Bash(vercel --prod --yes)",
+      "Bash(mkdir -p \"C:/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/.claude/skills/add-api-route\")",
+      "Bash(mkdir -p \"C:/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/.claude/skills/add-page\")",
+      "Bash(mkdir -p \"C:/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/.claude/skills/add-component\")",
+      "Bash(mkdir -p \"C:/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/.claude/skills/add-migration\")",
+      "Bash(mkdir -p \"C:/Users/임효준/Desktop/업무/기타/AI Contract Simplifier/.claude/skills/check-plan-gate\")"
     ]
   }
 }

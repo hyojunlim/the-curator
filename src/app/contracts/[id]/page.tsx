@@ -24,9 +24,10 @@ interface ContractDetail {
   status: string;
   risk_score: number;
   risk_high: boolean;
-  result: AnalysisResult;
+  result: AnalysisResult | null;
   created_at: string;
   tags: string[];
+  error_message?: string;
 }
 
 type PerspectiveView = "none" | "party_a" | "party_b";
@@ -44,6 +45,7 @@ export default function ContractDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [perspective, setPerspective] = useState<PerspectiveView>("none");
+  const [retrying, setRetrying] = useState(false);
   const { sub } = useSubscription();
   const isPro = sub?.plan === "pro" || sub?.plan === "business";
 
@@ -54,13 +56,35 @@ export default function ContractDetailPage() {
       .catch(() => { setLoading(false); setNotFound(true); });
   }, [id, router]);
 
+  // Poll for status updates when PENDING or PROCESSING
+  useEffect(() => {
+    if (!contract || (contract.status !== "PENDING" && contract.status !== "PROCESSING")) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/contracts/${id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setContract(data);
+        setTags(data.tags ?? []);
+        if (data.status === "COMPLETE" || data.status === "FAILED") {
+          clearInterval(interval);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [contract?.status, id]);
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   }
 
   function handleShare() {
-    if (!contract) return;
+    if (!contract || !contract.result) return;
     const lang = contract.result.language || "English";
     const text = [
       `=== ${t(lang, "pdfReportTitle")}: ${contract.title} ===`,
@@ -174,8 +198,28 @@ export default function ContractDetailPage() {
     );
   }
 
-  const { result, risk_score, risk_high, title, status, type, created_at } = contract;
-  const lang = result.language || "English";
+  const { risk_score, risk_high, title, status: contractStatus, type, created_at } = contract;
+  const result = contract.result;
+  const lang = result?.language || "English";
+
+  // Handle retry for failed analyses
+  async function handleRetry() {
+    if (!contract) return;
+    setRetrying(true);
+    try {
+      const res = await fetch("/api/analyze/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contractId: contract.id, language: lang }),
+      });
+      if (res.ok) {
+        setContract({ ...contract, status: "PROCESSING", error_message: undefined });
+      }
+    } catch {
+      // ignore
+    }
+    setRetrying(false);
+  }
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
@@ -197,6 +241,76 @@ export default function ContractDetailPage() {
           <span className="text-on-surface font-medium">{title}</span>
         </div>
 
+        {/* PENDING / PROCESSING state */}
+        {(contractStatus === "PENDING" || contractStatus === "PROCESSING") && (
+          <div className="max-w-lg mx-auto text-center py-20">
+            <div className="w-20 h-20 bg-primary-fixed/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </div>
+            <h2 className="font-headline font-extrabold text-xl text-on-surface mb-2">
+              {tr("contractDetail.analyzingTitle") || "Analyzing your contract..."}
+            </h2>
+            <p className="text-sm text-on-surface-variant mb-8">
+              {tr("contractDetail.analyzingDesc") || "Our AI is reviewing clauses, identifying risks, and generating recommendations. This usually takes 30-60 seconds."}
+            </p>
+
+            {/* Animated step indicators */}
+            <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm text-left max-w-sm mx-auto">
+              <AnalysisSteps status={contractStatus} />
+            </div>
+          </div>
+        )}
+
+        {/* FAILED state */}
+        {contractStatus === "FAILED" && (
+          <div className="max-w-lg mx-auto text-center py-20">
+            <div className="w-20 h-20 bg-error-container/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <span className="material-symbols-outlined text-error text-[40px]">error</span>
+            </div>
+            <h2 className="font-headline font-extrabold text-xl text-on-surface mb-2">
+              {tr("contractDetail.analysisFailed") || "Analysis Failed"}
+            </h2>
+            <p className="text-sm text-on-surface-variant mb-4">
+              {contract.error_message || tr("contractDetail.analysisFailedDesc") || "Something went wrong during analysis. Please try again."}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handleRetry}
+                disabled={retrying}
+                className="btn-primary-gradient text-white px-6 py-3 rounded-lg font-headline font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              >
+                {retrying ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {tr("contractDetail.retrying") || "Retrying..."}
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">refresh</span>
+                    {tr("contractDetail.tryAgain") || "Try Again"}
+                  </>
+                )}
+              </button>
+              <Link
+                href="/analyze"
+                className="border border-outline-variant/30 text-on-surface-variant px-6 py-3 rounded-lg font-headline font-bold text-sm hover:bg-surface-container-low transition-colors flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                {tr("contractDetail.reAnalyze") || "New Analysis"}
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* COMPLETE state — full results */}
+        {contractStatus === "COMPLETE" && result && (
+          <>
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -207,7 +321,7 @@ export default function ContractDetailPage() {
               <div className="flex items-center gap-2">
                 <h1 className="font-headline font-extrabold text-xl text-on-surface">{title}</h1>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-fixed/30 text-primary">
-                  {status}
+                  {contractStatus}
                 </span>
               </div>
               <p className="text-sm text-on-surface-variant mt-0.5">{type}</p>
@@ -501,9 +615,72 @@ export default function ContractDetailPage() {
             )}
           </div>
         </div>
+          </>
+        )}
       </div>
 
       <AppFooter />
+    </div>
+  );
+}
+
+/** Animated analysis steps for PENDING/PROCESSING */
+function AnalysisSteps({ status }: { status: string }) {
+  const { t: tr } = useTranslation();
+  const STEPS = [
+    { label: tr("contractDetail.stepUploading") || "Uploading document", icon: "upload_file" },
+    { label: tr("contractDetail.stepExtracting") || "Extracting text", icon: "text_snippet" },
+    { label: tr("contractDetail.stepAnalyzing") || "Analyzing clauses", icon: "policy" },
+    { label: tr("contractDetail.stepScoring") || "Scoring risks", icon: "assessment" },
+    { label: tr("contractDetail.stepGenerating") || "Generating report", icon: "summarize" },
+  ];
+
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    // Start at step 1 if already processing
+    if (status === "PROCESSING") setCurrentStep(2);
+
+    const interval = setInterval(() => {
+      setCurrentStep((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [status]);
+
+  return (
+    <div className="space-y-3">
+      {STEPS.map((step, i) => {
+        const isDone = i < currentStep;
+        const isActive = i === currentStep;
+        return (
+          <div key={i} className="flex items-center gap-3">
+            {isDone ? (
+              <span className="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+            ) : isActive ? (
+              <svg className="w-5 h-5 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <span className="material-symbols-outlined text-on-surface-variant/30 text-[20px]">radio_button_unchecked</span>
+            )}
+            <div className="flex items-center gap-2">
+              <span className={`material-symbols-outlined text-[16px] ${isDone ? "text-secondary" : isActive ? "text-primary" : "text-on-surface-variant/40"}`}>
+                {step.icon}
+              </span>
+              <span className={`text-sm ${isDone ? "text-secondary font-medium" : isActive ? "text-on-surface font-semibold" : "text-on-surface-variant/50"}`}>
+                {step.label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+      <div className="mt-4 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+        <div
+          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
+          style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+        />
+      </div>
     </div>
   );
 }

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { analyzeContract, analyzeContractFromPDF } from "@/lib/gemini";
 import { extractPDF, extractDOCX } from "@/lib/extractors";
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { checkUsage, incrementUsage } from "@/lib/subscription";
-import { ALLOWED_LANGUAGES, FREE_LANGUAGES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_WORD_COUNT, PLAN_FEATURES } from "@/lib/config";
+import { checkUsage } from "@/lib/subscription";
+import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_WORD_COUNT, PLAN_FEATURES } from "@/lib/config";
 
 export const runtime = "nodejs";
-export const maxDuration = 120; // Allow up to 120s for Gemini API calls (expanded prompt)
+export const maxDuration = 30; // Only text extraction now — fast
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,6 +39,7 @@ export async function POST(req: NextRequest) {
 
     let contractText = "";
     let fileName = "Pasted Text";
+    let pdfBase64: string | null = null;
     const contentType = req.headers.get("content-type") ?? "";
 
     // Determine allowed languages based on plan
@@ -90,7 +90,6 @@ export async function POST(req: NextRequest) {
 
       const buffer = Buffer.from(await file.arrayBuffer());
       const lowerName = file.name.toLowerCase();
-      let pdfFallbackBuffer: Buffer | null = null;
 
       if (lowerName.endsWith(".pdf")) {
         try {
@@ -99,9 +98,10 @@ export async function POST(req: NextRequest) {
           console.error("[/api/analyze] PDF extraction failed, using vision fallback:", extractErr);
           contractText = "";
         }
-        // If text extraction fails (scanned/image PDF), we'll use Gemini's vision
+        // If text extraction fails (scanned/image PDF), store base64 for vision fallback
         if (!contractText || contractText.trim().length < 50) {
-          pdfFallbackBuffer = buffer;
+          pdfBase64 = buffer.toString("base64");
+          contractText = ""; // Will use vision in process route
         }
       } else if (lowerName.endsWith(".docx")) {
         try {
@@ -116,48 +116,6 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-
-      // If we have a scanned PDF, send it directly to Gemini Vision
-      if (pdfFallbackBuffer) {
-        const result = await analyzeContractFromPDF(pdfFallbackBuffer, language);
-        result.language = language;
-
-        const aiScore = typeof result.riskScore === "number" ? result.riskScore : null;
-        const highCount = result.risks.filter((r) => r.severity === "high").length;
-        const medCount = result.risks.filter((r) => r.severity === "medium").length;
-        const riskScore = aiScore !== null
-          ? Math.max(0, Math.min(100, aiScore))
-          : Math.min(100, highCount * 20 + medCount * 10 + result.risks.length * 2);
-        const riskHigh = riskScore >= 60;
-
-        let savedId: string | null = null;
-        try {
-          const { data, error: dbError } = await supabaseAdmin
-            .from("contracts")
-            .insert({
-              user_id: userId,
-              title: fileName,
-              parties: "",
-              type: result.contractType || "General Contract",
-              status: "COMPLETE",
-              risk_score: riskScore,
-              risk_high: riskHigh,
-              result,
-            })
-            .select("id")
-            .single();
-          if (dbError) console.error("[/api/analyze] Supabase insert error:", dbError.message);
-          savedId = data?.id ?? null;
-        } catch (dbErr) {
-          console.error("[/api/analyze] Supabase insert exception:", dbErr);
-        }
-
-        if (usage.plan !== "business") {
-          await incrementUsage(userId);
-        }
-
-        return NextResponse.json({ ...result, riskScore, riskHigh, savedId });
-      }
     } else {
       const body = await req.json();
       contractText = (body.text ?? "").trim();
@@ -166,7 +124,8 @@ export async function POST(req: NextRequest) {
       fileName = contractText.slice(0, 60).replace(/\s+/g, " ").trim() + "...";
     }
 
-    if (!contractText || contractText.length < 50) {
+    // For non-vision cases, validate text length
+    if (!pdfBase64 && (!contractText || contractText.length < 50)) {
       return NextResponse.json(
         { error: "Contract text is too short or empty. Please provide more content." },
         { status: 400 }
@@ -174,53 +133,39 @@ export async function POST(req: NextRequest) {
     }
 
     // Truncate to ~15,000 words
-    const words = contractText.split(/\s+/);
-    if (words.length > MAX_WORD_COUNT) {
-      contractText = words.slice(0, MAX_WORD_COUNT).join(" ") + "\n[... document truncated for analysis ...]";
+    if (contractText) {
+      const words = contractText.split(/\s+/);
+      if (words.length > MAX_WORD_COUNT) {
+        contractText = words.slice(0, MAX_WORD_COUNT).join(" ") + "\n[... document truncated for analysis ...]";
+      }
     }
 
-    const result = await analyzeContract(contractText, language);
-    result.language = language;
+    // Save contract with PENDING status
+    const { data, error: dbError } = await supabaseAdmin
+      .from("contracts")
+      .insert({
+        user_id: userId,
+        title: fileName,
+        parties: "",
+        type: "Pending Analysis",
+        status: "PENDING",
+        risk_score: 0,
+        risk_high: false,
+        contract_text: contractText || null,
+        pdf_base64: pdfBase64 || null,
+        result: null,
+      })
+      .select("id")
+      .single();
 
-    // Use AI-generated risk score; fallback to calculation only if missing
-    const aiScore = typeof result.riskScore === "number" ? result.riskScore : null;
-    const highCount = result.risks.filter((r) => r.severity === "high").length;
-    const medCount = result.risks.filter((r) => r.severity === "medium").length;
-    const riskScore = aiScore !== null
-      ? Math.max(0, Math.min(100, aiScore))
-      : Math.min(100, highCount * 20 + medCount * 10 + result.risks.length * 2);
-    const riskHigh = riskScore >= 60;
-
-    // Save to Supabase
-    let savedId: string | null = null;
-    try {
-      const { data, error: dbError } = await supabaseAdmin
-        .from("contracts")
-        .insert({
-          user_id: userId,
-          title: fileName,
-          parties: "",
-          type: result.contractType || "General Contract",
-          status: "COMPLETE",
-          risk_score: riskScore,
-          risk_high: riskHigh,
-          result,
-        })
-        .select("id")
-        .single();
-      if (dbError) console.error("[/api/analyze] Supabase insert error:", dbError.message);
-      savedId = data?.id ?? null;
-    } catch (dbErr) {
-      console.error("[/api/analyze] Supabase insert exception:", dbErr);
+    if (dbError || !data) {
+      console.error("[/api/analyze] Supabase insert error:", dbError?.message);
+      return NextResponse.json({ error: "Failed to save contract." }, { status: 500 });
     }
 
-    // Increment usage count for free and pro users (business is unlimited)
-    if (usage.plan !== "business") {
-      await incrementUsage(userId);
-    }
-
+    // Return immediately with contractId and language
     return NextResponse.json(
-      { ...result, riskScore, riskHigh, savedId },
+      { contractId: data.id, status: "PENDING", language },
       {
         status: 200,
         headers: { "X-RateLimit-Remaining": String(limit.remaining) },
@@ -229,34 +174,8 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[/api/analyze] Error:", msg);
-
-    if (msg === "TIMEOUT") {
-      return NextResponse.json(
-        { error: "Analysis timed out. The contract may be too complex — try a shorter excerpt." },
-        { status: 504 }
-      );
-    }
-    if (msg === "QUOTA_EXCEEDED") {
-      return NextResponse.json(
-        { error: "AI service quota exceeded. Please try again later." },
-        { status: 429 }
-      );
-    }
-    if (msg.startsWith("INVALID_JSON") || msg === "EMPTY_RESPONSE") {
-      return NextResponse.json(
-        { error: "The AI returned an invalid response. Please try again." },
-        { status: 502 }
-      );
-    }
-    if (msg === "SAFETY_BLOCKED") {
-      return NextResponse.json(
-        { error: "The AI could not process this contract due to content restrictions. Try a different document." },
-        { status: 422 }
-      );
-    }
-
     return NextResponse.json(
-      { error: "Analysis failed. Please try again." },
+      { error: "Upload failed. Please try again." },
       { status: 500 }
     );
   }

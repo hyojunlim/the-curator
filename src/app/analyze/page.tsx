@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AnalysisResult } from "@/types";
+import { useRouter } from "next/navigation";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
-import ResultsView from "@/components/results/ResultsView";
 import UpgradeBanner from "@/components/ui/UpgradeBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { MVP_MODE } from "@/lib/config";
 import { useTranslation } from "@/lib/i18n";
 
 type Tab = "upload" | "paste";
-type Status = "idle" | "loading" | "success" | "error";
+type Status = "idle" | "loading" | "error";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -147,63 +146,6 @@ function TextPasteTab({ text, onTextChange, t }: { text: string; onTextChange: (
   );
 }
 
-function LoadingProgress({ t }: { t: (key: string, vars?: Record<string, string | number>) => string }) {
-  const LOADING_STEPS = [
-    { label: t("analyze.extractingText"), icon: "text_snippet" },
-    { label: t("analyze.analyzingClauses"), icon: "policy" },
-    { label: t("analyze.scoringRisks"), icon: "assessment" },
-    { label: t("analyze.generatingSummary"), icon: "summarize" },
-  ];
-  const [currentStep, setCurrentStep] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev < LOADING_STEPS.length - 1 ? prev + 1 : prev));
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-      <p className="font-headline font-bold text-on-surface text-sm mb-5">{t("analyze.analysisInProgress")}</p>
-      <div className="space-y-4">
-        {LOADING_STEPS.map((step, i) => {
-          const isDone = i < currentStep;
-          const isActive = i === currentStep;
-          return (
-            <div key={i} className="flex items-center gap-3">
-              {isDone ? (
-                <span className="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
-              ) : isActive ? (
-                <svg className="w-5 h-5 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <span className="material-symbols-outlined text-on-surface-variant/30 text-[20px]">radio_button_unchecked</span>
-              )}
-              <div className="flex items-center gap-2">
-                <span className={`material-symbols-outlined text-[16px] ${isDone ? "text-secondary" : isActive ? "text-primary" : "text-on-surface-variant/40"}`}>
-                  {step.icon}
-                </span>
-                <span className={`text-sm ${isDone ? "text-secondary font-medium" : isActive ? "text-on-surface font-semibold" : "text-on-surface-variant/50"}`}>
-                  {step.label}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-5 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
-          style={{ width: `${((currentStep + 1) / LOADING_STEPS.length) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 const FREE_LANG_CODES = ["English", "Korean"];
 
 const LANGUAGES = [
@@ -229,15 +171,14 @@ export default function AnalyzePage() {
     return "English";
   });
   const [status, setStatus] = useState<Status>("idle");
-  const [result, setResult] = useState<AnalysisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [usageLimited, setUsageLimited] = useState(false);
   const { sub, refresh: refreshSub } = useSubscription();
   const { t } = useTranslation();
+  const router = useRouter();
 
   function reset() {
     setStatus("idle");
-    setResult(null);
     setErrorMessage("");
     setFile(null);
     setPastedText("");
@@ -245,7 +186,6 @@ export default function AnalyzePage() {
 
   async function handleAnalyze() {
     setStatus("loading");
-    setResult(null);
     setErrorMessage("");
     try {
       let response: Response;
@@ -272,13 +212,19 @@ export default function AnalyzePage() {
           setUsageLimited(true);
           refreshSub();
         }
-        throw new Error(err.error ?? "Analysis failed");
+        throw new Error(err.error ?? "Upload failed");
       }
-      const data: AnalysisResult = await response.json();
-      setResult(data);
-      setStatus("success");
-      refreshSub();
-      setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100);
+      const { contractId, language: lang } = await response.json();
+
+      // Fire-and-forget: trigger background processing
+      fetch("/api/analyze/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contractId, language: lang || language }),
+      }).catch(() => {}); // fire and forget
+
+      // Redirect to contract detail page
+      router.push(`/contracts/${contractId}`);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : t("analyze.unknownError"));
       setStatus("error");
@@ -421,53 +367,30 @@ export default function AnalyzePage() {
           )}
 
           {/* Analyze button */}
-          {status !== "success" && (
-            <button
-              onClick={handleAnalyze}
-              disabled={!canAnalyze}
-              className={`w-full py-3.5 rounded-lg text-sm font-headline font-bold transition-all flex items-center justify-center gap-2 ${
-                canAnalyze
-                  ? "btn-primary-gradient text-white shadow-md hover:opacity-90"
-                  : "bg-surface-container-high text-on-surface-variant cursor-not-allowed"
-              }`}
-            >
-              {status === "loading" ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  {t("analyze.analyzingContract")}
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-[18px]">psychology</span>
-                  {t("analyze.analyzeContract")}
-                </>
-              )}
-            </button>
-          )}
-
-          {/* Results */}
-          {status === "loading" && (
-            <div className="mt-8">
-              <LoadingProgress t={t} />
-            </div>
-          )}
-          {status === "success" && result && (
-            <>
-              <div className="mt-6 mb-4">
-                <button
-                  onClick={reset}
-                  className="w-full py-3.5 rounded-lg text-sm font-headline font-bold transition-all flex items-center justify-center gap-2 border-2 border-primary text-primary hover:bg-primary/10"
-                >
-                  <span className="material-symbols-outlined text-[18px]">restart_alt</span>
-                  {t("analyze.title")}
-                </button>
-              </div>
-              <ResultsView result={result} onReset={reset} plan={sub?.plan ?? "free"} />
-            </>
-          )}
+          <button
+            onClick={handleAnalyze}
+            disabled={!canAnalyze}
+            className={`w-full py-3.5 rounded-lg text-sm font-headline font-bold transition-all flex items-center justify-center gap-2 ${
+              canAnalyze
+                ? "btn-primary-gradient text-white shadow-md hover:opacity-90"
+                : "bg-surface-container-high text-on-surface-variant cursor-not-allowed"
+            }`}
+          >
+            {status === "loading" ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {t("analyze.analyzingContract")}
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[18px]">psychology</span>
+                {t("analyze.analyzeContract")}
+              </>
+            )}
+          </button>
         </div>
 
         {/* Intelligence Panel — hidden on mobile */}
@@ -476,7 +399,7 @@ export default function AnalyzePage() {
             <div className="flex items-center gap-2 mb-3">
               <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                {status === "success" ? t("analyze.analysisComplete") : t("analyze.liveIntelligence")}
+                {t("analyze.liveIntelligence")}
               </span>
             </div>
 
@@ -515,37 +438,6 @@ export default function AnalyzePage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* Success state — result summary */}
-            {status === "success" && result && (
-              <div className="space-y-4">
-                <div className="bg-surface-container-lowest rounded-xl p-4">
-                  <p className="font-headline font-bold text-on-surface text-sm mb-2">{t("analyze.riskOverview")}</p>
-                  <div className="space-y-2">
-                    {(["high", "medium", "low"] as const).map((sev) => {
-                      const count = result.risks.filter((r) => r.severity === sev).length;
-                      const colors = { high: "text-error", medium: "text-tertiary", low: "text-secondary" };
-                      const icons = { high: "error", medium: "warning", low: "info" };
-                      return (
-                        <div key={sev} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className={`material-symbols-outlined text-[14px] ${colors[sev]}`}>{icons[sev]}</span>
-                            <span className="text-xs text-on-surface-variant capitalize">{t(`analyze.${sev}Risk`)}</span>
-                          </div>
-                          <span className={`text-xs font-bold ${colors[sev]}`}>{count}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="bg-surface-container-lowest rounded-xl p-4">
-                  <p className="font-headline font-bold text-on-surface text-sm mb-2">{t("analyze.summary")}</p>
-                  <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-6">
-                    {result.summary}
-                  </p>
                 </div>
               </div>
             )}

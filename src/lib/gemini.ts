@@ -97,7 +97,7 @@ function parseResponse(responseText: string): AnalysisResult {
 }
 
 /** Single API call to Gemini with timeout via AbortController */
-async function callGemini(prompt: string, timeoutMs = 110_000): Promise<string> {
+async function callGemini(prompt: string, timeoutMs = 240_000): Promise<string> {
   const model = getModel();
 
   // Race between API call and timeout
@@ -172,7 +172,7 @@ export async function analyzeContractFromPDF(
 
   async function callPDF(): Promise<string> {
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("TIMEOUT")), 55_000);
+      setTimeout(() => reject(new Error("TIMEOUT")), 240_000);
     });
 
     try {
