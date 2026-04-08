@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["pdf-parse", "mammoth", "hwp.js"],
+    serverComponentsExternalPackages: ["pdf-parse", "mammoth", "hwp.js", "pdfkit"],
   },
   async headers() {
     return [
