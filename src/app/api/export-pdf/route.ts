@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
     .single();
 
   if (error || !data)
-    return NextResponse.json(
-      { error: "Contract not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Contract not found" }, { status: 404 });
+
+  if (data.status !== "COMPLETE" || !data.result)
+    return NextResponse.json({ error: "Analysis not complete yet" }, { status: 400 });
 
   let pdfBuffer: Buffer;
   try {

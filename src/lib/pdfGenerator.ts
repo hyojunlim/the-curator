@@ -10,10 +10,31 @@ import type {
   ActionItem,
 } from "@/types";
 
-// ── Font paths ─────────────────────────────────────────────────────────────
-const FONT_DIR = path.join(process.cwd(), "public", "fonts");
-const FONT_REGULAR = path.join(FONT_DIR, "NotoSansKR-Regular.otf");
-const FONT_BOLD = path.join(FONT_DIR, "NotoSansKR-Bold.otf");
+// ── Font paths (try multiple locations for Vercel compatibility) ──────────
+function findFont(name: string): string {
+  const candidates = [
+    path.join(process.cwd(), "public", "fonts", name),
+    path.join(process.cwd(), ".next", "server", "public", "fonts", name),
+    path.join(process.cwd(), "src", "assets", "fonts", name),
+    path.join(__dirname, "..", "assets", "fonts", name),
+    path.join(__dirname, "..", "..", "public", "fonts", name),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  throw new Error(`Font not found: ${name}. Tried: ${candidates.join(", ")}`);
+}
+
+let FONT_REGULAR: string;
+let FONT_BOLD: string;
+try {
+  FONT_REGULAR = findFont("NotoSansKR-Regular.otf");
+  FONT_BOLD = findFont("NotoSansKR-Bold.otf");
+} catch {
+  // Fallback: will use Helvetica (no Korean support)
+  FONT_REGULAR = "";
+  FONT_BOLD = "";
+}
 
 // ── Colors ─────────────────────────────────────────────────────────────────
 const COLOR = {
@@ -205,12 +226,23 @@ export async function generateContractPDF(contract: {
       doc.on("end", () => resolve(Buffer.concat(chunks)));
       doc.on("error", reject);
 
-      // Register Korean fonts
-      doc.registerFont("Regular", FONT_REGULAR);
-      doc.registerFont("Bold", FONT_BOLD);
-      doc.font("Regular");
+      // Register Korean fonts (fallback to Helvetica if not found)
+      if (FONT_REGULAR && FONT_BOLD) {
+        doc.registerFont("Regular", FONT_REGULAR);
+        doc.registerFont("Bold", FONT_BOLD);
+        doc.font("Regular");
+      } else {
+        doc.registerFont("Regular", "Helvetica");
+        doc.registerFont("Bold", "Helvetica-Bold");
+        doc.font("Helvetica");
+      }
 
       const result = contract.result;
+      if (!result) {
+        doc.fontSize(14).text("Analysis not yet complete.");
+        doc.end();
+        return;
+      }
       const dateStr = formatDate(contract.created_at);
 
       // ═══════════════════════════════════════════════════════════════════
