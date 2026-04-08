@@ -2,15 +2,18 @@ import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getSubscription } from "@/lib/subscription";
+import { MVP_MODE } from "@/lib/config";
 
 export async function GET(request: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Search is a paid feature (Pro or Business)
-  const sub = await getSubscription(userId);
-  if (sub.plan === "free") {
-    return Response.json({ error: "Search is a Pro feature. Upgrade to unlock.", code: "PRO_ONLY" }, { status: 403 });
+  // Search is a paid feature (Pro or Business), unless MVP_MODE is on
+  if (!MVP_MODE) {
+    const sub = await getSubscription(userId);
+    if (sub.plan === "free") {
+      return Response.json({ error: "Search is a Pro feature. Upgrade to unlock.", code: "PRO_ONLY" }, { status: 403 });
+    }
   }
 
   // Rate limit: max 60 searches per hour per user

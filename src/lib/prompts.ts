@@ -92,8 +92,19 @@ Identify between 3 and 10 risk items. If there are fewer than 3 genuine risks, i
 
 Identify 2-5 key dates. If no explicit dates exist, note timeline-based deadlines.
 List all financial obligations found. If none, return an empty array.
-Identify 1-4 important missing clauses for this contract type. Only flag clauses that would genuinely be expected in a contract of this type.
 Generate 3-7 action items prioritized by urgency.
+
+CRITICAL ACCURACY RULES for missing clauses:
+- Before flagging a clause as "missing", thoroughly scan the ENTIRE contract for synonyms, paraphrases, and equivalent provisions.
+- Korean contracts often use different wording for the same concept:
+  - Force Majeure (불가항력) may appear as: "부득이한 사유", "천재지변", "통제 불가능한 사유", "중대한 질병", "예측불가한 상황"
+  - Termination may appear as: "해지", "해제", "계약 종료", "효력 상실"
+  - Limitation of Liability may appear as: "손해배상 범위", "책임 한도", "배상 제한"
+  - Data Protection may appear as: "개인정보", "정보 보호", "비밀 유지"
+  - Dispute Resolution may appear as: "분쟁 해결", "관할 법원", "중재", "소송"
+- If the contract contains ANY provision that substantially addresses the same concern — even with different wording — do NOT flag it as missing.
+- Only flag 1-4 clauses that are genuinely and completely absent from the contract.
+- When in doubt, DO NOT flag it as missing. Accuracy is more important than thoroughness.
 
 CONTRACT TEXT TO ANALYZE:
 ---
