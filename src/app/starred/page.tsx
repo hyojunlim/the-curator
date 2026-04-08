@@ -101,12 +101,6 @@ export default function StarredPage() {
                       <span className="uppercase tracking-wider">{t("starred.analyzed")}</span>
                       <p className="font-medium text-on-surface">{formatDate(c.created_at, locale)}</p>
                     </div>
-                    <div className="text-right">
-                      <span className="uppercase tracking-wider">{t("starred.riskScore")}</span>
-                      <p className={`font-headline font-bold text-sm ${c.risk_high ? "text-error" : "text-secondary"}`}>
-                        {c.risk_score}/100
-                      </p>
-                    </div>
                   </div>
                 </Link>
               </div>

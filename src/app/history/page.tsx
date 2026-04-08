@@ -10,7 +10,7 @@ import { MVP_MODE } from "@/lib/config";
 import { useTranslation } from "@/lib/i18n";
 import type { Contract } from "@/types";
 
-const SORT_KEYS = ["sortMostRecent", "sortHighestRisk", "sortLowestRisk", "sortAlphabetical"] as const;
+const SORT_KEYS = ["sortMostRecent", "sortAlphabetical"] as const;
 
 const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
 
@@ -97,7 +97,6 @@ export default function HistoryPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [riskFilter, setRiskFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("sortMostRecent");
   const [sortOpen, setSortOpen] = useState(false);
@@ -163,21 +162,7 @@ export default function HistoryPage() {
       list = list.filter((c) => c.title.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
     }
 
-    if (riskFilter !== "all") {
-      list = list.filter((c) => {
-        if (riskFilter === "high") return c.risk_score >= 70;
-        if (riskFilter === "medium") return c.risk_score >= 40 && c.risk_score < 70;
-        return c.risk_score < 40; // low
-      });
-    }
-
     switch (sortBy) {
-      case "sortHighestRisk":
-        list = [...list].sort((a, b) => b.risk_score - a.risk_score);
-        break;
-      case "sortLowestRisk":
-        list = [...list].sort((a, b) => a.risk_score - b.risk_score);
-        break;
       case "sortAlphabetical":
         list = [...list].sort((a, b) => a.title.localeCompare(b.title));
         break;
@@ -186,9 +171,9 @@ export default function HistoryPage() {
     }
 
     return list;
-  }, [contracts, activeTag, riskFilter, searchQuery, sortBy]);
+  }, [contracts, activeTag, searchQuery, sortBy]);
 
-  const isFiltered = activeTag !== null || riskFilter !== "all" || searchQuery.trim() !== "";
+  const isFiltered = activeTag !== null || searchQuery.trim() !== "";
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
@@ -340,7 +325,7 @@ export default function HistoryPage() {
                   {t("history.noMatchDesc")}
                 </p>
                 <button
-                  onClick={() => { setSearchQuery(""); setActiveTag(null); setRiskFilter("all"); }}
+                  onClick={() => { setSearchQuery(""); setActiveTag(null); }}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-container-high text-on-surface text-sm font-medium hover:bg-surface-container-highest transition-colors"
                 >
                   <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
@@ -413,12 +398,6 @@ export default function HistoryPage() {
                           <span className="uppercase tracking-wider">{t("history.analyzed")}</span>
                           <p className="font-medium text-on-surface">{formatDate(c.created_at, locale)}</p>
                         </div>
-                        <div className="text-right">
-                          <span className="uppercase tracking-wider">{t("history.riskScore")}</span>
-                          <p className={`font-headline font-bold text-sm ${c.risk_high ? "text-error" : "text-secondary"}`}>
-                            {c.risk_score}/100
-                          </p>
-                        </div>
                       </div>
                     </Link>
                   </div>
@@ -476,27 +455,6 @@ export default function HistoryPage() {
                     );
                   });
                 })()}
-              </div>
-
-              <div className="border-t border-outline-variant/10 pt-3 mb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                  {t("history.riskLevel")}
-                </p>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {(["all", "high", "medium", "low"] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setRiskFilter(level)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
-                        riskFilter === level
-                          ? "bg-primary text-on-primary"
-                          : "bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high"
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div className="border-t border-outline-variant/10 pt-3 relative">

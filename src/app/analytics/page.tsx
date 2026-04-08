@@ -21,11 +21,6 @@ export default function AnalyticsPage() {
   }, []);
 
   const total = contracts.length;
-  const high = contracts.filter((c) => c.risk_score >= 70).length;
-  const medium = contracts.filter((c) => c.risk_score >= 40 && c.risk_score < 70).length;
-  const low = contracts.filter((c) => c.risk_score < 40).length;
-  const avgScore = total > 0 ? Math.round(contracts.reduce((s, c) => s + c.risk_score, 0) / total) : 0;
-  const highestRisk = [...contracts].sort((a, b) => b.risk_score - a.risk_score).slice(0, 3);
 
   // Group by month for the bar chart (last 6 months)
   const monthlyData = (() => {
@@ -57,24 +52,9 @@ export default function AnalyticsPage() {
 
         {loading ? (
           <div className="space-y-6 max-w-4xl animate-pulse">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                  <div className="h-3 bg-surface-container-high rounded w-20 mb-3" />
-                  <div className="h-8 bg-surface-container-high rounded w-16" />
-                </div>
-              ))}
-            </div>
-            <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-              <div className="h-4 bg-surface-container-high rounded w-32 mb-5" />
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i}>
-                    <div className="h-3 bg-surface-container-high rounded w-24 mb-2" />
-                    <div className="h-2.5 bg-surface-container-high rounded-full" />
-                  </div>
-                ))}
-              </div>
+            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+              <div className="h-3 bg-surface-container-high rounded w-20 mb-3" />
+              <div className="h-8 bg-surface-container-high rounded w-16" />
             </div>
             <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
               <div className="h-4 bg-surface-container-high rounded w-32 mb-5" />
@@ -97,42 +77,10 @@ export default function AnalyticsPage() {
         ) : (
           <div className="space-y-6 max-w-4xl">
             {/* Summary stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: t("analytics.totalContracts"), value: total, color: "text-on-surface" },
-                { label: t("analytics.avgRiskScore"), value: avgScore, color: avgScore >= 60 ? "text-error" : "text-secondary" },
-                { label: t("analytics.highRisk"), value: high, color: "text-error" },
-                { label: t("analytics.lowRisk"), value: low, color: "text-secondary" },
-              ].map((s) => (
-                <div key={s.label} className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{s.label}</p>
-                  <span className={`font-headline font-extrabold text-4xl ${s.color}`}>{s.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Risk distribution */}
-            <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-              <h2 className="font-headline font-bold text-on-surface mb-5">{t("analytics.riskDistribution")}</h2>
-              <div className="space-y-3">
-                {[
-                  { label: t("analytics.highRiskLabel"), count: high, color: "bg-error", textColor: "text-error" },
-                  { label: t("analytics.mediumRiskLabel"), count: medium, color: "bg-tertiary", textColor: "text-tertiary" },
-                  { label: t("analytics.lowRiskLabel"), count: low, color: "bg-secondary", textColor: "text-secondary" },
-                ].map((r) => (
-                  <div key={r.label}>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-on-surface-variant">{r.label}</span>
-                      <span className={`font-bold ${r.textColor}`}>{total > 0 ? Math.round((r.count / total) * 100) : 0}% ({r.count})</span>
-                    </div>
-                    <div className="h-2.5 bg-surface-container-high rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${r.color} transition-all duration-700`}
-                        style={{ width: total > 0 ? `${(r.count / total) * 100}%` : "0%" }}
-                      />
-                    </div>
-                  </div>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("analytics.totalContracts")}</p>
+                <span className="font-headline font-extrabold text-4xl text-on-surface">{total}</span>
               </div>
             </div>
 
@@ -155,32 +103,6 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Highest risk contracts */}
-            {highestRisk.length > 0 && (
-              <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-                <h2 className="font-headline font-bold text-on-surface mb-4">{t("analytics.highestRiskContracts")}</h2>
-                <div className="space-y-3">
-                  {highestRisk.map((c, i) => (
-                    <Link
-                      key={c.id}
-                      href={`/contracts/${c.id}`}
-                      className="flex items-center justify-between hover:bg-surface-container-low rounded-lg p-2 -mx-2 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-on-surface-variant w-4">{i + 1}</span>
-                        <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors line-clamp-1">{c.title}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="h-1.5 w-20 bg-surface-container-high rounded-full overflow-hidden">
-                          <div className="h-full bg-error rounded-full" style={{ width: `${c.risk_score}%` }} />
-                        </div>
-                        <span className="text-xs font-bold text-error w-12 text-right">{c.risk_score}/100</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>

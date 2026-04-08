@@ -78,8 +78,6 @@ export default function DashboardPage() {
   }, []);
 
   const total = contracts.length;
-  const highRisk = contracts.filter((c) => c.risk_high).length;
-  const avgScore = total > 0 ? Math.round(contracts.reduce((s, c) => s + c.risk_score, 0) / total) : 0;
   const recent = contracts.slice(0, 3);
 
   // Most recent analysis timestamp
@@ -119,11 +117,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {loading ? (
             <>
-              <StatCardSkeleton />
-              <StatCardSkeleton />
               <StatCardSkeleton />
               <StatCardSkeleton />
             </>
@@ -133,18 +129,6 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("dashboard.totalContracts")}</p>
                 <span className="font-headline font-extrabold text-4xl text-on-surface">{total}</span>
                 <p className="text-xs text-on-surface-variant mt-1">{t("dashboard.analyzedToDate")}</p>
-              </div>
-              <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("dashboard.highRisk")}</p>
-                <span className="font-headline font-extrabold text-4xl text-error">{highRisk}</span>
-                <p className="text-xs text-on-surface-variant mt-1">{t("dashboard.requireReview")}</p>
-              </div>
-              <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("dashboard.avgRiskScore")}</p>
-                <span className={`font-headline font-extrabold text-4xl ${avgScore >= 60 ? "text-error" : "text-secondary"}`}>
-                  {total > 0 ? avgScore : t("dashboard.na")}
-                </span>
-                <p className="text-xs text-on-surface-variant mt-1">{t("dashboard.acrossAll")}</p>
               </div>
               <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("dashboard.plan")}</p>
@@ -248,13 +232,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-on-surface-variant">{c.type} · {formatDate(c.created_at, locale)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">{t("dashboard.risk")}</p>
-                    <p className={`font-headline font-bold text-sm ${c.risk_high ? "text-error" : "text-secondary"}`}>{c.risk_score}/100</p>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
-                </div>
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
               </Link>
             ))}
           </div>

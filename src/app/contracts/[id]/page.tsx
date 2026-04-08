@@ -10,7 +10,6 @@ import { useSubscription } from "@/hooks/useSubscription";
 import KeyDatesCard from "@/components/results/KeyDatesCard";
 import FinancialCard from "@/components/results/FinancialCard";
 import MissingClausesCard from "@/components/results/MissingClausesCard";
-import FairnessCard from "@/components/results/FairnessCard";
 import ActionItemsCard from "@/components/results/ActionItemsCard";
 import { t } from "@/lib/i18n";
 import { useTranslation } from "@/lib/i18n";
@@ -198,7 +197,7 @@ export default function ContractDetailPage() {
     );
   }
 
-  const { risk_score, risk_high, title, status: contractStatus, type, created_at } = contract;
+  const { title, status: contractStatus, type, created_at } = contract;
   const result = contract.result;
   const lang = result?.language || "English";
 
@@ -331,11 +330,6 @@ export default function ContractDetailPage() {
             <p>{tr("contractDetail.analyzed")} <span className="font-medium text-on-surface">
               {new Date(created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}
             </span></p>
-            <p className="mt-1">{tr("contractDetail.riskScoreLabel")}{" "}
-              <span className={`font-headline font-bold text-sm ${risk_high ? "text-error" : "text-secondary"}`}>
-                {risk_score}/100
-              </span>
-            </p>
           </div>
         </div>
 
@@ -347,27 +341,9 @@ export default function ContractDetailPage() {
 
         {/* Results */}
         <div className="max-w-2xl space-y-5">
-          {/* Score card */}
-          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t(lang, "contractHealth")}</p>
-              <div className="flex items-baseline gap-2">
-                <span className={`font-headline font-extrabold text-4xl ${risk_high ? "text-error" : "text-secondary"}`}>{risk_score}</span>
-                <span className="text-sm text-on-surface-variant">/100</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
-                risk_score >= 70 ? "bg-error-container text-on-error-container"
-                : risk_score >= 40 ? "bg-tertiary-fixed text-tertiary"
-                : "bg-primary-fixed text-primary"
-              }`}>
-                <span className="material-symbols-outlined text-[14px]">
-                  {risk_score >= 70 ? "warning" : risk_score >= 40 ? "info" : "check_circle"}
-                </span>
-                {t(lang, "riskLevel")}: {t(lang, risk_score >= 70 ? "high" : risk_score >= 40 ? "medium" : "low")}
-              </span>
-              <div className="mt-2 flex gap-2 justify-end">
+          {/* Actions bar */}
+          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-end">
+              <div className="flex gap-2">
                 {isPro ? (
                   <>
                     <button onClick={handleShare} className="text-xs font-bold text-on-surface-variant border border-outline-variant/30 px-3 py-1 rounded hover:bg-surface-container-low transition-colors flex items-center gap-1">
@@ -384,7 +360,6 @@ export default function ContractDetailPage() {
                   </div>
                 )}
               </div>
-            </div>
           </div>
 
           {/* Summary */}
@@ -406,15 +381,6 @@ export default function ContractDetailPage() {
               <span className="text-sm font-semibold text-on-surface">{result.contractType}</span>
             </div>
           )}
-
-          {/* Fairness */}
-          <FairnessCard
-            score={result.fairnessScore ?? 50}
-            summary={result.fairnessSummary ?? ""}
-            partyAName={result.parties?.find(p => p.role === "party_a")?.name}
-            partyBName={result.parties?.find(p => p.role === "party_b")?.name}
-            language={lang}
-          />
 
           {/* Key Dates + Financial */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -479,33 +445,18 @@ export default function ContractDetailPage() {
                       {result.risks.length} {t(lang, "total")}
                     </span>
                   </h3>
-                  <div className="flex items-center gap-3 text-xs font-bold">
-                    {result.risks.filter((r) => r.severity === "high").length > 0 && (
-                      <span className="text-error">{result.risks.filter((r) => r.severity === "high").length} {t(lang, "critical")}</span>
-                    )}
-                    {result.risks.filter((r) => r.severity === "medium").length > 0 && (
-                      <span className="text-secondary">{result.risks.filter((r) => r.severity === "medium").length} {t(lang, "caution")}</span>
-                    )}
-                    {result.risks.filter((r) => r.severity === "low").length > 0 && (
-                      <span className="text-on-surface-variant">{result.risks.filter((r) => r.severity === "low").length} {t(lang, "advisory")}</span>
-                    )}
-                  </div>
                 </div>
                 <div className="space-y-3">
-                  {[...result.risks]
-                    .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.severity] - { high: 0, medium: 1, low: 2 }[b.severity]))
+                  {result.risks
                     .map((risk, i) => {
-                      const cfg = {
-                        high: { label: t(lang, "critical"), badge: "bg-error-container text-on-error-container", border: "border-l-error" },
-                        medium: { label: t(lang, "caution"), badge: "bg-tertiary-fixed text-tertiary", border: "border-l-secondary" },
-                        low: { label: t(lang, "advisory"), badge: "bg-primary-fixed text-primary", border: "border-l-secondary" },
-                      }[risk.severity];
                       const activeSuggestion = perspective === "party_a" ? (risk.suggestion_party_a || risk.suggestion) : perspective === "party_b" ? (risk.suggestion_party_b || risk.suggestion) : risk.suggestion;
                       return (
-                        <div key={i} className={`bg-surface-container-lowest rounded-xl border-l-4 ${cfg.border} shadow-sm p-5`}>
+                        <div key={i} className="bg-surface-container-lowest rounded-xl border-l-4 border-l-outline-variant/30 shadow-sm p-5">
                           <div className="flex items-start justify-between gap-3 mb-3">
                             <h3 className="font-headline font-bold text-on-surface text-sm">{risk.title}</h3>
-                            <span className={`shrink-0 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${cfg.badge}`}>{cfg.label}</span>
+                            {risk.clauseReference && risk.clauseReference !== "N/A" && (
+                              <span className="shrink-0 text-[11px] text-on-surface-variant/70 bg-surface-container-high px-1.5 py-0.5 rounded">{risk.clauseReference}</span>
+                            )}
                           </div>
                           {risk.clause && (
                             <div className="bg-surface-container-low rounded-lg p-3 mb-3 border-l-2 border-outline-variant">

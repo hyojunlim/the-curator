@@ -4,29 +4,6 @@ import { useState } from "react";
 import type { RiskItem } from "@/types";
 import { t } from "@/lib/i18n";
 
-const severityConfig = {
-  high: {
-    label: "Critical",
-    badge: "bg-error-container text-on-error-container",
-    border: "border-l-error",
-    icon: "error",
-    iconColor: "text-error",
-  },
-  medium: {
-    label: "Caution",
-    badge: "bg-tertiary-fixed text-tertiary",
-    border: "border-l-secondary",
-    icon: "warning",
-    iconColor: "text-secondary",
-  },
-  low: {
-    label: "Advisory",
-    badge: "bg-primary-fixed text-primary",
-    border: "border-l-secondary",
-    icon: "info",
-    iconColor: "text-secondary",
-  },
-} as const;
 
 interface Props {
   risk: RiskItem;
@@ -40,7 +17,6 @@ interface Props {
 export default function RiskItemCard({ risk, clauseNumber, perspective, partyName, language, defaultOpen = false }: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const lang = language || "English";
-  const config = severityConfig[risk.severity];
 
   const activeSuggestion =
     perspective === "party_a"
@@ -50,23 +26,20 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
       : risk.suggestion;
 
   return (
-    <div className={`bg-surface-container-lowest rounded-xl border-l-4 ${config.border} shadow-sm overflow-hidden`}>
+    <div className="bg-surface-container-lowest rounded-xl border-l-4 border-l-outline-variant/30 shadow-sm overflow-hidden">
       {/* Header — always visible, clickable */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-surface-container-low/50 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className={`material-symbols-outlined text-[16px] ${config.iconColor}`}>{config.icon}</span>
+          <span className="material-symbols-outlined text-[16px] text-primary">article</span>
           <h3 className="font-headline font-bold text-on-surface text-sm truncate">{risk.title}</h3>
           {risk.clauseReference && risk.clauseReference !== "N/A" && (
             <span className="text-[11px] text-on-surface-variant/70 shrink-0 bg-surface-container-high px-1.5 py-0.5 rounded">{risk.clauseReference}</span>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${config.badge}`}>
-            {risk.severity === "high" ? t(lang, "critical") : risk.severity === "medium" ? t(lang, "caution") : t(lang, "advisory")}
-          </span>
           <span className={`material-symbols-outlined text-[18px] text-on-surface-variant transition-transform ${isOpen ? "rotate-180" : ""}`}>
             expand_more
           </span>
