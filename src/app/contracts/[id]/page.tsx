@@ -159,7 +159,7 @@ export default function ContractDetailPage() {
               <div className="h-4 bg-surface-container-high rounded w-16 ml-auto" />
             </div>
           </div>
-          <div className="max-w-2xl space-y-5">
+          <div className="max-w-5xl space-y-5">
             <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm h-24" />
             <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm h-40" />
             <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm h-32" />
@@ -340,7 +340,7 @@ export default function ContractDetailPage() {
         </div>
 
         {/* Results */}
-        <div className="max-w-2xl space-y-5">
+        <div className="max-w-5xl space-y-5">
           {/* Actions bar */}
           <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-end">
               <div className="flex gap-2">
