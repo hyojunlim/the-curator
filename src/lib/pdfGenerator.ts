@@ -216,7 +216,7 @@ export async function generateContractPDF(contract: {
     );
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: "A4",
