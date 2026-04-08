@@ -10,30 +10,37 @@ import type {
   ActionItem,
 } from "@/types";
 
-// ── Font paths (try multiple locations for Vercel compatibility) ──────────
-function findFont(name: string): string {
+// ── Font loading ──────────────────────────────────────────────────────────
+// Cache font buffers in memory after first load
+let fontRegularBuf: Buffer | null = null;
+let fontBoldBuf: Buffer | null = null;
+
+async function loadFont(name: string): Promise<Buffer> {
+  // Try filesystem first (works locally)
   const candidates = [
     path.join(process.cwd(), "public", "fonts", name),
-    path.join(process.cwd(), ".next", "server", "public", "fonts", name),
     path.join(process.cwd(), "src", "assets", "fonts", name),
-    path.join(__dirname, "..", "assets", "fonts", name),
-    path.join(__dirname, "..", "..", "public", "fonts", name),
   ];
   for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
+    try {
+      if (fs.existsSync(p)) return fs.readFileSync(p);
+    } catch { /* ignore */ }
   }
-  throw new Error(`Font not found: ${name}. Tried: ${candidates.join(", ")}`);
+  // Fetch from own public URL (works on Vercel)
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? "https://the-curator-virid.vercel.app"
+      : "http://localhost:3000";
+  const res = await fetch(`${baseUrl}/fonts/${name}`);
+  if (!res.ok) throw new Error(`Failed to fetch font: ${name} from ${baseUrl}`);
+  return Buffer.from(await res.arrayBuffer());
 }
 
-let FONT_REGULAR: string;
-let FONT_BOLD: string;
-try {
-  FONT_REGULAR = findFont("NotoSansKR-Regular.otf");
-  FONT_BOLD = findFont("NotoSansKR-Bold.otf");
-} catch {
-  // Fallback: will use Helvetica (no Korean support)
-  FONT_REGULAR = "";
-  FONT_BOLD = "";
+async function getFonts(): Promise<{ regular: Buffer; bold: Buffer }> {
+  if (!fontRegularBuf) fontRegularBuf = await loadFont("NotoSansKR-Regular.otf");
+  if (!fontBoldBuf) fontBoldBuf = await loadFont("NotoSansKR-Bold.otf");
+  return { regular: fontRegularBuf, bold: fontBoldBuf };
 }
 
 // ── Colors ─────────────────────────────────────────────────────────────────
@@ -226,12 +233,16 @@ export async function generateContractPDF(contract: {
       doc.on("end", () => resolve(Buffer.concat(chunks)));
       doc.on("error", reject);
 
-      // Register Korean fonts (fallback to Helvetica if not found)
-      if (FONT_REGULAR && FONT_BOLD) {
-        doc.registerFont("Regular", FONT_REGULAR);
-        doc.registerFont("Bold", FONT_BOLD);
+      // Load and register Korean fonts
+      let fontsLoaded = false;
+      try {
+        const fonts = await getFonts();
+        doc.registerFont("Regular", fonts.regular);
+        doc.registerFont("Bold", fonts.bold);
         doc.font("Regular");
-      } else {
+        fontsLoaded = true;
+      } catch (fontErr) {
+        console.error("[PDF] Font loading failed, using Helvetica:", fontErr);
         doc.registerFont("Regular", "Helvetica");
         doc.registerFont("Bold", "Helvetica-Bold");
         doc.font("Helvetica");
