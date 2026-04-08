@@ -31,6 +31,7 @@ You MUST respond with ONLY valid JSON — no explanation, no markdown, no code f
   "risks": [
     {
       "title": "string — short descriptive name for this risk (e.g., 'Auto-Renewal Clause', 'Non-Compete Restriction')",
+      "clauseReference": "string — the article/section number where this clause appears in the contract (e.g., '제3조 제2항', 'Section 5.2', 'Article 7(a)'). If the contract uses numbered articles, always include the exact reference. If no numbering exists, use 'N/A'.",
       "clause": "string — the exact or near-exact problematic clause text quoted from the contract (50-150 words max)",
       "explanation": "string — a neutral, plain-language explanation of what this clause means and why it is notable",
       "severity": "high | medium | low",

@@ -59,8 +59,8 @@ export default function RiskItemCard({ risk, clauseNumber, perspective, partyNam
         <div className="flex items-center gap-2 min-w-0">
           <span className={`material-symbols-outlined text-[16px] ${config.iconColor}`}>{config.icon}</span>
           <h3 className="font-headline font-bold text-on-surface text-sm truncate">{risk.title}</h3>
-          {clauseNumber && (
-            <span className="text-[11px] text-on-surface-variant shrink-0">{t(lang, "clause")} {clauseNumber}</span>
+          {risk.clauseReference && risk.clauseReference !== "N/A" && (
+            <span className="text-[11px] text-on-surface-variant/70 shrink-0 bg-surface-container-high px-1.5 py-0.5 rounded">{risk.clauseReference}</span>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">

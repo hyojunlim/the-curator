@@ -1,5 +1,6 @@
 export interface RiskItem {
   title: string;
+  clauseReference?: string;
   clause: string;
   explanation: string;
   severity: "high" | "medium" | "low";
