@@ -455,22 +455,27 @@ export default function HistoryPage() {
                 >
                   {t("history.allContracts")}
                 </button>
-                {PREDEFINED_TAGS.map(({ label, color }) => {
-                  const count = contracts.filter((c) => (c.tags ?? []).includes(label)).length;
-                  if (count === 0) return null;
-                  return (
-                    <button
-                      key={label}
-                      onClick={() => setActiveTag(activeTag === label ? null : label)}
-                      className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-                        activeTag === label ? color + " border" : "text-on-surface-variant hover:bg-surface-container-high"
-                      }`}
-                    >
-                      <span>{label}</span>
-                      <span className="text-[10px] opacity-60">{count}</span>
-                    </button>
-                  );
-                })}
+                {/* Collect ALL unique tags from contracts (predefined + custom) */}
+                {(() => {
+                  const allTags = new Set<string>();
+                  contracts.forEach((c) => (c.tags ?? []).forEach((tag) => allTags.add(tag)));
+                  return Array.from(allTags).map((label) => {
+                    const count = contracts.filter((c) => (c.tags ?? []).includes(label)).length;
+                    const color = getTagColor(label);
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => setActiveTag(activeTag === label ? null : label)}
+                        className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                          activeTag === label ? color + " border" : "text-on-surface-variant hover:bg-surface-container-high"
+                        }`}
+                      >
+                        <span>{label}</span>
+                        <span className="text-[10px] opacity-60">{count}</span>
+                      </button>
+                    );
+                  });
+                })()}
               </div>
 
               <div className="border-t border-outline-variant/10 pt-3 mb-4">
