@@ -526,31 +526,46 @@ export default function ContractDetailPage() {
                               <p className={`text-xs leading-relaxed ${perspective !== "none" ? "text-on-surface" : "text-on-surface-variant"}`}>{activeSuggestion}</p>
                             </div>
                           )}
-                          {/* Rewrite: Before → After */}
-                          {risk.rewrite && risk.clause && (
-                            <div className="mt-3 rounded-lg border border-secondary/20 overflow-hidden">
-                              <div className="flex items-center gap-1.5 px-3 py-2 bg-secondary/5">
-                                <span className="material-symbols-outlined text-[14px] text-secondary">edit_note</span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{t(lang, "suggestedRewrite")}</span>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
-                                <div className="p-3 bg-error/3">
-                                  <div className="flex items-center gap-1 mb-1.5">
-                                    <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
-                                  </div>
-                                  <p className="text-xs text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">{risk.clause}</p>
+                          {/* Rewrite: perspective-aware Before → After */}
+                          {(() => {
+                            const activeRewrite = perspective === "party_a" ? (risk.rewrite_party_a || risk.rewrite)
+                              : perspective === "party_b" ? (risk.rewrite_party_b || risk.rewrite)
+                              : risk.rewrite;
+                            if (!activeRewrite) return null;
+                            const isAdd = risk.rewrite_type === "add";
+                            const headerLabel = isAdd ? t(lang, "suggestedAddition") : t(lang, "suggestedRewrite");
+                            const headerIcon = isAdd ? "add_circle" : "edit_note";
+                            return (
+                              <div className="mt-3 rounded-lg border border-secondary/20 overflow-hidden">
+                                <div className="flex items-center gap-1.5 px-3 py-2 bg-secondary/5">
+                                  <span className="material-symbols-outlined text-[14px] text-secondary">{headerIcon}</span>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{headerLabel}</span>
                                 </div>
-                                <div className="p-3 bg-secondary/3">
-                                  <div className="flex items-center gap-1 mb-1.5">
-                                    <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
+                                {isAdd ? (
+                                  <div className="p-3 bg-secondary/3">
+                                    <p className="text-xs text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
                                   </div>
-                                  <p className="text-xs text-on-surface leading-relaxed font-medium">{risk.rewrite}</p>
-                                </div>
+                                ) : (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
+                                    <div className="p-3 bg-error/3">
+                                      <div className="flex items-center gap-1 mb-1.5">
+                                        <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
+                                      </div>
+                                      <p className="text-xs text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">{risk.clause}</p>
+                                    </div>
+                                    <div className="p-3 bg-secondary/3">
+                                      <div className="flex items-center gap-1 mb-1.5">
+                                        <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
+                                      </div>
+                                      <p className="text-xs text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       );
                     })}
