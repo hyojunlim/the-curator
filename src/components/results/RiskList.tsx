@@ -45,6 +45,7 @@ export default function RiskList({ risks, perspective, partyName, language }: Pr
             perspective={perspective}
             partyName={partyName}
             language={lang}
+            defaultOpen={risk.severity === "high"}
           />
         ))}
       </div>
