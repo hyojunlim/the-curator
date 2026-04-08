@@ -81,52 +81,41 @@ export default function HomePage() {
               </div>
 
               <div className="p-6 space-y-5 text-left">
-                {/* Risk Score */}
+                {/* Analysis Result Header */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">{t("landing.demoRiskScore")}</span>
-                    <span className="text-xs font-bold text-error px-2 py-0.5 rounded-full bg-error/10">{t("landing.demoHigh")}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-headline font-extrabold text-on-surface">72<span className="text-sm text-on-surface-variant/50">/100</span></span>
-                    <div className="flex-1 h-2.5 bg-surface-container rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-tertiary-fixed-dim to-error rounded-full" style={{ width: "72%" }} />
-                    </div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">{t("landing.demoClauseReview")}</span>
+                    <span className="text-xs font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10">{t("landing.demoAnalysisComplete")}</span>
                   </div>
                 </div>
 
-                {/* Risk Items */}
+                {/* Clause Review Items */}
                 <div className="space-y-2">
                   {[
-                    { icon: "warning", label: t("landing.demoAutoRenewal"), severity: t("landing.demoHigh"), color: "error" },
-                    { icon: "warning", label: t("landing.demoUnlimitedLiability"), severity: t("landing.demoHigh"), color: "error" },
-                    { icon: "change_history", label: t("landing.demoNonCompete"), severity: t("landing.demoMedium"), color: "tertiary-fixed-dim" },
+                    { icon: "edit_note", label: t("landing.demoAutoRenewal"), action: t("landing.demoSuggestedModification") },
+                    { icon: "edit_note", label: t("landing.demoUnlimitedLiability"), action: t("landing.demoSuggestedModification") },
+                    { icon: "add_circle_outline", label: t("landing.demoNonCompete"), action: t("landing.demoSuggestedAddition") },
                   ].map((r, i) => (
                     <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-surface-container/50">
                       <div className="flex items-center gap-2">
-                        <span className={`material-symbols-outlined text-[16px] text-${r.color}`}>{r.icon}</span>
+                        <span className="material-symbols-outlined text-[16px] text-primary">{r.icon}</span>
                         <span className="text-sm text-on-surface font-medium">{r.label}</span>
                       </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider text-${r.color}`}>{r.severity}</span>
+                      <span className="text-[10px] font-bold text-primary/70">{r.action}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Fairness */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">{t("landing.demoFairness")}</span>
-                    <span className="text-xs text-on-surface-variant">35/100 · {t("landing.demoFavorsPartyA")}</span>
-                  </div>
-                  <div className="relative h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-error/80 to-tertiary-fixed-dim/60 rounded-full" style={{ width: "35%" }} />
-                  </div>
+                {/* Action Items Summary */}
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/15">
+                  <span className="material-symbols-outlined text-[16px] text-primary">checklist</span>
+                  <span className="text-xs font-bold text-primary">{t("landing.demoActionItemsSummary")}</span>
                 </div>
 
                 {/* Bottom row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/15">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary-fixed-dim block mb-1.5">{t("landing.demoMissingClauses")}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary-fixed-dim block mb-1.5">{t("landing.demoSuggestedClauses")}</span>
                     <p className="text-xs text-on-surface-variant">{t("landing.demoForceMajeure")} · {t("landing.demoDataProtection")}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
@@ -184,78 +173,54 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-            {/* 1. Risk Analysis — 2-col span */}
+            {/* 1. Smart Clause Analysis — 2-col span */}
             <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-10 group hover:border-outline-variant/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-8">
-                <span className="material-symbols-outlined text-primary">psychology</span>
+                <span className="material-symbols-outlined text-primary">fact_check</span>
               </div>
-              <h3 className="text-2xl font-headline font-bold text-on-surface mb-4">{t("landing.deepRiskAnalysis")}</h3>
+              <h3 className="text-2xl font-headline font-bold text-on-surface mb-4">{t("landing.smartClauseAnalysis")}</h3>
               <p className="text-on-surface-variant text-base leading-relaxed mb-8">
-                {t("landing.deepRiskDesc")}
+                {t("landing.smartClauseDesc")}
               </p>
-              {/* Risk gauge + severity chips */}
+              {/* Document review icon + action chips */}
               <div className="flex flex-col sm:flex-row items-center gap-8">
-                {/* Circular gauge */}
-                <div className="relative w-32 h-32 flex-shrink-0">
-                  <div
-                    className="w-full h-full rounded-full"
-                    style={{
-                      background: "conic-gradient(rgb(var(--c-error)) 0% 30%, rgb(var(--c-tertiary-fixed-dim)) 30% 50%, rgb(var(--c-primary)) 50% 72%, rgb(var(--c-surface-container)) 72% 100%)",
-                    }}
-                  />
-                  <div className="absolute inset-3 rounded-full bg-surface-container-lowest flex items-center justify-center">
-                    <div className="text-center">
-                      <span className="text-3xl font-headline font-extrabold text-on-surface leading-none">72</span>
-                      <span className="text-xs text-on-surface-variant block">/100</span>
-                    </div>
-                  </div>
+                {/* Document with checkmarks */}
+                <div className="relative w-32 h-32 flex-shrink-0 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
+                  <span className="material-symbols-outlined text-primary text-[48px]">grading</span>
                 </div>
-                {/* Severity chips */}
+                {/* Action chips */}
                 <div className="flex flex-wrap gap-3">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-error/10 text-error text-sm font-bold">
-                    <span className="w-2 h-2 rounded-full bg-error" />
-                    {t("landing.demoCritical3")}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-fixed-dim/10 text-tertiary-fixed-dim text-sm font-bold">
-                    <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim" />
-                    {t("landing.demoCaution2")}
-                  </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold">
-                    <span className="w-2 h-2 rounded-full bg-primary" />
-                    {t("landing.demoAdvisory1")}
+                    <span className="material-symbols-outlined text-[14px]">edit_note</span>
+                    {t("landing.demoModifications3")}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 text-secondary text-sm font-bold">
+                    <span className="material-symbols-outlined text-[14px]">add_circle_outline</span>
+                    {t("landing.demoAdditions2")}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* 2. Fairness Score */}
+            {/* 2. Party-Specific Advice */}
             <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <span className="material-symbols-outlined text-primary text-[20px]">balance</span>
+                <span className="material-symbols-outlined text-primary text-[20px]">groups</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.fairnessScoreTitle")}</h4>
+              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.partyAdviceTitle")}</h4>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                {t("landing.fairnessScoreDesc")}
+                {t("landing.partyAdviceDesc")}
               </p>
-              {/* Balance bar mockup */}
+              {/* Two-party advice mockup */}
               <div className="space-y-3">
-                <div className="flex justify-between text-xs text-on-surface-variant">
-                  <span>{t("landing.partyA")}</span>
-                  <span>{t("landing.partyB")}</span>
+                <div className="p-3 rounded-xl bg-primary/5 border border-primary/15">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1.5">{t("landing.partyAView")}</p>
+                  <p className="text-xs text-on-surface-variant">{t("landing.partyAAdvice")}</p>
                 </div>
-                <div className="relative h-3 bg-surface-container rounded-full overflow-hidden">
-                  <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-error/70 to-tertiary-fixed-dim/60 rounded-full" style={{ width: "65%" }} />
+                <div className="p-3 rounded-xl bg-secondary/5 border border-secondary/15">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-1.5">{t("landing.partyBView")}</p>
+                  <p className="text-xs text-on-surface-variant">{t("landing.partyBAdvice")}</p>
                 </div>
-                <div className="relative h-0">
-                  <div className="absolute -top-1 flex flex-col items-center" style={{ left: "35%", transform: "translateX(-50%)" }}>
-                    <span className="material-symbols-outlined text-error text-[16px]">arrow_drop_up</span>
-                    <span className="text-[10px] font-bold text-error whitespace-nowrap">35/100</span>
-                  </div>
-                </div>
-                <p className="text-xs font-bold text-error flex items-center gap-1 pt-3">
-                  <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-                  {t("landing.favorsPartyA")}
-                </p>
               </div>
             </div>
 
@@ -359,20 +324,20 @@ export default function HomePage() {
               </p>
               {/* Checklist */}
               <div className="space-y-2.5">
-                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-error/5 border border-error/10">
-                  <span className="w-2 h-2 rounded-full bg-error flex-shrink-0" />
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                  <span className="material-symbols-outlined text-[16px] text-primary flex-shrink-0">edit_note</span>
                   <span className="text-sm text-on-surface">{t("landing.actionNegotiateLiability")}</span>
-                  <span className="text-[10px] font-bold text-error ml-auto uppercase">{t("landing.demoHigh")}</span>
+                  <span className="text-[10px] font-bold text-primary ml-auto">{t("landing.actionModify")}</span>
                 </div>
-                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/10">
-                  <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim flex-shrink-0" />
+                <div className="flex items-center gap-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                  <span className="material-symbols-outlined text-[16px] text-primary flex-shrink-0">edit_note</span>
                   <span className="text-sm text-on-surface">{t("landing.actionAddTermination")}</span>
-                  <span className="text-[10px] font-bold text-tertiary-fixed-dim ml-auto uppercase">{t("landing.demoMedium")}</span>
+                  <span className="text-[10px] font-bold text-primary ml-auto">{t("landing.actionModify")}</span>
                 </div>
                 <div className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/5 border border-secondary/10">
-                  <span className="w-2 h-2 rounded-full bg-secondary flex-shrink-0" />
+                  <span className="material-symbols-outlined text-[16px] text-secondary flex-shrink-0">add_circle_outline</span>
                   <span className="text-sm text-on-surface">{t("landing.actionReviewPayment")}</span>
-                  <span className="text-[10px] font-bold text-secondary ml-auto uppercase">{t("landing.demoLow")}</span>
+                  <span className="text-[10px] font-bold text-secondary ml-auto">{t("landing.actionAdd")}</span>
                 </div>
               </div>
             </div>
@@ -500,36 +465,28 @@ export default function HomePage() {
             <div className="bg-surface-container-lowest border border-primary/20 rounded-2xl p-8 shadow-lg shadow-primary/5">
               <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-4">{t("landing.after")}</span>
               <div className="space-y-4">
-                {/* Risk score mini */}
+                {/* Review summary */}
                 <div className="flex items-center gap-3">
-                  <div className="relative w-14 h-14 flex-shrink-0">
-                    <div
-                      className="w-full h-full rounded-full"
-                      style={{
-                        background: "conic-gradient(rgb(var(--c-error)) 0% 72%, rgb(var(--c-surface-container)) 72% 100%)",
-                      }}
-                    />
-                    <div className="absolute inset-1.5 rounded-full bg-surface-container-lowest flex items-center justify-center">
-                      <span className="text-sm font-headline font-extrabold text-on-surface">72</span>
-                    </div>
+                  <div className="w-14 h-14 flex-shrink-0 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-[28px]">fact_check</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-on-surface">{t("landing.afterHighRisk")}</p>
-                    <p className="text-xs text-on-surface-variant">{t("landing.afterIssuesFound")}</p>
+                    <p className="text-sm font-bold text-on-surface">{t("landing.afterItemsReviewed")}</p>
+                    <p className="text-xs text-on-surface-variant">{t("landing.afterModificationsNeeded")}</p>
                   </div>
                 </div>
                 {/* Key findings */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-error text-[16px]">warning</span>
+                    <span className="material-symbols-outlined text-primary text-[16px]">edit_note</span>
                     <span className="text-on-surface">{t("landing.afterIssue1")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-error text-[16px]">warning</span>
+                    <span className="material-symbols-outlined text-primary text-[16px]">edit_note</span>
                     <span className="text-on-surface">{t("landing.afterIssue2")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim text-[16px]">info</span>
+                    <span className="material-symbols-outlined text-secondary text-[16px]">add_circle_outline</span>
                     <span className="text-on-surface">{t("landing.afterIssue3")}</span>
                   </div>
                 </div>
@@ -640,28 +597,20 @@ export default function HomePage() {
               {/* Mini dashboard */}
               <div className="p-4 bg-surface-container/30 rounded-xl space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 flex-shrink-0">
-                    <div
-                      className="w-full h-full rounded-full"
-                      style={{
-                        background: "conic-gradient(rgb(var(--c-error)) 0% 72%, rgb(var(--c-surface-container)) 72% 100%)",
-                      }}
-                    />
-                    <div className="absolute inset-1 rounded-full bg-surface-container-lowest flex items-center justify-center">
-                      <span className="text-[10px] font-headline font-extrabold text-on-surface">72</span>
-                    </div>
+                  <div className="w-10 h-10 flex-shrink-0 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-[20px]">grading</span>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-on-surface">{t("landing.mockRiskScore")}</p>
-                    <p className="text-[10px] text-on-surface-variant">{t("landing.mockItemsAttention")}</p>
+                    <p className="text-xs font-bold text-on-surface">{t("landing.mockClausesReviewed")}</p>
+                    <p className="text-[10px] text-on-surface-variant">{t("landing.mockModificationsSuggested")}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-error/5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-error" />
+                <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-primary/5">
+                  <span className="material-symbols-outlined text-[12px] text-primary">edit_note</span>
                   <span className="text-on-surface">{t("landing.mockLiabilityClause")}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-tertiary-fixed-dim/5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim" />
+                <div className="flex items-center gap-2 text-xs p-2 rounded-lg bg-secondary/5">
+                  <span className="material-symbols-outlined text-[12px] text-secondary">add_circle_outline</span>
                   <span className="text-on-surface">{t("landing.mockAutoRenewal")}</span>
                 </div>
               </div>
