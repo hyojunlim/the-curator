@@ -8,7 +8,7 @@ import { checkUsage, incrementUsage } from "@/lib/subscription";
 import { ALLOWED_LANGUAGES, FREE_LANGUAGES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_WORD_COUNT, PLAN_FEATURES } from "@/lib/config";
 
 export const runtime = "nodejs";
-export const maxDuration = 60; // Allow up to 60s for Gemini API calls
+export const maxDuration = 120; // Allow up to 120s for Gemini API calls (expanded prompt)
 
 export async function POST(req: NextRequest) {
   try {

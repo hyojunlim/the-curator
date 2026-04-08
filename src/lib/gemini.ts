@@ -97,7 +97,7 @@ function parseResponse(responseText: string): AnalysisResult {
 }
 
 /** Single API call to Gemini with timeout via AbortController */
-async function callGemini(prompt: string, timeoutMs = 55_000): Promise<string> {
+async function callGemini(prompt: string, timeoutMs = 110_000): Promise<string> {
   const model = getModel();
 
   // Race between API call and timeout
