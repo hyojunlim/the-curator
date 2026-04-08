@@ -209,13 +209,6 @@ export async function generateContractPDF(contract: {
   risk_high: boolean;
   result: AnalysisResult;
 }): Promise<Buffer> {
-  // Verify fonts exist
-  if (!fs.existsSync(FONT_REGULAR) || !fs.existsSync(FONT_BOLD)) {
-    throw new Error(
-      `Korean fonts not found. Expected at:\n  ${FONT_REGULAR}\n  ${FONT_BOLD}`
-    );
-  }
-
   return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
