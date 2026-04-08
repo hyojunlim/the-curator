@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { extractPDF, extractDOCX } from "@/lib/extractors";
+import { extractPDF, extractDOCX, extractHWP } from "@/lib/extractors";
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { checkUsage } from "@/lib/subscription";
@@ -61,16 +61,23 @@ export async function POST(req: NextRequest) {
       const ALLOWED_MIMES = [
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/x-hwp",
+        "application/haansofthwp",
+        "application/vnd.hancom.hwp",
       ];
-      if (!ALLOWED_MIMES.includes(file.type)) {
-        return NextResponse.json({ error: "Only PDF and DOCX files are allowed." }, { status: 400 });
+      // HWP files often have generic MIME types from browsers, so also check extension
+      const isHWP = file.name.toLowerCase().endsWith(".hwp");
+      if (!ALLOWED_MIMES.includes(file.type) && !isHWP) {
+        return NextResponse.json({ error: "Only PDF, DOCX, and HWP files are allowed." }, { status: 400 });
       }
 
       // Verify magic bytes
-      const headerBytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+      const headerBytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
       const isPDF = headerBytes[0] === 0x25 && headerBytes[1] === 0x50 && headerBytes[2] === 0x44 && headerBytes[3] === 0x46;
       const isZip = headerBytes[0] === 0x50 && headerBytes[1] === 0x4B && headerBytes[2] === 0x03 && headerBytes[3] === 0x04;
-      if (!isPDF && !isZip) {
+      // HWP files start with OLE2 compound file magic bytes: D0 CF 11 E0
+      const isHWPMagic = headerBytes[0] === 0xD0 && headerBytes[1] === 0xCF && headerBytes[2] === 0x11 && headerBytes[3] === 0xE0;
+      if (!isPDF && !isZip && !isHWPMagic) {
         return NextResponse.json({ error: "Invalid file format." }, { status: 400 });
       }
 
@@ -110,9 +117,16 @@ export async function POST(req: NextRequest) {
           console.error("[/api/analyze] DOCX extraction failed:", extractErr);
           return NextResponse.json({ error: "Failed to extract text from DOCX file." }, { status: 400 });
         }
+      } else if (lowerName.endsWith(".hwp")) {
+        try {
+          contractText = await extractHWP(buffer);
+        } catch (extractErr) {
+          console.error("[/api/analyze] HWP extraction failed:", extractErr);
+          return NextResponse.json({ error: "Failed to extract text from HWP file." }, { status: 400 });
+        }
       } else {
         return NextResponse.json(
-          { error: "Unsupported file type. Please upload a PDF or DOCX file." },
+          { error: "Unsupported file type. Please upload a PDF, DOCX, or HWP file." },
           { status: 400 }
         );
       }

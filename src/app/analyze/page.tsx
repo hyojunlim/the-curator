@@ -51,7 +51,7 @@ function FileUploadTab({ file, onFileChange, t }: { file: File | null; onFileCha
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.docx"
+          accept=".pdf,.docx,.hwp"
           className="hidden"
           onChange={(e) => { validateAndSet(e.target.files?.[0] ?? null); if (inputRef.current) inputRef.current.value = ""; }}
         />
@@ -88,6 +88,9 @@ function FileUploadTab({ file, onFileChange, t }: { file: File | null; onFileCha
           </span>
           <span className="flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">description</span> DOCX
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px]">article</span> HWP
           </span>
         </div>
       </div>
