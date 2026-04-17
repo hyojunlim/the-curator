@@ -1,18 +1,37 @@
-"use client";
-
 import Link from "next/link";
 import LandingNav from "@/components/layout/LandingNav";
-import { useTranslation } from "@/lib/i18n";
+import en from "@/lib/i18n/locales/en";
+
+/* ------------------------------------------------------------------ */
+/*  Server-side translation helper (NOT a hook — no "use client")     */
+/*  Traverses the English locale object by dot-separated path.        */
+/*  Returns arrays as-is so callers like pricing features still work. */
+/* ------------------------------------------------------------------ */
+function t(key: string): string {
+  const keys = key.split(".");
+  let val: unknown = en;
+  for (const k of keys) {
+    if (val && typeof val === "object" && k in (val as Record<string, unknown>)) {
+      val = (val as Record<string, unknown>)[k];
+    } else {
+      return key; // fallback: return the key itself
+    }
+  }
+  // Return arrays/objects as-is (cast through unknown) for feature lists
+  if (val !== undefined && typeof val !== "string") {
+    return val as unknown as string;
+  }
+  return (val as string) ?? key;
+}
 
 export default function HomePage() {
-  const { t } = useTranslation();
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface transition-colors duration-200">
 
-      {/* ── Navigation ── */}
+      {/* -- Navigation (client component) -- */}
       <LandingNav />
 
-      {/* ── Hero ── */}
+      {/* -- Hero -- */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 bg-grid-pattern" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[700px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
@@ -64,7 +83,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* ── Analysis Demo Mockup ── */}
+          {/* -- Analysis Demo Mockup -- */}
           <div className="relative mx-auto max-w-2xl animate-float">
             <div
               className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl shadow-2xl shadow-primary/10 overflow-hidden mockup-glow"
@@ -142,7 +161,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Trust Bar ── */}
+      {/* -- Trust Bar -- */}
       <section className="py-14 border-y border-outline-variant/15">
         <div className="max-w-5xl mx-auto px-8">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-on-surface/25 mb-8">
@@ -158,7 +177,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Features — 6 Interactive Mini-Mockups ── */}
+      {/* -- Features — 6 Interactive Mini-Mockups -- */}
       <section id="features" className="py-40 px-8">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-2xl mb-20">
@@ -207,7 +226,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">groups</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.partyAdviceTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.partyAdviceTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.partyAdviceDesc")}
               </p>
@@ -229,7 +248,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.keyDatesTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.keyDatesTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.keyDatesDesc")}
               </p>
@@ -261,7 +280,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">search_off</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.missingClausesTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.missingClausesTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.missingClausesDesc")}
               </p>
@@ -289,7 +308,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">payments</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.financialTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.financialTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.financialDesc")}
               </p>
@@ -318,7 +337,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">checklist</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.actionItemsTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.actionItemsTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.actionItemsDesc")}
               </p>
@@ -343,7 +362,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ── Multilingual Demo (CSS-only tabs) ── */}
+          {/* -- Multilingual Demo (CSS-only tabs) -- */}
           <div className="mt-5 bg-primary-container/20 border border-primary/15 rounded-2xl p-10">
             <div className="flex flex-col md:flex-row md:items-start gap-8">
               <div className="md:w-1/3">
@@ -424,7 +443,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Before / After ── */}
+      {/* -- Before / After -- */}
       <section className="py-32 px-8 border-t border-outline-variant/15">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20">
@@ -501,7 +520,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
+      {/* -- How It Works -- */}
       <section id="how-it-works" className="py-40 px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-24">
@@ -619,7 +638,75 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
+      {/* -- Why The Curator — Comparison -- */}
+      <section className="py-40 px-8 border-t border-outline-variant/15">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.whyBadge")}</span>
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">{t("landing.whyTitle")}</h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed max-w-2xl mx-auto">{t("landing.whyDesc")}</p>
+          </div>
+
+          {/* Comparison Table */}
+          <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl overflow-hidden mb-20">
+            {/* Header row */}
+            <div className="grid grid-cols-3 border-b border-outline-variant/15">
+              <div className="p-4" />
+              <div className="p-4 text-center border-x border-outline-variant/15">
+                <span className="text-sm font-bold text-on-surface-variant">{t("landing.comparisonManual")}</span>
+              </div>
+              <div className="p-4 text-center bg-primary/5">
+                <span className="text-sm font-bold text-primary">{t("landing.comparisonCurator")}</span>
+              </div>
+            </div>
+            {/* Rows */}
+            {[
+              { label: t("landing.compTime"), manual: t("landing.compTimeManual"), curator: t("landing.compTimeCurator") },
+              { label: t("landing.compCost"), manual: t("landing.compCostManual"), curator: t("landing.compCostCurator") },
+              { label: t("landing.compMiss"), manual: t("landing.compMissManual"), curator: t("landing.compMissCurator") },
+              { label: t("landing.compLang"), manual: t("landing.compLangManual"), curator: t("landing.compLangCurator") },
+              { label: t("landing.compRewrite"), manual: t("landing.compRewriteManual"), curator: t("landing.compRewriteCurator") },
+              { label: t("landing.compAvail"), manual: t("landing.compAvailManual"), curator: t("landing.compAvailCurator") },
+            ].map((row, i) => (
+              <div key={i} className={`grid grid-cols-3 ${i < 5 ? "border-b border-outline-variant/10" : ""}`}>
+                <div className="p-4 flex items-center">
+                  <span className="text-sm font-semibold text-on-surface">{row.label}</span>
+                </div>
+                <div className="p-4 flex items-center justify-center border-x border-outline-variant/10 text-center">
+                  <span className="text-sm text-on-surface-variant">{row.manual}</span>
+                </div>
+                <div className="p-4 flex items-center justify-center bg-primary/3 text-center">
+                  <span className="text-sm font-semibold text-primary">{row.curator}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Target Scenarios */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-4">{t("landing.whoTitle")}</h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed max-w-2xl mx-auto">{t("landing.whoDesc")}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: "person", title: t("landing.whoFreelancer"), desc: t("landing.whoFreelancerDesc") },
+              { icon: "rocket_launch", title: t("landing.whoStartup"), desc: t("landing.whoStartupDesc") },
+              { icon: "language", title: t("landing.whoGlobal"), desc: t("landing.whoGlobalDesc") },
+            ].map((card, i) => (
+              <div key={i} className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-primary text-[24px]">{card.icon}</span>
+                </div>
+                <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{card.title}</h3>
+                <p className="text-sm text-on-surface-variant leading-relaxed">{card.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* -- Pricing -- */}
       <section id="pricing" className="py-40 px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
@@ -642,12 +729,12 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: t("landing.starter"), price: t("landing.starterPrice"), sub: t("landing.starterSub"), features: t("landing.starterFeatures") as unknown as string[], cta: t("landing.getStarted"), href: "/sign-up", featured: false },
-              { name: t("landing.proName"), price: t("landing.proPrice"), sub: t("landing.proSub"), features: t("landing.proFeatures") as unknown as string[], cta: t("landing.startFreeTrial"), href: "/sign-up", featured: true },
-              { name: t("landing.businessName"), price: t("landing.businessPrice"), sub: t("landing.businessSub"), features: t("landing.businessFeatures") as unknown as string[], cta: t("landing.getBusiness"), href: "/sign-up", featured: false },
+              { key: "starter", name: t("landing.starter"), price: t("landing.starterPrice"), sub: t("landing.starterSub"), features: t("landing.starterFeatures") as unknown as string[], cta: t("landing.getStarted"), href: "/sign-up", featured: false },
+              { key: "pro", name: t("landing.proName"), price: t("landing.proPrice"), sub: t("landing.proSub"), features: t("landing.proFeatures") as unknown as string[], cta: t("landing.startFreeTrial"), href: "/sign-up?redirect_url=/settings?tab=billing", featured: true },
+              { key: "business", name: t("landing.businessName"), price: t("landing.businessPrice"), sub: t("landing.businessSub"), features: t("landing.businessFeatures") as unknown as string[], cta: t("landing.getBusiness"), href: "/sign-up?redirect_url=/settings?tab=billing", featured: false },
             ].map((plan) => (
               <div
-                key={plan.name}
+                key={plan.key}
                 className={`rounded-2xl p-8 flex flex-col ${
                   plan.featured
                     ? "bg-surface-container-lowest border-2 border-primary shadow-2xl shadow-primary/10 relative"
@@ -665,7 +752,7 @@ export default function HomePage() {
                     <span className="text-5xl font-headline font-extrabold text-on-surface">
                       {plan.price}
                     </span>
-                    {plan.price !== "Custom" && plan.price !== t("landing.starterPrice") && (
+                    {(plan.key === "pro" || plan.key === "business") && (
                       <span className="text-sm text-on-surface-variant">{t("landing.perMonth")}</span>
                     )}
                   </div>
@@ -697,7 +784,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
+      {/* -- Final CTA -- */}
       <section className="py-40 px-8 border-t border-outline-variant/15">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface mb-6 leading-[0.95]">
@@ -717,7 +804,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
+      {/* -- Footer -- */}
       <footer className="border-t border-outline-variant/15 py-16 px-8 bg-surface-container-low">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
@@ -730,7 +817,7 @@ export default function HomePage() {
             {[
               { title: t("landing.product"), links: [[t("landing.features"), "#features"], [t("landing.pricing"), "#pricing"], [t("landing.process"), "#how-it-works"], [t("landing.viewDashboard"), "/dashboard"]] },
               { title: t("landing.resources"), links: [[t("landing.viewDashboard"), "/dashboard"], [t("sidebar.newAnalysis"), "/analyze"], [t("landing.signIn"), "/sign-in"], [t("landing.signUp"), "/sign-up"]] },
-              { title: t("landing.legal"), links: [[t("support.privacyPolicy"), "/legal/privacy"], [t("support.termsOfService"), "/legal/terms"], [t("support.securityLink"), "/legal/security"]] },
+              { title: t("landing.legal"), links: [[t("support.privacyPolicy"), "/legal/privacy"], [t("support.termsOfService"), "/legal/terms"], [t("footer.refund"), "/legal/refund"], [t("support.securityLink"), "/legal/security"]] },
             ].map((col) => (
               <div key={col.title}>
                 <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 mb-5">{col.title}</p>

@@ -17,7 +17,7 @@ export default function RiskList({ risks, perspective, partyName, language }: Pr
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-headline font-bold text-on-surface flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px] text-primary">policy</span>
-          Clause Breakdown
+          {t(lang, "clauseBreakdown")}
           <span className="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full">
             {risks.length} {t(lang, "total")}
           </span>

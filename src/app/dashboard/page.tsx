@@ -9,12 +9,7 @@ import UpgradeBanner from "@/components/ui/UpgradeBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 import type { Contract } from "@/types";
 import { useTranslation } from "@/lib/i18n";
-
-const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
-
-function formatDate(iso: string, locale = "en") {
-  return new Date(iso).toLocaleDateString(DATE_LOCALES[locale] || "en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { formatDate } from "@/lib/dateUtils";
 
 function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | number>) => string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -85,9 +80,12 @@ export default function DashboardPage() {
     ? contracts.reduce((latest, c) => (c.created_at > latest ? c.created_at : latest), contracts[0].created_at)
     : null;
 
-  // Greeting based on time of day
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? t("dashboard.goodMorning") : hour < 18 ? t("dashboard.goodAfternoon") : t("dashboard.goodEvening");
+  // Greeting based on time of day — computed client-side to avoid hydration mismatch
+  const [greeting, setGreeting] = useState("");
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? t("dashboard.goodMorning") : hour < 18 ? t("dashboard.goodAfternoon") : t("dashboard.goodEvening"));
+  }, [t]);
   const displayName = userLoaded && user ? (user.firstName ?? user.username ?? null) : null;
 
   return (

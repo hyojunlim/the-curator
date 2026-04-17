@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const usage = await checkUsage(userId);
     if (!usage.allowed) {
       return NextResponse.json(
-        { error: "Monthly analysis limit reached. Upgrade to Pro for unlimited analyses.", code: "USAGE_LIMIT" },
+        { error: "Monthly analysis limit reached. Upgrade your plan for more analyses.", code: "USAGE_LIMIT" },
         { status: 403 }
       );
     }
@@ -136,6 +136,14 @@ export async function POST(req: NextRequest) {
       const rawLang = body.language || "English";
       language = allowedLangs.includes(rawLang) ? rawLang : "English";
       fileName = contractText.slice(0, 60).replace(/\s+/g, " ").trim() + "...";
+    }
+
+    // Reject excessively large pasted text
+    if (contractText.length > 500000) {
+      return NextResponse.json(
+        { error: "Text too long. Maximum 500,000 characters." },
+        { status: 400 }
+      );
     }
 
     // For non-vision cases, validate text length

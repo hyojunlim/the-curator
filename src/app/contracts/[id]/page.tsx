@@ -13,6 +13,8 @@ import MissingClausesCard from "@/components/results/MissingClausesCard";
 import ActionItemsCard from "@/components/results/ActionItemsCard";
 import { t } from "@/lib/i18n";
 import { useTranslation } from "@/lib/i18n";
+import { DATE_LOCALES } from "@/lib/dateUtils";
+import { MVP_MODE } from "@/lib/config";
 import type { AnalysisResult } from "@/types";
 
 interface ContractDetail {
@@ -27,13 +29,14 @@ interface ContractDetail {
   created_at: string;
   tags: string[];
   error_message?: string;
+  contract_text?: string;
 }
 
 type PerspectiveView = "none" | "party_a" | "party_b";
 
 export default function ContractDetailPage() {
   const { t: tr, locale: uiLocale } = useTranslation();
-  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[uiLocale] || "en-US";
+  const dateLocale = DATE_LOCALES[uiLocale] || "en-US";
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [contract, setContract] = useState<ContractDetail | null>(null);
@@ -46,7 +49,13 @@ export default function ContractDetailPage() {
   const [perspective, setPerspective] = useState<PerspectiveView>("none");
   const [retrying, setRetrying] = useState(false);
   const { sub } = useSubscription();
-  const isPro = sub?.plan === "pro" || sub?.plan === "business";
+  const isPro = sub?.plan === "pro" || sub?.plan === "business" || MVP_MODE;
+  const isBusiness = sub?.plan === "business" || MVP_MODE;
+  const [selectedRewrites, setSelectedRewrites] = useState<Set<number>>(new Set());
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
+
+  // Clear selections when perspective changes
+  useEffect(() => { setSelectedRewrites(new Set()); }, [perspective]);
 
   useEffect(() => {
     fetch(`/api/contracts/${id}`)
@@ -54,6 +63,17 @@ export default function ContractDetailPage() {
       .then((data) => { setContract(data); setTags(data.tags ?? []); setLoading(false); })
       .catch(() => { setLoading(false); setNotFound(true); });
   }, [id, router]);
+
+  // Auto-trigger process if stuck in PENDING (e.g. after retry/reset)
+  useEffect(() => {
+    if (!contract || contract.status !== "PENDING") return;
+    const lang = contract.result?.language || "Korean";
+    fetch("/api/analyze/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contractId: contract.id, language: lang }),
+    }).catch(() => {});
+  }, [contract?.status, contract?.id, contract?.result?.language]);
 
   // Poll for status updates when PENDING or PROCESSING
   useEffect(() => {
@@ -138,6 +158,54 @@ export default function ContractDetailPage() {
       showToast(tr("contractDetail.pdfExportFailed"));
     }
     setExporting(false);
+  }
+
+  function toggleRewrite(index: number) {
+    setSelectedRewrites(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
+  function selectAllRewrites() {
+    if (!contract?.result) return;
+    const indices = new Set<number>();
+    contract.result.risks.forEach((risk, i) => {
+      const rw = perspective === "party_a" ? (risk.rewrite_party_a || risk.rewrite)
+        : perspective === "party_b" ? (risk.rewrite_party_b || risk.rewrite)
+        : risk.rewrite;
+      if (rw) indices.add(i);
+    });
+    setSelectedRewrites(indices);
+  }
+
+  async function handleDownloadDocx() {
+    if (!contract || selectedRewrites.size === 0) return;
+    setDownloadingDocx(true);
+    try {
+      const res = await fetch("/api/export-docx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractId: contract.id,
+          selectedIndices: Array.from(selectedRewrites),
+          perspective,
+        }),
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${contract.title || "modified-contract"}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast(tr("contractDetail.docxExportFailed") || "Export failed");
+    }
+    setDownloadingDocx(false);
   }
 
   if (loading) {
@@ -319,7 +387,12 @@ export default function ContractDetailPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-headline font-extrabold text-xl text-on-surface">{title}</h1>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-fixed/30 text-primary">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${{
+                  COMPLETE: "bg-secondary/10 text-secondary",
+                  PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                  PROCESSING: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                  FAILED: "bg-error/10 text-error",
+                }[contractStatus] || "bg-primary-fixed/30 text-primary"}`}>
                   {contractStatus}
                 </span>
               </div>
@@ -342,7 +415,38 @@ export default function ContractDetailPage() {
         {/* Results */}
         <div className="max-w-5xl space-y-5">
           {/* Actions bar */}
-          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-end">
+          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-between flex-wrap gap-3">
+              {/* DOCX Download (Business only) */}
+              <div className="flex items-center gap-2">
+                {isBusiness ? (
+                  <>
+                    {selectedRewrites.size > 0 && (
+                      <span className="text-[11px] text-on-surface-variant font-medium">
+                        {selectedRewrites.size} {t(lang, "rewritesSelected") || "selected"}
+                      </span>
+                    )}
+                    <button onClick={selectAllRewrites} className="text-[11px] font-bold text-on-surface-variant border border-outline-variant/30 px-2.5 py-1 rounded hover:bg-surface-container-low transition-colors">
+                      {t(lang, "selectAllRewrites") || "Select All"}
+                    </button>
+                    {selectedRewrites.size > 0 && (
+                      <button onClick={() => setSelectedRewrites(new Set())} className="text-[11px] font-bold text-on-surface-variant border border-outline-variant/30 px-2.5 py-1 rounded hover:bg-surface-container-low transition-colors">
+                        {t(lang, "deselectAllRewrites") || "Deselect"}
+                      </button>
+                    )}
+                    <button onClick={handleDownloadDocx} disabled={selectedRewrites.size === 0 || downloadingDocx} className="text-[11px] font-bold bg-secondary text-on-secondary px-3 py-1 rounded flex items-center gap-1 hover:opacity-90 transition-opacity disabled:opacity-40">
+                      <span className="material-symbols-outlined text-[14px]">{downloadingDocx ? "hourglass_empty" : "description"}</span>
+                      {t(lang, "downloadModifiedContract") || "Download Modified"}
+                      <span className="text-[9px] font-bold bg-white/20 px-1.5 py-0.5 rounded ml-1">BETA</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant/60">
+                    <span className="material-symbols-outlined text-[12px]">lock</span>
+                    {t(lang, "docxBusinessOnly") || "Business only"}
+                  </div>
+                )}
+              </div>
+              {/* PDF Export + Share */}
               <div className="flex gap-2">
                 {isPro ? (
                   <>
@@ -489,6 +593,15 @@ export default function ContractDetailPage() {
                             return (
                               <div className="mt-3 rounded-lg border border-secondary/20 overflow-hidden">
                                 <div className="flex items-center gap-1.5 px-3 py-2 bg-secondary/5">
+                                  {isBusiness && (
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedRewrites.has(i)}
+                                      onChange={() => toggleRewrite(i)}
+                                      className="w-4 h-4 accent-secondary rounded cursor-pointer shrink-0"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  )}
                                   <span className="material-symbols-outlined text-[14px] text-secondary">{headerIcon}</span>
                                   <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{headerLabel}</span>
                                 </div>

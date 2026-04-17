@@ -20,12 +20,12 @@ export default function FinancialCard({ obligations, language }: Props) {
       </div>
       <div className="space-y-3">
         {obligations.map((o, i) => (
-          <div key={i} className="rounded-lg bg-surface-container-low p-3">
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <span className="text-base font-semibold text-on-surface">{o.description}</span>
-              <span className="text-sm font-bold text-primary shrink-0">{o.amount}</span>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-on-surface-variant">
+          <div key={i} className="rounded-lg bg-surface-container-low p-3 overflow-hidden">
+            <p className="text-base font-semibold text-on-surface mb-1">{o.description}</p>
+            {o.amount && (
+              <p className="text-sm font-bold text-primary mb-2">{o.amount}</p>
+            )}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-on-surface-variant">
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[12px]">person</span>
                 {o.party}

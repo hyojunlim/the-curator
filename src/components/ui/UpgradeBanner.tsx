@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import PayPalButton from "./PayPalButton";
+import PaddleCheckout from "./PaddleCheckout";
 import { useTranslation } from "@/lib/i18n";
 
 interface UpgradeBannerProps {
@@ -106,7 +106,7 @@ export default function UpgradeBanner({ remaining, limit, plan, onUpgraded }: Up
               </li>
             ))}
           </ul>
-          <PayPalButton plan={map.nextPlan} onSuccess={handleSuccess} />
+          <PaddleCheckout plan={map.nextPlan} />
         </div>
       )}
     </div>

@@ -167,12 +167,13 @@ export default function AnalyzePage() {
   const [activeTab, setActiveTab] = useState<Tab>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState("");
-  const [language, setLanguage] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("curator-language") || "English";
-    }
-    return "English";
-  });
+  const [language, setLanguage] = useState("English");
+
+  // Read stored language preference client-side to avoid hydration mismatch
+  useEffect(() => {
+    const stored = localStorage.getItem("curator-language") || localStorage.getItem("curator-ui-language");
+    if (stored) setLanguage(stored);
+  }, []);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [usageLimited, setUsageLimited] = useState(false);
@@ -243,7 +244,7 @@ export default function AnalyzePage() {
       <AppSidebar />
 
       {/* Main content */}
-      <div className="ml-0 lg:ml-64 flex-1 flex pt-14 lg:pt-0">
+      <div className="ml-0 lg:ml-64 flex-1 flex flex-col lg:flex-row pt-14 lg:pt-0">
         {/* Upload panel */}
         <div className="flex-1 p-10 max-w-2xl">
           <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-1">{t("analyze.title")}</h1>
@@ -396,8 +397,8 @@ export default function AnalyzePage() {
           </button>
         </div>
 
-        {/* Intelligence Panel — hidden on mobile */}
-        <div className="hidden lg:flex w-80 shrink-0 p-8 bg-surface-container-low border-l border-outline-variant/10 flex-col gap-6">
+        {/* Intelligence Panel — stacked below on mobile, side panel on desktop */}
+        <div className="flex w-full lg:w-80 shrink-0 p-8 bg-surface-container-low border-t lg:border-t-0 lg:border-l border-outline-variant/10 flex-col gap-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>

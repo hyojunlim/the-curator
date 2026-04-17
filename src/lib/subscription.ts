@@ -6,8 +6,8 @@ export interface Subscription {
   id: string;
   user_id: string;
   plan: PlanType;
-  paypal_payer_id: string | null;
-  paypal_capture_id: string | null;
+  paddle_subscription_id: string | null;
+  paddle_customer_id: string | null;
   usage_count: number;
   usage_reset_at: string;
 }
@@ -25,6 +25,7 @@ export async function getSubscription(userId: string): Promise<Subscription> {
     if (new Date(data.usage_reset_at) <= new Date()) {
       const nextReset = new Date();
       nextReset.setMonth(nextReset.getMonth() + 1);
+      nextReset.setDate(1); // Always reset on the 1st to avoid month-end date issues
       const { data: updated, error: updateErr } = await supabaseAdmin
         .from("subscriptions")
         .update({ usage_count: 0, usage_reset_at: nextReset.toISOString() })
@@ -39,21 +40,32 @@ export async function getSubscription(userId: string): Promise<Subscription> {
     return data as Subscription;
   }
 
-  // Create new free subscription
+  // Create new free subscription (upsert to prevent duplicates from concurrent requests)
   const nextReset = new Date();
   nextReset.setMonth(nextReset.getMonth() + 1);
+  nextReset.setDate(1); // Always reset on the 1st to avoid month-end date issues
   const { data: created, error: createErr } = await supabaseAdmin
     .from("subscriptions")
-    .insert({
-      user_id: userId,
-      plan: "free",
-      usage_count: 0,
-      usage_reset_at: nextReset.toISOString(),
-    })
+    .upsert(
+      {
+        user_id: userId,
+        plan: "free",
+        usage_count: 0,
+        usage_reset_at: nextReset.toISOString(),
+      },
+      { onConflict: "user_id", ignoreDuplicates: true }
+    )
     .select("*")
     .single();
 
   if (createErr || !created) {
+    // If upsert conflict, re-fetch the existing row
+    const { data: existing } = await supabaseAdmin
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    if (existing) return existing as Subscription;
     throw new Error("Failed to create subscription");
   }
   return created as Subscription;
@@ -91,23 +103,48 @@ export async function incrementUsage(userId: string): Promise<void> {
   }
 }
 
-/** Activate a paid plan after successful PayPal payment */
-export async function activatePlan(userId: string, plan: "pro" | "business", paypalPayerId: string, paypalCaptureId: string): Promise<void> {
+/** Activate a paid plan after successful Paddle payment */
+export async function activatePlan(userId: string, plan: "pro" | "business", subscriptionId: string, customerId: string): Promise<void> {
   const sub = await getSubscription(userId);
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("subscriptions")
     .update({
       plan,
-      paypal_payer_id: paypalPayerId,
-      paypal_capture_id: paypalCaptureId,
+      paddle_subscription_id: subscriptionId,
+      paddle_customer_id: customerId,
     })
     .eq("id", sub.id);
+
+  if (error) {
+    console.error("[activatePlan] DB update failed:", error.message);
+    throw new Error("Failed to activate plan in database");
+  }
 }
 
 /** Downgrade to free plan */
 export async function deactivatePro(userId: string): Promise<void> {
   await supabaseAdmin
     .from("subscriptions")
-    .update({ plan: "free", paypal_capture_id: null })
+    .update({ plan: "free", paddle_subscription_id: null })
     .eq("user_id", userId);
+}
+
+/** Cancel Paddle subscription via API */
+export async function cancelPaddleSubscription(subscriptionId: string): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `https://${process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox" ? "sandbox-api" : "api"}.paddle.com/subscriptions/${subscriptionId}/cancel`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${(process.env.PADDLE_API_KEY || "").trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ effective_from: "next_billing_period" }),
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
