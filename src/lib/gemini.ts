@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { jsonrepair } from "jsonrepair";
 import { GEMINI_PROMPT } from "./prompts";
 import type { AnalysisResult } from "@/types";
 
@@ -37,7 +38,6 @@ function parseResponse(responseText: string): AnalysisResult {
   // Strategy 1: Parse as-is
   try {
     const raw = JSON.parse(cleaned);
-    // If Gemini wrapped in array [{...}], unwrap it
     parsed = Array.isArray(raw) ? raw[0] : raw;
   } catch {
     // Strategy 2: Extract between first { and last }
@@ -47,17 +47,59 @@ function parseResponse(responseText: string): AnalysisResult {
       try {
         parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
       } catch {
-        // Strategy 3: Try removing ALL trailing non-} characters
-        const trimmed = cleaned.slice(jsonStart).replace(/[^}]*$/, "");
-        const end2 = trimmed.lastIndexOf("}");
-        if (end2 !== -1) {
-          try {
-            parsed = JSON.parse(trimmed.slice(0, end2 + 1));
-          } catch {
-            // all strategies failed
+        // Strategy 3: Fix common JSON issues (unescaped control chars, newlines in strings)
+        try {
+          const fixed = cleaned.slice(jsonStart, jsonEnd + 1)
+            .replace(/[\x00-\x1F\x7F]/g, (ch) => {
+              if (ch === "\n") return "\\n";
+              if (ch === "\r") return "\\r";
+              if (ch === "\t") return "\\t";
+              return "";
+            });
+          parsed = JSON.parse(fixed);
+        } catch {
+          // Strategy 4: Try removing ALL trailing non-} characters
+          const trimmed = cleaned.slice(jsonStart).replace(/[^}]*$/, "");
+          const end2 = trimmed.lastIndexOf("}");
+          if (end2 !== -1) {
+            try {
+              parsed = JSON.parse(trimmed.slice(0, end2 + 1));
+            } catch {
+              // Strategy 5: Aggressive — fix truncated JSON by closing open brackets
+              try {
+                let attempt = trimmed.slice(0, end2 + 1);
+                const openBraces = (attempt.match(/{/g) || []).length;
+                const closeBraces = (attempt.match(/}/g) || []).length;
+                const openBrackets = (attempt.match(/\[/g) || []).length;
+                const closeBrackets = (attempt.match(/\]/g) || []).length;
+                for (let b = 0; b < openBrackets - closeBrackets; b++) attempt += "]";
+                for (let b = 0; b < openBraces - closeBraces; b++) attempt += "}";
+                parsed = JSON.parse(attempt);
+              } catch {
+                // Strategy 6: jsonrepair library — handles unescaped quotes, trailing commas, etc.
+                try {
+                  const repaired = jsonrepair(cleaned);
+                  const raw = JSON.parse(repaired);
+                  parsed = Array.isArray(raw) ? raw[0] : raw;
+                } catch {
+                  // all strategies failed
+                }
+              }
+            }
           }
         }
       }
+    }
+  }
+
+  if (!parsed) {
+    // Final attempt: jsonrepair on raw input
+    try {
+      const repaired = jsonrepair(cleaned);
+      const raw = JSON.parse(repaired);
+      parsed = Array.isArray(raw) ? raw[0] : raw;
+    } catch {
+      // truly failed
     }
   }
 
@@ -101,9 +143,10 @@ async function callGemini(prompt: string, timeoutMs = 240_000): Promise<string> 
   const model = getModel();
 
   // Race between API call and timeout
+  let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs);
-  });
+    timeoutId = setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs);
+  }).catch((e) => { throw e; }); // prevent unhandled rejection if timeout fires after race settles
 
   try {
     const resultPromise = model.generateContent({
@@ -111,11 +154,13 @@ async function callGemini(prompt: string, timeoutMs = 240_000): Promise<string> 
     });
 
     const result = await Promise.race([resultPromise, timeoutPromise]);
+    clearTimeout(timeoutId!);
 
     const response = result.response;
     const text = response.text();
     return text;
   } catch (err: unknown) {
+    clearTimeout(timeoutId!);
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[Gemini] callGemini error:", msg);
     if (msg === "TIMEOUT") throw new Error("TIMEOUT");
@@ -148,7 +193,7 @@ export async function analyzeContract(
       lastError = err instanceof Error ? err : new Error(String(err));
       console.error(`[Gemini] Attempt ${attempt + 1}/${MAX_RETRIES + 1} failed:`, lastError.message);
       // Only retry on INVALID_JSON or EMPTY_RESPONSE
-      if (lastError.message !== "INVALID_JSON" && lastError.message !== "EMPTY_RESPONSE") throw lastError;
+      if (!lastError.message.startsWith("INVALID_JSON") && lastError.message !== "EMPTY_RESPONSE") throw lastError;
       // Wait briefly before retry
       if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 500));
     }
@@ -171,9 +216,10 @@ export async function analyzeContractFromPDF(
   const pdfBase64 = pdfBuffer.toString("base64");
 
   async function callPDF(): Promise<string> {
+    let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("TIMEOUT")), 240_000);
-    });
+      timeoutId = setTimeout(() => reject(new Error("TIMEOUT")), 240_000);
+    }).catch((e) => { throw e; }); // prevent unhandled rejection if timeout fires after race settles
 
     try {
       const resultPromise = model.generateContent({
@@ -187,8 +233,10 @@ export async function analyzeContractFromPDF(
       });
 
       const result = await Promise.race([resultPromise, timeoutPromise]);
+      clearTimeout(timeoutId!);
       return result.response.text();
     } catch (err: unknown) {
+      clearTimeout(timeoutId!);
       const msg = err instanceof Error ? err.message : String(err);
       console.error("[Gemini PDF] callPDF error:", msg);
       if (msg === "TIMEOUT") throw new Error("TIMEOUT");
@@ -207,7 +255,7 @@ export async function analyzeContractFromPDF(
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
       console.error(`[Gemini PDF] Attempt ${attempt + 1}/${MAX_RETRIES + 1} failed:`, lastError.message);
-      if (lastError.message !== "INVALID_JSON" && lastError.message !== "EMPTY_RESPONSE") throw lastError;
+      if (!lastError.message.startsWith("INVALID_JSON") && lastError.message !== "EMPTY_RESPONSE") throw lastError;
       if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 500));
     }
   }

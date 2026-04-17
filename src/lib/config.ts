@@ -6,7 +6,7 @@
 // ── Subscription Plans ──
 export type PlanType = "free" | "pro" | "business";
 
-export const FREE_ANALYSIS_LIMIT = parseInt(process.env.FREE_ANALYSIS_LIMIT || "5", 10);
+export const FREE_ANALYSIS_LIMIT = parseInt(process.env.FREE_ANALYSIS_LIMIT || "10", 10);
 export const PRO_ANALYSIS_LIMIT = parseInt(process.env.PRO_ANALYSIS_LIMIT || "30", 10);
 
 export const PRO_PRICE_USD = process.env.PRO_PRICE_USD || "29.00";
@@ -40,8 +40,7 @@ export const FREE_LANGUAGES: string[] = ["English", "Korean"];
 export const FREE_HISTORY_DAYS = 7;
 
 // ── MVP Mode: unlock all features for free users ──
-// TODO: Revert to restricted free plan before public launch
-export const MVP_MODE = true;
+export const MVP_MODE = process.env.MVP_MODE === "true" && process.env.NODE_ENV !== "production";
 
 // ── Plan feature matrix ──
 export const PLAN_FEATURES = {
@@ -51,6 +50,7 @@ export const PLAN_FEATURES = {
     historyDays: MVP_MODE ? null : FREE_HISTORY_DAYS,
     search: MVP_MODE ? true : false,
     pdfExport: MVP_MODE ? true : false,
+    docxExport: MVP_MODE ? true : false,
     priorityProcessing: false,
   },
   pro: {
@@ -59,6 +59,7 @@ export const PLAN_FEATURES = {
     historyDays: 90,
     search: true,
     pdfExport: true,
+    docxExport: false,
     priorityProcessing: false,
   },
   business: {
@@ -67,6 +68,7 @@ export const PLAN_FEATURES = {
     historyDays: null, // unlimited
     search: true,
     pdfExport: true,
+    docxExport: true,
     priorityProcessing: true,
   },
 } as const;

@@ -36,9 +36,14 @@ const SECTION_KEYS: Record<string, { heading: string; text: string }[]> = {
     { heading: "legal.api.getContractById", text: "legal.api.getContractByIdText" },
     { heading: "legal.api.rateLimits", text: "legal.api.rateLimitsText" },
   ],
+  refund: [
+    { heading: "legal.refund.policy", text: "legal.refund.policyText" },
+    { heading: "legal.refund.eligibility", text: "legal.refund.eligibilityText" },
+    { heading: "legal.refund.process", text: "legal.refund.processText" },
+    { heading: "legal.refund.exceptions", text: "legal.refund.exceptionsText" },
+    { heading: "legal.refund.contact", text: "legal.refund.contactText" },
+  ],
 };
-
-const VALID_SLUGS = ["privacy", "terms", "security", "api"] as const;
 
 export default function LegalPage({ params }: { params: { slug: string } }) {
   const { t } = useTranslation();

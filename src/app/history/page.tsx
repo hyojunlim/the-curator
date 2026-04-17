@@ -8,15 +8,10 @@ import { PREDEFINED_TAGS, getTagColor } from "@/lib/tags";
 import { useSubscription } from "@/hooks/useSubscription";
 import { MVP_MODE } from "@/lib/config";
 import { useTranslation } from "@/lib/i18n";
+import { formatDate } from "@/lib/dateUtils";
 import type { Contract } from "@/types";
 
 const SORT_KEYS = ["sortMostRecent", "sortAlphabetical"] as const;
-
-const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
-
-function formatDate(iso: string, locale = "en") {
-  return new Date(iso).toLocaleDateString(DATE_LOCALES[locale] || "en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 /* ──────────────────────── Skeleton Card ──────────────────────── */
 function SkeletonCard() {
@@ -357,7 +352,7 @@ export default function HistoryPage() {
                       onClick={() => setDeleteConfirm(c.id)}
                       aria-label="Delete contract"
                       title="Delete contract"
-                      className="absolute top-4 right-12 text-on-surface-variant/0 group-hover:text-on-surface-variant/40 hover:!text-error transition-colors"
+                      className="absolute top-4 right-12 text-on-surface-variant/40 lg:text-on-surface-variant/0 lg:group-hover:text-on-surface-variant/40 hover:!text-error transition-colors"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
@@ -367,14 +362,19 @@ export default function HistoryPage() {
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-fixed/30">
                           <span className="material-symbols-outlined text-[20px] text-primary">description</span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-fixed/30 text-primary">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${{
+                          COMPLETE: "bg-secondary/10 text-secondary",
+                          PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                          PROCESSING: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                          FAILED: "bg-error/10 text-error",
+                        }[c.status] || "bg-primary-fixed/30 text-primary"}`}>
                           {c.status}
                         </span>
                       </div>
-                      <h3 className="font-headline font-bold text-on-surface text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="font-headline font-bold text-on-surface text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2" title={c.title}>
                         {c.title}
                       </h3>
-                      <p className="text-xs text-on-surface-variant mb-2">{c.type}</p>
+                      <p className="text-xs text-on-surface-variant mb-2" title={c.type}>{c.type}</p>
                     </Link>
 
                     {/* Tags -- clickable to filter */}
@@ -417,7 +417,43 @@ export default function HistoryPage() {
             )}
           </div>
 
-          {/* Filters panel */}
+          {/* Filters panel -- mobile: horizontal scroll row, desktop: sidebar */}
+          {/* Mobile filter row */}
+          <div className="lg:hidden fixed bottom-16 left-0 right-0 z-30 bg-surface/95 backdrop-blur-sm border-t border-outline-variant/10 px-4 py-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => setActiveTag(null)}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+                  !activeTag
+                    ? "bg-primary/10 text-primary font-bold"
+                    : "bg-surface-container-high text-on-surface-variant"
+                }`}
+              >
+                {t("history.allContracts")}
+              </button>
+              {(() => {
+                const allTags = new Set<string>();
+                contracts.forEach((c) => (c.tags ?? []).forEach((tag) => allTags.add(tag)));
+                return Array.from(allTags).map((label) => {
+                  const count = contracts.filter((c) => (c.tags ?? []).includes(label)).length;
+                  const color = getTagColor(label);
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => setActiveTag(activeTag === label ? null : label)}
+                      className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
+                        activeTag === label ? color + " border" : "bg-surface-container-high text-on-surface-variant"
+                      }`}
+                    >
+                      {label} <span className="opacity-60">{count}</span>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Desktop filter sidebar */}
           <div className="hidden lg:block w-56 shrink-0">
             <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">

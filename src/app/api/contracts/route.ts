@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getSubscription } from "@/lib/subscription";
 import { PLAN_FEATURES } from "@/lib/config";
+import { isValidUUID } from "@/lib/validation";
 
 export async function GET() {
   const { userId } = await auth();
@@ -24,7 +25,7 @@ export async function GET() {
     query = query.gte("created_at", cutoff.toISOString());
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.limit(200);
 
   if (error) {
     console.error("[/api/contracts] Error:", error.message);
@@ -46,6 +47,9 @@ export async function DELETE(request: Request) {
   const { id } = await request.json();
   if (!id || typeof id !== "string") {
     return Response.json({ error: "Invalid contract ID" }, { status: 400 });
+  }
+  if (!isValidUUID(id)) {
+    return Response.json({ error: "Invalid contract ID format" }, { status: 400 });
   }
 
   const { error } = await supabaseAdmin

@@ -5,11 +5,12 @@ import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
+import { DATE_LOCALES } from "@/lib/dateUtils";
 import type { Contract } from "@/types";
 
 export default function AnalyticsPage() {
   const { t, locale } = useTranslation();
-  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[locale] || "en-US";
+  const dateLocale = DATE_LOCALES[locale] || "en-US";
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
 

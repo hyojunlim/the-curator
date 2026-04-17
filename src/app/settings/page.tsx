@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
-import PayPalButton from "@/components/ui/PayPalButton";
+import PaddleCheckout from "@/components/ui/PaddleCheckout";
+import PaddleScript from "@/components/ui/PaddleScript";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { useTranslation } from "@/lib/i18n";
+import { DATE_LOCALES } from "@/lib/dateUtils";
 
 const PLAN_KEYS = {
   free: "free",
@@ -19,12 +21,32 @@ const SECTION_ICONS: Record<string, string> = { profile: "person", notifications
 
 export default function SettingsPage() {
   const { t, locale } = useTranslation();
-  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[locale] || "en-US";
+  const dateLocale = DATE_LOCALES[locale] || "en-US";
   const [activeSection, setActiveSection] = useState("profile");
+
+  // Handle URL params: ?tab=billing, ?upgraded=pro
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tab")) {
+        setActiveSection(params.get("tab")!);
+      }
+      if (params.get("upgraded")) {
+        setActiveSection("billing");
+        if (!params.get("_ptxn")) {
+          window.history.replaceState({}, "", "/settings");
+          refreshSub();
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [saved, setSaved] = useState(false);
   const { sub, loading: subLoading, refresh: refreshSub } = useSubscription();
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { user } = useUser();
+  const { openUserProfile } = useClerk();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -36,7 +58,8 @@ export default function SettingsPage() {
   // Populate form from Clerk user data + localStorage
   useEffect(() => {
     if (user) {
-      const savedLang = typeof window !== "undefined" ? localStorage.getItem("curator-language") || "English" : "English";
+      // Use the same key as UI language system for consistency
+      const savedLang = typeof window !== "undefined" ? localStorage.getItem("curator-ui-language") || "English" : "English";
       const savedOrg = typeof window !== "undefined" ? localStorage.getItem("curator-org") || "" : "";
       setForm((prev) => ({
         ...prev,
@@ -52,8 +75,12 @@ export default function SettingsPage() {
     try {
       // Persist language & org to localStorage BEFORE Clerk update
       // (Clerk update triggers useEffect which reads localStorage)
+      // Sync report language with UI language system
+      localStorage.setItem("curator-ui-language", form.language);
       localStorage.setItem("curator-language", form.language);
       localStorage.setItem("curator-org", form.org);
+      // Notify UI language system of the change
+      window.dispatchEvent(new CustomEvent("curator-ui-language-change", { detail: form.language }));
       await user?.update({
         firstName: form.name.split(" ")[0] || "",
         lastName: form.name.split(" ").slice(1).join(" ") || "",
@@ -67,6 +94,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
+      <PaddleScript />
       <AppSidebar />
 
       <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
@@ -254,7 +282,7 @@ export default function SettingsPage() {
                   </p>
                   <button
                     onClick={() => {
-                      window.open("https://accounts.clerk.dev/user", "_blank");
+                      openUserProfile();
                     }}
                     className="px-4 py-2 rounded-lg border border-error/30 text-error text-sm font-bold hover:bg-error/5 transition-colors"
                   >
@@ -315,33 +343,83 @@ export default function SettingsPage() {
 
                       {/* Active paid plan info */}
                       {sub.plan !== "free" && (
-                        <div className="bg-primary/5 rounded-lg p-4 mb-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
-                            <span className="font-headline font-bold text-sm text-on-surface">
-                              {t("settings.planActive", { plan: t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`) })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-on-surface-variant mb-3">
-                            {sub.plan === "business"
-                              ? t("settings.businessPlanDesc")
-                              : t("settings.proPlanDesc")}
-                          </p>
-                          <button
-                            onClick={async () => {
-                              if (!confirm(t("settings.cancelConfirm", { plan: t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`) }))) return;
-                              setCancelling(true);
-                              try {
-                                const res = await fetch("/api/subscription/cancel", { method: "POST" });
-                                if (res.ok) refreshSub();
-                              } catch { /* ignore */ }
-                              setCancelling(false);
-                            }}
-                            disabled={cancelling}
-                            className="text-xs text-on-surface-variant hover:text-error transition-colors underline"
-                          >
-                            {cancelling ? t("settings.cancelling") : t("settings.cancelSubscription")}
-                          </button>
+                        <div className={`rounded-lg p-4 mb-4 ${sub.canceledAt || sub.paddleStatus === "canceled" ? "bg-tertiary/5 border border-tertiary/20" : "bg-primary/5"}`}>
+                          {sub.canceledAt || sub.paddleStatus === "canceled" ? (
+                            <>
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="material-symbols-outlined text-tertiary text-[18px]">event_busy</span>
+                                <span className="font-headline font-bold text-sm text-on-surface">
+                                  {t("settings.subscriptionCanceled") || "Subscription Canceled"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-on-surface-variant mb-3">
+                                {sub.canceledAt
+                                  ? (t("settings.accessUntil") || "You still have access until") + " " + new Date(sub.canceledAt).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })
+                                  : (t("settings.canceledDesc") || "Your subscription has been canceled.")}
+                              </p>
+                              <button
+                                onClick={() => {
+                                  // Scroll to re-subscribe checkout cards below
+                                  const section = document.getElementById("resubscribe-section");
+                                  if (section) section.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                className="text-xs font-bold text-primary hover:text-primary/80 transition-colors underline"
+                              >
+                                {t("settings.resubscribe") || "Re-subscribe"}
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
+                                <span className="font-headline font-bold text-sm text-on-surface">
+                                  {t("settings.planActive", { plan: t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`) })}
+                                </span>
+                              </div>
+                              <p className="text-xs text-on-surface-variant mb-3">
+                                {sub.plan === "business"
+                                  ? t("settings.businessPlanDesc")
+                                  : t("settings.proPlanDesc")}
+                              </p>
+                              {showCancelConfirm ? (
+                                <div className="bg-error/5 border border-error/20 rounded-lg p-4 mt-2">
+                                  <p className="text-sm text-on-surface mb-3">
+                                    {t("settings.cancelConfirm", { plan: t(`settings.${PLAN_KEYS[sub.plan as keyof typeof PLAN_KEYS] ?? "free"}`) })}
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={async () => {
+                                        setCancelling(true);
+                                        try {
+                                          const res = await fetch("/api/subscription/cancel", { method: "POST" });
+                                          if (res.ok) refreshSub();
+                                        } catch { /* ignore */ }
+                                        setCancelling(false);
+                                        setShowCancelConfirm(false);
+                                      }}
+                                      disabled={cancelling}
+                                      className="px-4 py-2 bg-error text-white rounded-lg text-xs font-bold hover:bg-error/90 transition-colors"
+                                    >
+                                      {cancelling ? t("settings.cancelling") : (t("settings.confirmCancel") || t("settings.cancelSubscription"))}
+                                    </button>
+                                    <button
+                                      onClick={() => setShowCancelConfirm(false)}
+                                      className="px-4 py-2 bg-surface-container-high rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+                                    >
+                                      {t("common.cancel") || t("settings.goBack") || "Back"}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setShowCancelConfirm(true)}
+                                  className="text-xs text-on-surface-variant hover:text-error transition-colors underline"
+                                >
+                                  {t("settings.cancelSubscription")}
+                                </button>
+                              )}
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -362,7 +440,7 @@ export default function SettingsPage() {
                           </li>
                         ))}
                       </ul>
-                      <PayPalButton plan="pro" onSuccess={refreshSub} />
+                      <PaddleCheckout plan="pro" />
                     </div>
                     {/* Business */}
                     <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-2 border-primary">
@@ -375,13 +453,45 @@ export default function SettingsPage() {
                           </li>
                         ))}
                       </ul>
-                      <PayPalButton plan="business" onSuccess={refreshSub} />
+                      <PaddleCheckout plan="business" />
                     </div>
                   </div>
                 )}
 
+                {/* Re-subscribe / upgrade options when canceled */}
+                {sub && sub.plan !== "free" && (sub.canceledAt || sub.paddleStatus === "canceled") && (
+                  <div id="resubscribe-section" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Same plan re-subscribe */}
+                    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/15">
+                      <h2 className="font-headline font-bold text-on-surface mb-1">{t("settings.resubscribe")}</h2>
+                      <p className="text-lg font-headline font-extrabold text-on-surface mb-1">
+                        {sub.plan === "business" ? "$79" : "$29"}<span className="text-xs font-normal text-on-surface-variant">/mo</span>
+                      </p>
+                      <p className="text-xs text-on-surface-variant mb-4">
+                        {t("settings.resubscribeDesc")}
+                      </p>
+                      <PaddleCheckout plan={sub.plan === "business" ? "business" : "pro"} />
+                    </div>
+                    {/* Upgrade to Business (if currently Pro) */}
+                    {sub.plan === "pro" && (
+                      <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-2 border-primary">
+                        <h2 className="font-headline font-bold text-primary mb-1">{t("settings.upgradeToBusiness")}</h2>
+                        <p className="text-lg font-headline font-extrabold text-on-surface mb-1">$79<span className="text-xs font-normal text-on-surface-variant">/mo</span></p>
+                        <ul className="text-xs text-on-surface-variant space-y-2 mb-4">
+                          {(t("settings.businessFeatures") as unknown as string[]).map((f: string) => (
+                            <li key={f} className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-secondary text-[14px]">check</span>{f}
+                            </li>
+                          ))}
+                        </ul>
+                        <PaddleCheckout plan="business" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Pro user can upgrade to Business */}
-                {sub && sub.plan === "pro" && (
+                {sub && sub.plan === "pro" && !(sub.canceledAt || sub.paddleStatus === "canceled") && (
                   <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-2 border-primary">
                     <h2 className="font-headline font-bold text-on-surface mb-1">{t("settings.upgradeToBusiness")}</h2>
                     <p className="text-lg font-headline font-extrabold text-on-surface mb-3">$79<span className="text-xs font-normal text-on-surface-variant">/mo</span></p>
@@ -392,7 +502,7 @@ export default function SettingsPage() {
                         </li>
                       ))}
                     </ul>
-                    <PayPalButton plan="business" onSuccess={refreshSub} />
+                    <PaddleCheckout plan="business" />
                   </div>
                 )}
 

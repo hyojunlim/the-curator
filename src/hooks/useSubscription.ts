@@ -9,6 +9,8 @@ export interface SubscriptionInfo {
   limit: number | null;
   remaining: number;
   resetsAt: string;
+  canceledAt: string | null;
+  paddleStatus: string | null;
 }
 
 export function useSubscription() {

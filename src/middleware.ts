@@ -6,9 +6,23 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/legal/(.*)",
+  "/sitemap.xml",
+  "/robots.txt",
+  "/opengraph-image(.*)",
+  "/support",
+  "/api/paddle/webhook",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // Let search engine bots bypass Clerk auth entirely to prevent redirect errors
+  const userAgent = request.headers.get("user-agent") || "";
+  const isBot = /Googlebot|bingbot|Baiduspider|YandexBot|DuckDuckBot|Slurp|Applebot|NaverBot|Yeti/i.test(userAgent);
+
+  if (isBot) {
+    // Bots should only see public pages; protected pages are blocked by robots.txt
+    return NextResponse.next();
+  }
+
   const { userId } = await auth();
 
   // Logged-in users hitting landing page → redirect to dashboard

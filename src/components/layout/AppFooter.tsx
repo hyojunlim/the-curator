@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 
 export default function AppFooter({ sidebarOffset = true }: { sidebarOffset?: boolean }) {
@@ -12,10 +13,11 @@ export default function AppFooter({ sidebarOffset = true }: { sidebarOffset?: bo
       }`}
     >
       <div className="flex gap-2 lg:gap-4 flex-wrap">
-        <a href="/legal/privacy" className="hover:text-primary transition-colors">{t("footer.privacy")}</a>
-        <a href="/legal/terms" className="hover:text-primary transition-colors">{t("footer.terms")}</a>
-        <a href="/legal/security" className="hover:text-primary transition-colors hidden sm:inline">{t("footer.security")}</a>
-        <a href="/legal/api" className="hover:text-primary transition-colors hidden sm:inline">{t("footer.apiDocs")}</a>
+        <Link href="/legal/privacy" className="hover:text-primary transition-colors">{t("footer.privacy")}</Link>
+        <Link href="/legal/terms" className="hover:text-primary transition-colors">{t("footer.terms")}</Link>
+        <Link href="/legal/refund" className="hover:text-primary transition-colors">{t("footer.refund")}</Link>
+        <Link href="/legal/security" className="hover:text-primary transition-colors hidden sm:inline">{t("footer.security")}</Link>
+        <Link href="/legal/api" className="hover:text-primary transition-colors hidden sm:inline">{t("footer.apiDocs")}</Link>
       </div>
       <span className="hidden sm:inline">&copy; {new Date().getFullYear()} {t("common.copyright")}</span>
     </div>

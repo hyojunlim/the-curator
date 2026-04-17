@@ -10,7 +10,8 @@ import fr from "./i18n/locales/fr";
 import de from "./i18n/locales/de";
 import pt from "./i18n/locales/pt";
 
-const locales: Record<string, any> = { en, ko, ja, zh, es, fr, de, pt };
+type LocaleData = typeof en;
+const locales: Record<string, LocaleData> = { en, ko, ja, zh, es, fr, de, pt };
 
 const langMap: Record<string, string> = {
   English: "en",
@@ -26,9 +27,10 @@ const langMap: Record<string, string> = {
 /** Legacy t() function for results components — reads from locale.results namespace */
 export function t(language: string, key: string): string {
   const locale = langMap[language] || "en";
-  return (locales[locale]?.results as any)?.[key]
-    || (locales.en.results as any)?.[key]
-    || key;
+  const localeData = locales[locale];
+  const results = localeData?.results as Record<string, string> | undefined;
+  const enResults = locales.en.results as Record<string, string> | undefined;
+  return results?.[key] || enResults?.[key] || key;
 }
 
 export function getLocale(language: string): string {

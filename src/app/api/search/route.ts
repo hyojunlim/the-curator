@@ -32,8 +32,8 @@ export async function GET(request: Request) {
     return Response.json({ error: "Invalid search query" }, { status: 400 });
   }
 
-  // Limit search query length to prevent abuse
-  const safeQuery = q.slice(0, 100);
+  // Limit search query length and escape SQL wildcards to prevent abuse
+  const safeQuery = q.slice(0, 100).replace(/%/g, "\\%").replace(/_/g, "\\_");
 
   const { data, error } = await supabaseAdmin
     .from("contracts")

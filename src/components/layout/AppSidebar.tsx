@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser, useClerk } from "@clerk/nextjs";
@@ -22,18 +22,46 @@ export default function AppSidebar() {
   ];
 
   const bottomItems = [
+    { label: t("sidebar.billing"), icon: "credit_card", href: "/settings?tab=billing" },
     { label: t("sidebar.helpCenter"), icon: "help", href: "/support" },
     { label: t("sidebar.settings"), icon: "settings", href: "/settings" },
   ];
   const pathname = usePathname();
+  const [currentSearch, setCurrentSearch] = useState("");
   const { user } = useUser();
+
+  // Read search params client-side to avoid useSearchParams Suspense requirement
+  useEffect(() => {
+    setCurrentSearch(window.location.search);
+  }, [pathname]);
   const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { sub } = useSubscription();
   const isPaid = MVP_MODE || sub?.plan === "pro" || sub?.plan === "business";
 
+  // Auto-close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   function isActive(href: string) {
     if (href === "/history") return pathname.startsWith("/history") || pathname.startsWith("/contracts/");
+    // Handle hrefs with query params (e.g. /settings?tab=billing)
+    const params = new URLSearchParams(currentSearch);
+    if (href.includes("?")) {
+      const [hrefPath, hrefQuery] = href.split("?");
+      if (pathname !== hrefPath) return false;
+      const hrefParams = new URLSearchParams(hrefQuery);
+      let match = true;
+      hrefParams.forEach((value, key) => {
+        if (params.get(key) !== value) match = false;
+      });
+      return match;
+    }
+    // For /settings without query, only match when there are no tab params
+    if (href === "/settings") {
+      return pathname === "/settings" && !params.get("tab");
+    }
     return pathname === href || pathname.startsWith(href + "/");
   }
 
