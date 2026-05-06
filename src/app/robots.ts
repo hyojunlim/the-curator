@@ -6,9 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/dashboard", "/analyze", "/history", "/settings", "/team", "/starred", "/analytics", "/contracts/"],
+        disallow: ["/api/", "/dashboard", "/analyze", "/history", "/settings", "/team", "/starred", "/analytics", "/contracts/", "/not-found"],
       },
     ],
-    sitemap: "https://the-curator-virid.vercel.app/sitemap.xml",
+    sitemap: "https://thecurator.site/sitemap.xml",
   };
 }

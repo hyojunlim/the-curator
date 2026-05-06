@@ -5,13 +5,8 @@ import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
+import { formatDate } from "@/lib/dateUtils";
 import type { Contract } from "@/types";
-
-const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
-
-function formatDate(iso: string, locale = "en") {
-  return new Date(iso).toLocaleDateString(DATE_LOCALES[locale] || "en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 export default function StarredPage() {
   const { t, locale } = useTranslation();
@@ -92,10 +87,10 @@ export default function StarredPage() {
                       <span className="material-symbols-outlined text-[20px] text-primary">description</span>
                     </div>
                   </div>
-                  <h3 className="font-headline font-bold text-on-surface text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                  <h3 className="font-headline font-bold text-on-surface text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2" title={c.title}>
                     {c.title}
                   </h3>
-                  <p className="text-xs text-on-surface-variant mb-4">{c.type}</p>
+                  <p className="text-xs text-on-surface-variant mb-4" title={c.type}>{c.type}</p>
                   <div className="flex items-center justify-between text-[11px] text-on-surface-variant">
                     <div>
                       <span className="uppercase tracking-wider">{t("starred.analyzed")}</span>

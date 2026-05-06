@@ -9,21 +9,21 @@ export default function HomePage() {
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface transition-colors duration-200">
 
-      {/* ── Navigation ── */}
+      {/* -- Navigation (client component) -- */}
       <LandingNav />
 
-      {/* ── Hero ── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      {/* -- Hero -- */}
+      <section id="main-content" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 bg-grid-pattern" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[700px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-xs font-bold tracking-widest uppercase text-primary mb-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse motion-reduce:animate-none inline-block" />
             {t("landing.aiPoweredBadge")}
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-[88px] font-headline font-extrabold tracking-tighter leading-[0.88] mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[88px] font-headline font-extrabold tracking-tighter leading-[0.95] mb-8">
             <span className="text-on-surface">{t("landing.heroTitle1")}</span>
             <br />
             <span className="gradient-text">{t("landing.heroTitle2")}</span>
@@ -43,7 +43,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high px-8 py-4 rounded-xl font-headline font-bold text-base transition-all"
+              className="inline-flex items-center gap-2 text-on-surface-variant hover:text-on-surface font-semibold text-base transition-colors px-4 py-2"
             >
               {t("landing.viewDashboard")}
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -64,8 +64,8 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* ── Analysis Demo Mockup ── */}
-          <div className="relative mx-auto max-w-2xl animate-float">
+          {/* -- Analysis Demo Mockup -- */}
+          <div className="relative mx-auto max-w-2xl animate-float motion-reduce:animate-none">
             <div
               className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl shadow-2xl shadow-primary/10 overflow-hidden mockup-glow"
               style={{ transform: "perspective(1000px) rotateY(-2deg) rotateX(2deg)" }}
@@ -77,14 +77,14 @@ export default function HomePage() {
                   <span className="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim/60" />
                   <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
                 </div>
-                <span className="text-xs font-headline font-bold text-on-surface-variant/60 ml-2">{t("landing.demoTitle")}</span>
+                <span className="text-xs font-headline font-bold text-on-surface-variant ml-2">{t("landing.demoTitle")}</span>
               </div>
 
               <div className="p-6 space-y-5 text-left">
                 {/* Analysis Result Header */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">{t("landing.demoClauseReview")}</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("landing.demoClauseReview")}</span>
                     <span className="text-xs font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10">{t("landing.demoAnalysisComplete")}</span>
                   </div>
                 </div>
@@ -115,11 +115,11 @@ export default function HomePage() {
                 {/* Bottom row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-tertiary-fixed-dim/5 border border-tertiary-fixed-dim/15">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary-fixed-dim block mb-1.5">{t("landing.demoSuggestedClauses")}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-tertiary-fixed-dim block mb-1.5">{t("landing.demoSuggestedClauses")}</span>
                     <p className="text-xs text-on-surface-variant">{t("landing.demoForceMajeure")} · {t("landing.demoDataProtection")}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1.5">{t("landing.demoActionItems")}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-primary block mb-1.5">{t("landing.demoActionItems")}</span>
                     <div className="space-y-1">
                       <p className="text-xs text-on-surface-variant flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px] text-primary">check_box</span>
@@ -142,15 +142,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Trust Bar ── */}
+      {/* -- Trust Bar -- */}
       <section className="py-14 border-y border-outline-variant/15">
-        <div className="max-w-5xl mx-auto px-8">
-          <p className="text-center text-xs font-bold uppercase tracking-widest text-on-surface/25 mb-8">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <p className="text-center text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-8">
             {t("landing.poweredByAI")}
           </p>
           <div className="flex flex-wrap justify-center items-center gap-12">
             {["Gemini AI", "Next.js", "TypeScript", "Secure Cloud"].map((name) => (
-              <span key={name} className="text-on-surface/20 font-headline font-bold text-lg tracking-tight hover:text-on-surface/40 transition-colors">
+              <span key={name} className="text-on-surface-variant font-headline font-bold text-lg tracking-tight hover:text-on-surface transition-colors">
                 {name}
               </span>
             ))}
@@ -158,8 +158,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Features — 6 Interactive Mini-Mockups ── */}
-      <section id="features" className="py-40 px-8">
+      {/* -- Features — 6 Interactive Mini-Mockups -- */}
+      <section id="features" className="py-40 px-5 sm:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-2xl mb-20">
             <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.features")}</span>
@@ -171,7 +171,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* 1. Smart Clause Analysis — 2-col span */}
             <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-10 group hover:border-outline-variant/30 transition-all">
@@ -207,18 +207,18 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">groups</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.partyAdviceTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.partyAdviceTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.partyAdviceDesc")}
               </p>
               {/* Two-party advice mockup */}
               <div className="space-y-3">
                 <div className="p-3 rounded-xl bg-primary/5 border border-primary/15">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1.5">{t("landing.partyAView")}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-1.5">{t("landing.partyAView")}</p>
                   <p className="text-xs text-on-surface-variant">{t("landing.partyAAdvice")}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-secondary/5 border border-secondary/15">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-1.5">{t("landing.partyBView")}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-secondary mb-1.5">{t("landing.partyBView")}</p>
                   <p className="text-xs text-on-surface-variant">{t("landing.partyBAdvice")}</p>
                 </div>
               </div>
@@ -229,7 +229,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.keyDatesTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.keyDatesTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.keyDatesDesc")}
               </p>
@@ -261,7 +261,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">search_off</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.missingClausesTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.missingClausesTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.missingClausesDesc")}
               </p>
@@ -289,13 +289,13 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">payments</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.financialTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.financialTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.financialDesc")}
               </p>
               {/* Mini table */}
               <div className="rounded-xl border border-outline-variant/15 overflow-hidden text-xs">
-                <div className="grid grid-cols-3 gap-0 bg-surface-container px-3 py-2 font-bold text-on-surface-variant/60 uppercase tracking-wider text-[10px]">
+                <div className="grid grid-cols-3 gap-0 bg-surface-container px-3 py-2 font-bold text-on-surface-variant/60 uppercase tracking-wider text-[11px]">
                   <span>{t("landing.tableType")}</span>
                   <span className="text-right">{t("landing.tableAmount")}</span>
                   <span className="text-right">{t("landing.tableParty")}</span>
@@ -318,7 +318,7 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-primary text-[20px]">checklist</span>
               </div>
-              <h4 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.actionItemsTitle")}</h4>
+              <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{t("landing.actionItemsTitle")}</h3>
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
                 {t("landing.actionItemsDesc")}
               </p>
@@ -343,7 +343,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ── Multilingual Demo (CSS-only tabs) ── */}
+          {/* -- Multilingual Demo (CSS-only tabs) -- */}
           <div className="mt-5 bg-primary-container/20 border border-primary/15 rounded-2xl p-10">
             <div className="flex flex-col md:flex-row md:items-start gap-8">
               <div className="md:w-1/3">
@@ -381,36 +381,36 @@ export default function HomePage() {
                     </label>
                   </div>
 
-                  {/* Tab content — EN */}
+                  {/* Tab content — EN (always shows in English to demonstrate AI capability) */}
                   <div className="lang-tab-panel p-5">
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
                       <span className="material-symbols-outlined text-error mt-0.5">warning</span>
                       <div>
-                        <p className="text-sm font-bold text-on-surface mb-1">{t("landing.multilingualDemoTitle")}</p>
+                        <p className="text-sm font-bold text-on-surface mb-1">Auto-Renewal Clause</p>
                         <p className="text-sm text-on-surface-variant leading-relaxed">
                           {t("landing.multilingualDemoEN")}
                         </p>
                       </div>
                     </div>
                   </div>
-                  {/* Tab content — KO */}
+                  {/* Tab content — KO (always shows in Korean) */}
                   <div className="lang-tab-panel p-5">
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
                       <span className="material-symbols-outlined text-error mt-0.5">warning</span>
                       <div>
-                        <p className="text-sm font-bold text-on-surface mb-1">{t("landing.multilingualDemoTitle")}</p>
+                        <p className="text-sm font-bold text-on-surface mb-1">자동 갱신 조항</p>
                         <p className="text-sm text-on-surface-variant leading-relaxed">
                           {t("landing.multilingualDemoKO")}
                         </p>
                       </div>
                     </div>
                   </div>
-                  {/* Tab content — JA */}
+                  {/* Tab content — JA (always shows in Japanese) */}
                   <div className="lang-tab-panel p-5">
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-error/5 border border-error/10">
                       <span className="material-symbols-outlined text-error mt-0.5">warning</span>
                       <div>
-                        <p className="text-sm font-bold text-on-surface mb-1">{t("landing.multilingualDemoTitle")}</p>
+                        <p className="text-sm font-bold text-on-surface mb-1">自動更新条項</p>
                         <p className="text-sm text-on-surface-variant leading-relaxed">
                           {t("landing.multilingualDemoJA")}
                         </p>
@@ -424,12 +424,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Before / After ── */}
-      <section className="py-32 px-8 border-t border-outline-variant/15">
+      {/* -- Before / After -- */}
+      <section className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20">
             <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.transformation")}</span>
-            <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
               {t("landing.beforeAfterTitle")}
             </h2>
             <p className="text-on-surface-variant text-lg">{t("landing.beforeAfterDesc")}</p>
@@ -456,9 +456,10 @@ export default function HomePage() {
             {/* Arrow divider */}
             <div className="flex flex-col items-center justify-center gap-2 py-4">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-[24px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-primary text-[24px] md:hidden">arrow_downward</span>
+                <span className="material-symbols-outlined text-primary text-[24px] hidden md:block">arrow_forward</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary whitespace-nowrap">{t("landing.aiAnalysis")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-primary whitespace-nowrap">{t("landing.aiAnalysis")}</span>
             </div>
 
             {/* After — clean analysis */}
@@ -501,12 +502,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section id="how-it-works" className="py-40 px-8 border-t border-outline-variant/15">
+      {/* -- How It Works -- */}
+      <section id="how-it-works" className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-24">
             <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.process")}</span>
-            <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
+            <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
               {t("landing.threeSteps")}
             </h2>
             <p className="text-on-surface-variant text-lg">{t("landing.threeStepsDesc")}</p>
@@ -515,7 +516,7 @@ export default function HomePage() {
             {/* Step 1 — Upload */}
             <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
               <div className="flex items-start justify-between mb-8">
-                <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">01</span>
+                <span aria-hidden="true" className="text-6xl font-headline font-black text-on-surface/20 leading-none">01</span>
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-[20px]">cloud_upload</span>
                 </div>
@@ -525,7 +526,7 @@ export default function HomePage() {
               {/* Mini upload area */}
               <div className="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center bg-surface-container/30">
                 <span className="material-symbols-outlined text-on-surface-variant/30 text-[32px] mb-2 block">description</span>
-                <p className="text-xs text-on-surface-variant/50 font-medium">{t("landing.dropFileHere")}</p>
+                <p className="text-sm text-on-surface-variant font-medium">{t("landing.dropFileHere")}</p>
                 <div className="mt-3 flex items-center justify-center gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">.pdf</span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">.docx</span>
@@ -536,7 +537,7 @@ export default function HomePage() {
             {/* Step 2 — Analyze */}
             <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
               <div className="flex items-start justify-between mb-8">
-                <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">02</span>
+                <span aria-hidden="true" className="text-6xl font-headline font-black text-on-surface/20 leading-none">02</span>
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>
                 </div>
@@ -569,16 +570,16 @@ export default function HomePage() {
                     <span className="text-tertiary-fixed-dim font-bold">85%</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-tertiary-fixed-dim rounded-full animate-progress-85" style={{ width: "85%" }} />
+                    <div className="h-full bg-tertiary-fixed-dim rounded-full animate-progress-85 motion-reduce:animate-none" style={{ width: "85%" }} />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] mb-1">
                     <span className="text-on-surface-variant">{t("landing.reportGeneration")}</span>
-                    <span className="text-on-surface-variant/50 font-bold">42%</span>
+                    <span className="text-on-surface-variant font-bold">42%</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-primary/40 rounded-full animate-pulse-bar" style={{ width: "42%" }} />
+                    <div className="h-full bg-primary/40 rounded-full animate-pulse-bar motion-reduce:animate-none" style={{ width: "42%" }} />
                   </div>
                 </div>
               </div>
@@ -587,7 +588,7 @@ export default function HomePage() {
             {/* Step 3 — Act */}
             <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
               <div className="flex items-start justify-between mb-8">
-                <span className="text-6xl font-headline font-black text-on-surface/8 leading-none">03</span>
+                <span aria-hidden="true" className="text-6xl font-headline font-black text-on-surface/20 leading-none">03</span>
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-[20px]">task_alt</span>
                 </div>
@@ -619,12 +620,80 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
-      <section id="pricing" className="py-40 px-8 border-t border-outline-variant/15">
+      {/* -- Why The Curator — Comparison -- */}
+      <section className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.whyBadge")}</span>
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">{t("landing.whyTitle")}</h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed max-w-2xl mx-auto">{t("landing.whyDesc")}</p>
+          </div>
+
+          {/* Comparison Table */}
+          <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl overflow-hidden mb-20">
+            {/* Header row */}
+            <div className="grid grid-cols-3 border-b border-outline-variant/15">
+              <div className="p-4" />
+              <div className="p-4 text-center border-x border-outline-variant/15">
+                <span className="text-sm font-bold text-on-surface-variant">{t("landing.comparisonManual")}</span>
+              </div>
+              <div className="p-4 text-center bg-primary/5">
+                <span className="text-sm font-bold text-primary">{t("landing.comparisonCurator")}</span>
+              </div>
+            </div>
+            {/* Rows */}
+            {[
+              { label: t("landing.compTime"), manual: t("landing.compTimeManual"), curator: t("landing.compTimeCurator") },
+              { label: t("landing.compCost"), manual: t("landing.compCostManual"), curator: t("landing.compCostCurator") },
+              { label: t("landing.compMiss"), manual: t("landing.compMissManual"), curator: t("landing.compMissCurator") },
+              { label: t("landing.compLang"), manual: t("landing.compLangManual"), curator: t("landing.compLangCurator") },
+              { label: t("landing.compRewrite"), manual: t("landing.compRewriteManual"), curator: t("landing.compRewriteCurator") },
+              { label: t("landing.compAvail"), manual: t("landing.compAvailManual"), curator: t("landing.compAvailCurator") },
+            ].map((row, i) => (
+              <div key={i} className={`grid grid-cols-3 ${i < 5 ? "border-b border-outline-variant/10" : ""}`}>
+                <div className="p-4 flex items-center">
+                  <span className="text-sm font-semibold text-on-surface">{row.label}</span>
+                </div>
+                <div className="p-4 flex items-center justify-center border-x border-outline-variant/10 text-center">
+                  <span className="text-sm text-on-surface-variant">{row.manual}</span>
+                </div>
+                <div className="p-4 flex items-center justify-center bg-primary/3 text-center">
+                  <span className="text-sm font-semibold text-primary">{row.curator}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Target Scenarios */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">{t("landing.whoTitle")}</h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed max-w-2xl mx-auto">{t("landing.whoDesc")}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: "person", title: t("landing.whoFreelancer"), desc: t("landing.whoFreelancerDesc") },
+              { icon: "rocket_launch", title: t("landing.whoStartup"), desc: t("landing.whoStartupDesc") },
+              { icon: "language", title: t("landing.whoGlobal"), desc: t("landing.whoGlobalDesc") },
+            ].map((card, i) => (
+              <div key={i} className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-primary text-[24px]">{card.icon}</span>
+                </div>
+                <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{card.title}</h3>
+                <p className="text-sm text-on-surface-variant leading-relaxed">{card.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* -- Pricing -- */}
+      <section id="pricing" className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">{t("landing.pricing")}</span>
-            <h2 className="text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
+            <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
               {t("landing.pricingTitle")}
             </h2>
             <p className="text-on-surface-variant text-lg">{t("landing.pricingDesc")}</p>
@@ -642,12 +711,12 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: t("landing.starter"), price: t("landing.starterPrice"), sub: t("landing.starterSub"), features: t("landing.starterFeatures") as unknown as string[], cta: t("landing.getStarted"), href: "/sign-up", featured: false },
-              { name: t("landing.proName"), price: t("landing.proPrice"), sub: t("landing.proSub"), features: t("landing.proFeatures") as unknown as string[], cta: t("landing.startFreeTrial"), href: "/sign-up", featured: true },
-              { name: t("landing.businessName"), price: t("landing.businessPrice"), sub: t("landing.businessSub"), features: t("landing.businessFeatures") as unknown as string[], cta: t("landing.getBusiness"), href: "/sign-up", featured: false },
+              { key: "starter", name: t("landing.starter"), price: t("landing.starterPrice"), sub: t("landing.starterSub"), features: t("landing.starterFeatures") as unknown as string[], cta: t("landing.getStarted"), href: "/sign-up", featured: false },
+              { key: "pro", name: t("landing.proName"), price: t("landing.proPrice"), sub: t("landing.proSub"), features: t("landing.proFeatures") as unknown as string[], cta: t("landing.startFreeTrial"), href: "/sign-up?redirect_url=/settings?tab=billing", featured: true },
+              { key: "business", name: t("landing.businessName"), price: t("landing.businessPrice"), sub: t("landing.businessSub"), features: t("landing.businessFeatures") as unknown as string[], cta: t("landing.getBusiness"), href: "/sign-up?redirect_url=/settings?tab=billing", featured: false },
             ].map((plan) => (
               <div
-                key={plan.name}
+                key={plan.key}
                 className={`rounded-2xl p-8 flex flex-col ${
                   plan.featured
                     ? "bg-surface-container-lowest border-2 border-primary shadow-2xl shadow-primary/10 relative"
@@ -665,7 +734,7 @@ export default function HomePage() {
                     <span className="text-5xl font-headline font-extrabold text-on-surface">
                       {plan.price}
                     </span>
-                    {plan.price !== "Custom" && plan.price !== t("landing.starterPrice") && (
+                    {(plan.key === "pro" || plan.key === "business") && (
                       <span className="text-sm text-on-surface-variant">{t("landing.perMonth")}</span>
                     )}
                   </div>
@@ -697,8 +766,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="py-40 px-8 border-t border-outline-variant/15">
+      {/* -- Final CTA -- */}
+      <section className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface mb-6 leading-[0.95]">
             {t("landing.ctaTitle1")}{" "}
@@ -717,8 +786,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-outline-variant/15 py-16 px-8 bg-surface-container-low">
+      {/* -- Footer -- */}
+      <footer className="border-t border-outline-variant/15 py-16 px-5 sm:px-8 bg-surface-container-low">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div>
@@ -730,7 +799,7 @@ export default function HomePage() {
             {[
               { title: t("landing.product"), links: [[t("landing.features"), "#features"], [t("landing.pricing"), "#pricing"], [t("landing.process"), "#how-it-works"], [t("landing.viewDashboard"), "/dashboard"]] },
               { title: t("landing.resources"), links: [[t("landing.viewDashboard"), "/dashboard"], [t("sidebar.newAnalysis"), "/analyze"], [t("landing.signIn"), "/sign-in"], [t("landing.signUp"), "/sign-up"]] },
-              { title: t("landing.legal"), links: [[t("support.privacyPolicy"), "/legal/privacy"], [t("support.termsOfService"), "/legal/terms"], [t("support.securityLink"), "/legal/security"]] },
+              { title: t("landing.legal"), links: [[t("support.privacyPolicy"), "/legal/privacy"], [t("support.termsOfService"), "/legal/terms"], [t("footer.refund"), "/legal/refund"], [t("support.securityLink"), "/legal/security"]] },
             ].map((col) => (
               <div key={col.title}>
                 <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 mb-5">{col.title}</p>
@@ -747,8 +816,8 @@ export default function HomePage() {
             ))}
           </div>
           <div className="border-t border-outline-variant/15 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-on-surface-variant/40 text-xs">&copy; {new Date().getFullYear()} {t("common.copyright")}. {t("common.allRightsReserved")}</p>
-            <p className="text-on-surface-variant/40 text-xs">{t("common.builtWithAI")}</p>
+            <p className="text-on-surface-variant/70 text-xs">&copy; {new Date().getFullYear()} {t("common.copyright")}. {t("common.allRightsReserved")}</p>
+            <p className="text-on-surface-variant/70 text-xs">{t("common.builtWithAI")}</p>
           </div>
         </div>
       </footer>

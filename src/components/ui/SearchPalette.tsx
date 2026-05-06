@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getTagColor } from "@/lib/tags";
+import { useTranslation } from "@/lib/i18n";
+import { DATE_LOCALES } from "@/lib/dateUtils";
 
 interface SearchResult {
   id: string;
@@ -15,6 +17,7 @@ interface SearchResult {
 }
 
 export default function SearchPalette() {
+  const { t, locale } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -22,6 +25,7 @@ export default function SearchPalette() {
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const dateLocale = DATE_LOCALES[locale] || "en-US";
 
   // Open on Cmd/Ctrl+K
   useEffect(() => {
@@ -61,8 +65,8 @@ export default function SearchPalette() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => search(query), 200);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => search(query), 200);
+    return () => clearTimeout(timer);
   }, [query, search]);
 
   function navigate(id: string) {
@@ -95,7 +99,7 @@ export default function SearchPalette() {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search contracts..."
+            placeholder={t("search.placeholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
@@ -133,7 +137,7 @@ export default function SearchPalette() {
                       </span>
                       <span className="text-on-surface-variant/40 text-xs">·</span>
                       <span className="text-xs text-on-surface-variant">
-                        {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {new Date(r.created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
                       </span>
                       {r.tags?.slice(0, 2).map((tag) => (
                         <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${getTagColor(tag)}`}>
@@ -152,7 +156,7 @@ export default function SearchPalette() {
         {/* Empty state */}
         {query && !loading && results.length === 0 && (
           <div className="px-4 py-8 text-center text-on-surface-variant text-sm">
-            No contracts found for &ldquo;{query}&rdquo;
+            {t("search.noResults", { query })}
           </div>
         )}
 
@@ -160,13 +164,13 @@ export default function SearchPalette() {
         {!query && (
           <div className="px-4 py-4 text-xs text-on-surface-variant/50 flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded border border-outline-variant/30 font-mono">↑↓</kbd> navigate
+              <kbd className="px-1 py-0.5 rounded border border-outline-variant/30 font-mono">↑↓</kbd> {t("search.navigate")}
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded border border-outline-variant/30 font-mono">↵</kbd> open
+              <kbd className="px-1 py-0.5 rounded border border-outline-variant/30 font-mono">↵</kbd> {t("search.open")}
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded border border-outline-variant/30 font-mono">esc</kbd> close
+              <kbd className="px-1 py-0.5 rounded border border-outline-variant/30 font-mono">esc</kbd> {t("search.close")}
             </span>
           </div>
         )}

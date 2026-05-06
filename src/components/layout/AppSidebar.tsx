@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser, useClerk } from "@clerk/nextjs";
@@ -22,18 +22,46 @@ export default function AppSidebar() {
   ];
 
   const bottomItems = [
+    { label: t("sidebar.billing"), icon: "credit_card", href: "/settings?tab=billing" },
     { label: t("sidebar.helpCenter"), icon: "help", href: "/support" },
     { label: t("sidebar.settings"), icon: "settings", href: "/settings" },
   ];
   const pathname = usePathname();
+  const [currentSearch, setCurrentSearch] = useState("");
   const { user } = useUser();
+
+  // Read search params client-side to avoid useSearchParams Suspense requirement
+  useEffect(() => {
+    setCurrentSearch(window.location.search);
+  }, [pathname]);
   const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { sub } = useSubscription();
   const isPaid = MVP_MODE || sub?.plan === "pro" || sub?.plan === "business";
 
+  // Auto-close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   function isActive(href: string) {
     if (href === "/history") return pathname.startsWith("/history") || pathname.startsWith("/contracts/");
+    // Handle hrefs with query params (e.g. /settings?tab=billing)
+    const params = new URLSearchParams(currentSearch);
+    if (href.includes("?")) {
+      const [hrefPath, hrefQuery] = href.split("?");
+      if (pathname !== hrefPath) return false;
+      const hrefParams = new URLSearchParams(hrefQuery);
+      let match = true;
+      hrefParams.forEach((value, key) => {
+        if (params.get(key) !== value) match = false;
+      });
+      return match;
+    }
+    // For /settings without query, only match when there are no tab params
+    if (href === "/settings") {
+      return pathname === "/settings" && !params.get("tab");
+    }
     return pathname === href || pathname.startsWith(href + "/");
   }
 
@@ -45,7 +73,7 @@ export default function AppSidebar() {
           <h1 className="font-headline font-extrabold text-primary text-2xl tracking-tighter hover:opacity-80 transition-opacity">
             {t("common.appName")}
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/60 mt-0.5">
+          <p className="text-[11px] uppercase tracking-wider text-on-surface-variant/60 mt-0.5">
             {t("common.tagline")}
           </p>
         </Link>
@@ -77,7 +105,7 @@ export default function AppSidebar() {
               setMobileOpen(false);
               window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
             }}
-            className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs hover:bg-surface-container-high hover:text-on-surface transition-all border border-outline-variant/15"
+            className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs hover:bg-surface-container-high hover:text-on-surface transition-all border border-outline-variant/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <span className="material-symbols-outlined text-[16px]">search</span>
             <span className="flex-1 text-left">{t("sidebar.searchContracts")}</span>
@@ -86,7 +114,7 @@ export default function AppSidebar() {
           <SearchPalette />
         </>
       ) : (
-        <div className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container-high/30 text-on-surface-variant/40 text-xs border border-outline-variant/10 cursor-not-allowed">
+        <div className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container-high/30 text-on-surface-variant/60 text-xs border border-outline-variant/10 cursor-not-allowed">
           <span className="material-symbols-outlined text-[16px]">search</span>
           <span className="flex-1 text-left">{t("sidebar.searchContracts")}</span>
           <span className="material-symbols-outlined text-[12px]">lock</span>
@@ -100,7 +128,7 @@ export default function AppSidebar() {
             key={item.label}
             href={item.href}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center px-4 py-3 rounded-lg transition-all text-sm ${
+            className={`flex items-center px-4 py-3 rounded-lg transition-all text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               isActive(item.href)
                 ? "bg-surface-container-lowest text-primary font-semibold shadow-sm"
                 : "text-on-surface-variant hover:translate-x-1"
@@ -123,7 +151,7 @@ export default function AppSidebar() {
             key={item.label}
             href={item.href}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center px-4 py-2 rounded-lg transition-all text-sm ${
+            className={`flex items-center px-4 py-2 rounded-lg transition-all text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               isActive(item.href)
                 ? "bg-surface-container-lowest text-primary font-semibold"
                 : "text-on-surface-variant hover:translate-x-1"
@@ -145,7 +173,7 @@ export default function AppSidebar() {
         {/* Sign Out */}
         <button
           onClick={() => signOut({ redirectUrl: "/" })}
-          className="flex items-center gap-2 mx-2 px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-error/10 hover:text-error transition-all"
+          className="flex items-center gap-2 mx-2 px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-error/10 hover:text-error transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <span className="material-symbols-outlined text-[20px]">logout</span>
           {t("common.signOut")}

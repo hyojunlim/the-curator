@@ -30,7 +30,7 @@ async function loadFont(name: string): Promise<Buffer> {
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : process.env.NEXT_PUBLIC_SUPABASE_URL
-      ? "https://the-curator-virid.vercel.app"
+      ? "https://thecurator.site"
       : "http://localhost:3000";
   const res = await fetch(`${baseUrl}/fonts/${name}`);
   if (!res.ok) throw new Error(`Failed to fetch font: ${name} from ${baseUrl}`);
@@ -209,7 +209,15 @@ export async function generateContractPDF(contract: {
   risk_high: boolean;
   result: AnalysisResult;
 }): Promise<Buffer> {
-  return new Promise(async (resolve, reject) => {
+  // Load fonts before creating the promise to avoid async-in-promise anti-pattern
+  let fontsResult: { regular: Buffer; bold: Buffer } | null = null;
+  try {
+    fontsResult = await getFonts();
+  } catch (fontErr) {
+    console.error("[PDF] Font loading failed, will use Helvetica:", fontErr);
+  }
+
+  return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: "A4",
@@ -226,16 +234,14 @@ export async function generateContractPDF(contract: {
       doc.on("end", () => resolve(Buffer.concat(chunks)));
       doc.on("error", reject);
 
-      // Load and register Korean fonts
+      // Register fonts (pre-loaded above to avoid async-in-promise)
       let fontsLoaded = false;
-      try {
-        const fonts = await getFonts();
-        doc.registerFont("Regular", fonts.regular);
-        doc.registerFont("Bold", fonts.bold);
+      if (fontsResult) {
+        doc.registerFont("Regular", fontsResult.regular);
+        doc.registerFont("Bold", fontsResult.bold);
         doc.font("Regular");
         fontsLoaded = true;
-      } catch (fontErr) {
-        console.error("[PDF] Font loading failed, using Helvetica:", fontErr);
+      } else {
         doc.registerFont("Regular", "Helvetica");
         doc.registerFont("Bold", "Helvetica-Bold");
         doc.font("Helvetica");

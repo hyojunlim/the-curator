@@ -7,21 +7,34 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS } from "./config";
 
-// ── Upstash Redis rate limiter (persistent, works across serverless instances) ──
-let redisLimiter: Ratelimit | null = null;
+// ── Upstash Redis instance (reused for all limiters) ──
+let redis: Redis | null = null;
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  const redis = new Redis({
+  redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
+}
 
-  redisLimiter = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, `${Math.round(RATE_LIMIT_WINDOW_MS / 1000)} s`),
-    analytics: true,
-    prefix: "curator:ratelimit",
-  });
+// Cache Ratelimit instances per (maxRequests, windowMs) combination
+const limiterCache = new Map<string, Ratelimit>();
+
+function getRedisLimiter(maxRequests: number, windowMs: number): Ratelimit | null {
+  if (!redis) return null;
+
+  const cacheKey = `${maxRequests}:${windowMs}`;
+  let limiter = limiterCache.get(cacheKey);
+  if (!limiter) {
+    limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(maxRequests, `${Math.round(windowMs / 1000)} s`),
+      analytics: true,
+      prefix: `curator:rl:${maxRequests}:${Math.round(windowMs / 1000)}`,
+    });
+    limiterCache.set(cacheKey, limiter);
+  }
+  return limiter;
 }
 
 // ── In-memory fallback (for local dev without Redis) ──
@@ -71,9 +84,10 @@ export async function checkRateLimit(
   maxRequests = RATE_LIMIT_MAX_REQUESTS,
   windowMs = RATE_LIMIT_WINDOW_MS,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
-  // Use Upstash Redis if configured
-  if (redisLimiter) {
-    const result = await redisLimiter.limit(key);
+  // Use Upstash Redis if configured (with correct per-call limits)
+  const limiter = getRedisLimiter(maxRequests, windowMs);
+  if (limiter) {
+    const result = await limiter.limit(key);
     return {
       allowed: result.success,
       remaining: result.remaining,

@@ -20,10 +20,6 @@ const LANG_MAP: Record<string, string> = {
   Portuguese: "pt",
 };
 
-const LOCALE_TO_LANG: Record<string, string> = Object.fromEntries(
-  Object.entries(LANG_MAP).map(([name, code]) => [code, name])
-);
-
 interface LanguageContextType {
   language: string;
   locale: string;
@@ -58,6 +54,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
+      // Update html lang attribute for SEO & accessibility
+      document.documentElement.lang = LANG_MAP[lang] || "en";
     } catch {}
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: lang }));
   }, []);

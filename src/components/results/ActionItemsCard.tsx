@@ -35,7 +35,7 @@ export default function ActionItemsCard({ items, language }: Props) {
       </div>
       <div className="space-y-2">
         {sorted.map((item, i) => {
-          const config = priorityConfig[item.priority];
+          const config = priorityConfig[item.priority] ?? priorityConfig.medium;
           return (
             <div key={i} className="flex items-start gap-3 rounded-lg bg-surface-container-low p-3">
               <span className={`material-symbols-outlined text-[16px] mt-0.5 ${config.color}`}>

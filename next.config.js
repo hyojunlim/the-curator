@@ -3,6 +3,18 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["pdf-parse", "mammoth", "hwp.js", "pdfkit"],
   },
+  async redirects() {
+    return [
+      // Canonical domain: redirect www → non-www (301) to eliminate duplicate content
+      // and fix Google Search Console "redirect error" / "duplicate, user did not select canonical"
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.thecurator.site" }],
+        destination: "https://thecurator.site/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -22,7 +34,7 @@ const nextConfig = {
           // Content Security Policy
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://*.clerk.accounts.dev https://*.clerk.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://www.paypal.com https://*.clerk.accounts.dev https://*.clerk.com https://generativelanguage.googleapis.com; frame-src https://www.paypal.com https://*.clerk.accounts.dev https://*.clerk.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paddle.com https://cdn.paddle.com https://*.clerk.accounts.dev https://*.clerk.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.paddle.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.paddle.com https://*.clerk.accounts.dev https://*.clerk.com https://generativelanguage.googleapis.com https://cdn.paddle.com; frame-src https://*.paddle.com https://*.clerk.accounts.dev https://*.clerk.com; worker-src 'self' blob:;",
           },
           // Strict Transport Security (HTTPS only in production)
           {
@@ -31,13 +43,10 @@ const nextConfig = {
           },
         ],
       },
-      {
-        // Prevent API responses from being cached
-        source: "/api/(.*)",
-        headers: [
-          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
-        ],
-      },
+      // Note: removed blanket no-store on /api/(.*). Next.js dynamic API routes
+      // are not cached by default, and individual routes that specifically need
+      // no-store already set it themselves. This allows read endpoints like
+      // /api/contracts and /api/subscription to be cached when appropriate.
     ];
   },
 };

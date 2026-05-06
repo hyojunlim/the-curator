@@ -6,15 +6,8 @@
 // ── Subscription Plans ──
 export type PlanType = "free" | "pro" | "business";
 
-export const FREE_ANALYSIS_LIMIT = parseInt(process.env.FREE_ANALYSIS_LIMIT || "5", 10);
+export const FREE_ANALYSIS_LIMIT = parseInt(process.env.FREE_ANALYSIS_LIMIT || "10", 10);
 export const PRO_ANALYSIS_LIMIT = parseInt(process.env.PRO_ANALYSIS_LIMIT || "30", 10);
-
-export const PRO_PRICE_USD = process.env.PRO_PRICE_USD || "29.00";
-export const BUSINESS_PRICE_USD = process.env.BUSINESS_PRICE_USD || "79.00";
-
-export const PRO_PLAN_NAME = "The Curator Pro — Monthly Subscription";
-export const BUSINESS_PLAN_NAME = "The Curator Business — Monthly Subscription";
-export const BRAND_NAME = "The Curator";
 
 // ── Rate Limiting ──
 export const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || String(60 * 60 * 1000), 10); // 1 hour
@@ -26,6 +19,29 @@ export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 // ── AI Processing ──
 export const MAX_WORD_COUNT = parseInt(process.env.MAX_WORD_COUNT || "15000", 10);
+
+// ── Content limits ──
+export const MIN_CONTRACT_TEXT_LENGTH = 50;
+export const MAX_CONTRACT_TEXT_CHARS = 500_000;
+
+// ── Analysis ──
+export const HIGH_RISK_THRESHOLD = 60;
+export const RISK_SCORE_WEIGHTS = {
+  high: 20,
+  medium: 10,
+  low: 2,
+} as const;
+
+// ── Gemini ──
+export const GEMINI_TIMEOUT_MS = 240_000;
+export const GEMINI_MAX_RETRIES = 1;
+
+// ── Paddle ──
+export const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox"
+  ? "https://sandbox-api.paddle.com"
+  : "https://api.paddle.com";
+export const PADDLE_SCRIPT_TIMEOUT_MS = 10_000;
+export const WEBHOOK_REPLAY_WINDOW_SECONDS = 300;
 
 // ── Languages ──
 export const ALLOWED_LANGUAGES: string[] = [
@@ -40,8 +56,7 @@ export const FREE_LANGUAGES: string[] = ["English", "Korean"];
 export const FREE_HISTORY_DAYS = 7;
 
 // ── MVP Mode: unlock all features for free users ──
-// TODO: Revert to restricted free plan before public launch
-export const MVP_MODE = true;
+export const MVP_MODE = process.env.MVP_MODE === "true" && process.env.NODE_ENV !== "production";
 
 // ── Plan feature matrix ──
 export const PLAN_FEATURES = {
@@ -51,6 +66,7 @@ export const PLAN_FEATURES = {
     historyDays: MVP_MODE ? null : FREE_HISTORY_DAYS,
     search: MVP_MODE ? true : false,
     pdfExport: MVP_MODE ? true : false,
+    docxExport: MVP_MODE ? true : false,
     priorityProcessing: false,
   },
   pro: {
@@ -59,6 +75,7 @@ export const PLAN_FEATURES = {
     historyDays: 90,
     search: true,
     pdfExport: true,
+    docxExport: false,
     priorityProcessing: false,
   },
   business: {
@@ -67,6 +84,7 @@ export const PLAN_FEATURES = {
     historyDays: null, // unlimited
     search: true,
     pdfExport: true,
+    docxExport: true,
     priorityProcessing: true,
   },
 } as const;

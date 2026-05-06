@@ -16,7 +16,15 @@ export async function extractHWP(buffer: Buffer): Promise<string> {
   const doc = parse(buffer);
   const texts: string[] = [];
 
-  function extractText(node: any): void {
+  interface HwpNode {
+    text?: string;
+    content?: HwpNode | HwpNode[];
+    children?: HwpNode[];
+    sections?: HwpNode[];
+    paragraphs?: HwpNode[];
+  }
+
+  function extractText(node: string | HwpNode | null | undefined): void {
     if (!node) return;
     if (typeof node === "string") { texts.push(node); return; }
     if (node.text) texts.push(node.text);
@@ -29,6 +37,9 @@ export async function extractHWP(buffer: Buffer): Promise<string> {
     }
     if (node.sections) {
       if (Array.isArray(node.sections)) node.sections.forEach(extractText);
+    }
+    if (node.paragraphs) {
+      if (Array.isArray(node.paragraphs)) node.paragraphs.forEach(extractText);
     }
   }
 

@@ -5,9 +5,9 @@ const c = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
 const config: Config = {
   darkMode: "class",
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -74,7 +74,8 @@ const config: Config = {
         DEFAULT: "0.125rem",
         lg: "0.25rem",
         xl: "0.5rem",
-        full: "0.75rem",
+        "2xl": "1rem",
+        full: "9999px",
       },
     },
   },

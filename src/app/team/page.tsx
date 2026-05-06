@@ -91,7 +91,7 @@ export default function TeamPage() {
             </div>
 
             <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm mt-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-3">
                 {t("team.rolePermissions")}
               </p>
               {[

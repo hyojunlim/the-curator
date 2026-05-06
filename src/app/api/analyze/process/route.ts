@@ -3,6 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { analyzeContract, analyzeContractFromPDF } from "@/lib/gemini";
 import { supabaseAdmin } from "@/lib/supabase";
 import { incrementUsage, getSubscription } from "@/lib/subscription";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { isValidUUID } from "@/lib/validation";
+import { HIGH_RISK_THRESHOLD, RISK_SCORE_WEIGHTS } from "@/lib/config";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes — plenty of time for Gemini
@@ -14,9 +17,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Rate limit: max 30 analysis requests per hour
+    const limit = await checkRateLimit(`${userId}:analyze-process`, 30);
+    if (!limit.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const { contractId, language } = await req.json();
     if (!contractId) {
       return NextResponse.json({ error: "Missing contractId" }, { status: 400 });
+    }
+
+    if (!isValidUUID(contractId)) {
+      return NextResponse.json({ error: "Invalid contract ID" }, { status: 400 });
     }
 
     // Verify ownership and get contract data
@@ -62,7 +75,7 @@ export async function POST(req: NextRequest) {
       const medCount = result.risks.filter((r: { severity: string }) => r.severity === "medium").length;
       const riskScore = aiScore !== null
         ? Math.max(0, Math.min(100, aiScore))
-        : Math.min(100, highCount * 20 + medCount * 10 + result.risks.length * 2);
+        : Math.min(100, highCount * RISK_SCORE_WEIGHTS.high + medCount * RISK_SCORE_WEIGHTS.medium + result.risks.length * RISK_SCORE_WEIGHTS.low);
 
       // Update contract with results
       await supabaseAdmin
@@ -71,7 +84,7 @@ export async function POST(req: NextRequest) {
           status: "COMPLETE",
           type: result.contractType || "General Contract",
           risk_score: riskScore,
-          risk_high: riskScore >= 60,
+          risk_high: riskScore >= HIGH_RISK_THRESHOLD,
           result,
           pdf_base64: null, // Clean up stored PDF data after processing
         })
@@ -96,7 +109,7 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", contractId);
 
-      return NextResponse.json({ status: "FAILED", error: msg });
+      return NextResponse.json({ status: "FAILED", error: "Analysis failed. Please try again or contact support." });
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

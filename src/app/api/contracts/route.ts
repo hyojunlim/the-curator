@@ -1,12 +1,14 @@
+import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getSubscription } from "@/lib/subscription";
 import { PLAN_FEATURES } from "@/lib/config";
+import { isValidUUID } from "@/lib/validation";
 
 export async function GET() {
   const { userId } = await auth();
-  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const sub = await getSubscription(userId);
 
@@ -24,28 +26,31 @@ export async function GET() {
     query = query.gte("created_at", cutoff.toISOString());
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.limit(200);
 
   if (error) {
     console.error("[/api/contracts] Error:", error.message);
-    return Response.json({ error: "Failed to fetch contracts" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch contracts" }, { status: 500 });
   }
-  return Response.json(data);
+  return NextResponse.json(data);
 }
 
 export async function DELETE(request: Request) {
   const { userId } = await auth();
-  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // Rate limit: max 20 bulk deletes per hour per user
   const limit = await checkRateLimit(`${userId}:delete`, 20);
   if (!limit.allowed) {
-    return Response.json({ error: "Too many delete requests. Please slow down." }, { status: 429 });
+    return NextResponse.json({ error: "Too many delete requests. Please slow down." }, { status: 429 });
   }
 
   const { id } = await request.json();
   if (!id || typeof id !== "string") {
-    return Response.json({ error: "Invalid contract ID" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid contract ID" }, { status: 400 });
+  }
+  if (!isValidUUID(id)) {
+    return NextResponse.json({ error: "Invalid contract ID format" }, { status: 400 });
   }
 
   const { error } = await supabaseAdmin
@@ -56,7 +61,7 @@ export async function DELETE(request: Request) {
 
   if (error) {
     console.error("[/api/contracts] Delete error:", error.message);
-    return Response.json({ error: "Failed to delete contract" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete contract" }, { status: 500 });
   }
-  return Response.json({ success: true });
+  return NextResponse.json({ success: true });
 }

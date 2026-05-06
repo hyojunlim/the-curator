@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
@@ -13,7 +13,9 @@ import MissingClausesCard from "@/components/results/MissingClausesCard";
 import ActionItemsCard from "@/components/results/ActionItemsCard";
 import { t } from "@/lib/i18n";
 import { useTranslation } from "@/lib/i18n";
-import type { AnalysisResult } from "@/types";
+import { DATE_LOCALES } from "@/lib/dateUtils";
+import { MVP_MODE } from "@/lib/config";
+import type { AnalysisResult, RiskItem } from "@/types";
 
 interface ContractDetail {
   id: string;
@@ -27,13 +29,36 @@ interface ContractDetail {
   created_at: string;
   tags: string[];
   error_message?: string;
+  contract_text?: string;
 }
 
 type PerspectiveView = "none" | "party_a" | "party_b";
 
+/** Map a contract status to a localized, human-friendly label. */
+function getStatusLabel(status: string, tr: (key: string, vars?: Record<string, string | number>) => string): string {
+  switch (status) {
+    case "COMPLETE": return tr("status.complete") || "Ready";
+    case "PENDING": return tr("status.pending") || "Queued";
+    case "PROCESSING": return tr("status.processing") || "Analyzing";
+    case "FAILED": return tr("status.failed") || "Failed";
+    default: return status;
+  }
+}
+
+/** aria-label for the status badge. */
+function getStatusAriaLabel(status: string): string {
+  switch (status) {
+    case "COMPLETE": return "Analysis complete";
+    case "PENDING": return "Analysis queued";
+    case "PROCESSING": return "Analysis in progress";
+    case "FAILED": return "Analysis failed";
+    default: return status;
+  }
+}
+
 export default function ContractDetailPage() {
   const { t: tr, locale: uiLocale } = useTranslation();
-  const dateLocale = ({ en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" } as Record<string, string>)[uiLocale] || "en-US";
+  const dateLocale = DATE_LOCALES[uiLocale] || "en-US";
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [contract, setContract] = useState<ContractDetail | null>(null);
@@ -46,7 +71,14 @@ export default function ContractDetailPage() {
   const [perspective, setPerspective] = useState<PerspectiveView>("none");
   const [retrying, setRetrying] = useState(false);
   const { sub } = useSubscription();
-  const isPro = sub?.plan === "pro" || sub?.plan === "business";
+  const isPro = sub?.plan === "pro" || sub?.plan === "business" || MVP_MODE;
+  const isBusiness = sub?.plan === "business" || MVP_MODE;
+  const [selectedRewrites, setSelectedRewrites] = useState<Set<number>>(new Set());
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
+  const [pollTimedOut, setPollTimedOut] = useState(false);
+
+  // Clear selections when perspective changes
+  useEffect(() => { setSelectedRewrites(new Set()); }, [perspective]);
 
   useEffect(() => {
     fetch(`/api/contracts/${id}`)
@@ -55,26 +87,66 @@ export default function ContractDetailPage() {
       .catch(() => { setLoading(false); setNotFound(true); });
   }, [id, router]);
 
-  // Poll for status updates when PENDING or PROCESSING
+  // Auto-trigger process if stuck in PENDING (e.g. after retry/reset)
+  useEffect(() => {
+    if (!contract || contract.status !== "PENDING") return;
+    const lang = contract.result?.language || "Korean";
+    fetch("/api/analyze/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contractId: contract.id, language: lang }),
+    }).catch(() => {});
+  }, [contract?.status, contract?.id, contract?.result?.language]);
+
+  // Poll for status updates when PENDING or PROCESSING with exponential backoff:
+  //   polls 1-10:   every 2s
+  //   polls 11-20:  every 5s
+  //   polls 21-30:  every 10s
+  //   after 30:     stop polling and show a timeout message
   useEffect(() => {
     if (!contract || (contract.status !== "PENDING" && contract.status !== "PROCESSING")) return;
 
-    const interval = setInterval(async () => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let pollCount = 0;
+
+    const getDelay = (count: number): number | null => {
+      if (count >= 30) return null; // stop
+      if (count >= 20) return 10000;
+      if (count >= 10) return 5000;
+      return 2000;
+    };
+
+    const poll = async () => {
+      if (cancelled) return;
+      pollCount++;
       try {
         const res = await fetch(`/api/contracts/${id}`);
         if (!res.ok) return;
         const data = await res.json();
+        if (cancelled) return;
         setContract(data);
         setTags(data.tags ?? []);
-        if (data.status === "COMPLETE" || data.status === "FAILED") {
-          clearInterval(interval);
-        }
+        if (data.status === "COMPLETE" || data.status === "FAILED") return;
       } catch {
         // ignore polling errors
       }
-    }, 2000);
+      if (cancelled) return;
+      const delay = getDelay(pollCount);
+      if (delay === null) {
+        setPollTimedOut(true);
+        return;
+      }
+      timeoutId = setTimeout(poll, delay);
+    };
 
-    return () => clearInterval(interval);
+    // Initial delay of 2s before first poll, matching previous behavior
+    timeoutId = setTimeout(poll, 2000);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [contract?.status, id]);
 
   function showToast(msg: string) {
@@ -138,6 +210,54 @@ export default function ContractDetailPage() {
       showToast(tr("contractDetail.pdfExportFailed"));
     }
     setExporting(false);
+  }
+
+  const toggleRewrite = useCallback((index: number) => {
+    setSelectedRewrites(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
+  function selectAllRewrites() {
+    if (!contract?.result) return;
+    const indices = new Set<number>();
+    contract.result.risks.forEach((risk, i) => {
+      const rw = perspective === "party_a" ? (risk.rewrite_party_a || risk.rewrite)
+        : perspective === "party_b" ? (risk.rewrite_party_b || risk.rewrite)
+        : risk.rewrite;
+      if (rw) indices.add(i);
+    });
+    setSelectedRewrites(indices);
+  }
+
+  async function handleDownloadDocx() {
+    if (!contract || selectedRewrites.size === 0) return;
+    setDownloadingDocx(true);
+    try {
+      const res = await fetch("/api/export-docx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractId: contract.id,
+          selectedIndices: Array.from(selectedRewrites),
+          perspective,
+        }),
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${contract.title || "modified-contract"}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast(tr("contractDetail.docxExportFailed") || "Export failed");
+    }
+    setDownloadingDocx(false);
   }
 
   if (loading) {
@@ -224,10 +344,10 @@ export default function ContractDetailPage() {
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
       <AppSidebar />
 
-      <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24">
+      <main id="main-content" className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24">
         {/* Toast */}
         {toast && (
-          <div className="fixed top-6 right-6 z-50 bg-on-surface text-surface text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2">
+          <div className="fixed top-4 right-4 z-[60] bg-on-surface text-surface text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px] text-secondary">check_circle</span>
             {toast}
           </div>
@@ -260,6 +380,29 @@ export default function ContractDetailPage() {
             <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm text-left max-w-sm mx-auto">
               <AnalysisSteps status={contractStatus} />
             </div>
+
+            {pollTimedOut && (
+              <div className="mt-6 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-left max-w-sm mx-auto">
+                <div className="flex items-start gap-2 mb-3">
+                  <span className="material-symbols-outlined text-yellow-700 dark:text-yellow-400 text-[18px] mt-0.5">schedule</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200">
+                      {tr("contractDetail.pollingStoppedTitle") || "Still processing..."}
+                    </p>
+                    <p className="text-xs text-yellow-800 dark:text-yellow-300 mt-1">
+                      {tr("contractDetail.pollingStoppedDesc") || "This is taking longer than expected. Refresh the page to check again."}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setPollTimedOut(false); window.location.reload(); }}
+                  className="w-full px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[14px]">refresh</span>
+                  {tr("contractDetail.refresh") || "Refresh"}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -318,9 +461,17 @@ export default function ContractDetailPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-headline font-extrabold text-xl text-on-surface">{title}</h1>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-fixed/30 text-primary">
-                  {contractStatus}
+                <h1 className="font-headline font-extrabold text-2xl text-on-surface truncate max-w-2xl">{title}</h1>
+                <span
+                  aria-label={getStatusAriaLabel(contractStatus)}
+                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${{
+                    COMPLETE: "bg-secondary/10 text-secondary",
+                    PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                    PROCESSING: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                    FAILED: "bg-error/10 text-error",
+                  }[contractStatus] || "bg-primary-fixed/30 text-primary"}`}
+                >
+                  {getStatusLabel(contractStatus, tr)}
                 </span>
               </div>
               <p className="text-sm text-on-surface-variant mt-0.5">{type}</p>
@@ -335,14 +486,45 @@ export default function ContractDetailPage() {
 
         {/* Tags */}
         <div className="mb-6">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">{tr("contractDetail.labels")}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">{tr("contractDetail.labels")}</p>
           <TagSelector tags={tags} onChange={handleTagChange} />
         </div>
 
         {/* Results */}
         <div className="max-w-5xl space-y-5">
           {/* Actions bar */}
-          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-end">
+          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex items-center justify-between flex-wrap gap-3">
+              {/* DOCX Download (Business only) */}
+              <div className="flex items-center gap-2">
+                {isBusiness ? (
+                  <>
+                    {selectedRewrites.size > 0 && (
+                      <span className="text-[11px] text-on-surface-variant font-medium">
+                        {selectedRewrites.size} {t(lang, "rewritesSelected") || "selected"}
+                      </span>
+                    )}
+                    <button onClick={selectAllRewrites} className="text-[11px] font-bold text-on-surface-variant border border-outline-variant/30 px-2.5 py-1 rounded hover:bg-surface-container-low transition-colors">
+                      {t(lang, "selectAllRewrites") || "Select All"}
+                    </button>
+                    {selectedRewrites.size > 0 && (
+                      <button onClick={() => setSelectedRewrites(new Set())} className="text-[11px] font-bold text-on-surface-variant border border-outline-variant/30 px-2.5 py-1 rounded hover:bg-surface-container-low transition-colors">
+                        {t(lang, "deselectAllRewrites") || "Deselect"}
+                      </button>
+                    )}
+                    <button onClick={handleDownloadDocx} disabled={selectedRewrites.size === 0 || downloadingDocx} className="text-[11px] font-bold bg-secondary text-on-secondary px-3 py-1 rounded flex items-center gap-1 hover:opacity-90 transition-opacity disabled:opacity-40">
+                      <span className="material-symbols-outlined text-[14px]">{downloadingDocx ? "hourglass_empty" : "description"}</span>
+                      {t(lang, "downloadModifiedContract") || "Download Modified"}
+                      <span className="text-[9px] font-bold bg-white/20 px-1.5 py-0.5 rounded ml-1">BETA</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant/60">
+                    <span className="material-symbols-outlined text-[12px]">lock</span>
+                    {t(lang, "docxBusinessOnly") || "Business only"}
+                  </div>
+                )}
+              </div>
+              {/* PDF Export + Share */}
               <div className="flex gap-2">
                 {isPro ? (
                   <>
@@ -363,7 +545,7 @@ export default function ContractDetailPage() {
           </div>
 
           {/* Summary */}
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
+          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-9 h-9 bg-primary-fixed rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary text-[18px]">summarize</span>
@@ -411,13 +593,13 @@ export default function ContractDetailPage() {
                   </button>
                   <button onClick={() => setPerspective("party_a")} className={`flex flex-col items-center gap-1.5 px-3 py-3.5 rounded-xl text-xs font-bold transition-all border ${perspective === "party_a" ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20" : "border-outline-variant text-on-surface-variant hover:border-primary/40 hover:text-on-surface"}`}>
                     <span className={`material-symbols-outlined text-[22px] ${perspective === "party_a" ? "text-primary" : "text-on-surface-variant"}`}>shield_person</span>
-                    <span className="truncate max-w-full">{partyA?.name || "Party A"}</span>
-                    <span className={`text-[11px] font-normal ${perspective === "party_a" ? "text-primary/70" : "text-on-surface-variant/60"}`}>{partyA?.description || "갑"}</span>
+                    <span className="truncate max-w-full" title={partyA?.name}>{partyA?.name || tr("contractDetail.partyA") || "Party A"}</span>
+                    <span className={`text-[11px] font-normal ${perspective === "party_a" ? "text-primary/70" : "text-on-surface-variant/60"}`}>{partyA?.description || tr("contractDetail.partyA") || "Party A"}</span>
                   </button>
                   <button onClick={() => setPerspective("party_b")} className={`flex flex-col items-center gap-1.5 px-3 py-3.5 rounded-xl text-xs font-bold transition-all border ${perspective === "party_b" ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20" : "border-outline-variant text-on-surface-variant hover:border-primary/40 hover:text-on-surface"}`}>
                     <span className={`material-symbols-outlined text-[22px] ${perspective === "party_b" ? "text-primary" : "text-on-surface-variant"}`}>person</span>
-                    <span className="truncate max-w-full">{partyB?.name || "Party B"}</span>
-                    <span className={`text-[11px] font-normal ${perspective === "party_b" ? "text-primary/70" : "text-on-surface-variant/60"}`}>{partyB?.description || "을"}</span>
+                    <span className="truncate max-w-full" title={partyB?.name}>{partyB?.name || tr("contractDetail.partyB") || "Party B"}</span>
+                    <span className={`text-[11px] font-normal ${perspective === "party_b" ? "text-primary/70" : "text-on-surface-variant/60"}`}>{partyB?.description || tr("contractDetail.partyB") || "Party B"}</span>
                   </button>
                 </div>
                 {perspective !== "none" && activePartyName && (
@@ -447,79 +629,19 @@ export default function ContractDetailPage() {
                   </h3>
                 </div>
                 <div className="space-y-3">
-                  {result.risks
-                    .map((risk, i) => {
-                      const activeSuggestion = perspective === "party_a" ? (risk.suggestion_party_a || risk.suggestion) : perspective === "party_b" ? (risk.suggestion_party_b || risk.suggestion) : risk.suggestion;
-                      return (
-                        <div key={i} className="bg-surface-container-lowest rounded-xl border-l-4 border-l-outline-variant/30 shadow-sm p-5">
-                          <div className="flex items-start justify-between gap-3 mb-3">
-                            <h3 className="font-headline font-bold text-on-surface text-sm">{risk.title}</h3>
-                            {risk.clauseReference && risk.clauseReference !== "N/A" && (
-                              <span className="shrink-0 text-[11px] text-on-surface-variant/70 bg-surface-container-high px-1.5 py-0.5 rounded">{risk.clauseReference}</span>
-                            )}
-                          </div>
-                          {risk.clause && (
-                            <div className="bg-surface-container-low rounded-lg p-3 mb-3 border-l-2 border-outline-variant">
-                              <p className="text-sm text-on-surface-variant italic leading-relaxed">&ldquo;{risk.clause}&rdquo;</p>
-                            </div>
-                          )}
-                          <p className="text-base text-on-surface-variant leading-relaxed">{risk.explanation}</p>
-                          {activeSuggestion && (
-                            <div className={`mt-3 rounded-lg p-3 ${perspective !== "none" ? "bg-primary/5 border border-primary/20" : "bg-surface-container-low"}`}>
-                              <div className="flex items-center gap-1.5 mb-1.5">
-                                <span className={`material-symbols-outlined text-[14px] ${perspective !== "none" ? "text-primary" : "text-on-surface-variant"}`}>
-                                  {perspective !== "none" ? "person_pin" : "lightbulb"}
-                                </span>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${perspective !== "none" ? "text-primary" : "text-on-surface-variant"}`}>
-                                  {perspective !== "none" && activePartyName ? `${activePartyName} ${t(lang, "advice")}` : t(lang, "suggestion")}
-                                </span>
-                              </div>
-                              <p className={`text-xs leading-relaxed ${perspective !== "none" ? "text-on-surface" : "text-on-surface-variant"}`}>{activeSuggestion}</p>
-                            </div>
-                          )}
-                          {/* Rewrite: perspective-aware Before → After */}
-                          {(() => {
-                            const activeRewrite = perspective === "party_a" ? (risk.rewrite_party_a || risk.rewrite)
-                              : perspective === "party_b" ? (risk.rewrite_party_b || risk.rewrite)
-                              : risk.rewrite;
-                            if (!activeRewrite) return null;
-                            const isAdd = risk.rewrite_type === "add";
-                            const headerLabel = isAdd ? t(lang, "suggestedAddition") : t(lang, "suggestedRewrite");
-                            const headerIcon = isAdd ? "add_circle" : "edit_note";
-                            return (
-                              <div className="mt-3 rounded-lg border border-secondary/20 overflow-hidden">
-                                <div className="flex items-center gap-1.5 px-3 py-2 bg-secondary/5">
-                                  <span className="material-symbols-outlined text-[14px] text-secondary">{headerIcon}</span>
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{headerLabel}</span>
-                                </div>
-                                {isAdd ? (
-                                  <div className="p-3 bg-secondary/3">
-                                    <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
-                                  </div>
-                                ) : (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
-                                    <div className="p-3 bg-error/3">
-                                      <div className="flex items-center gap-1 mb-1.5">
-                                        <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
-                                      </div>
-                                      <p className="text-sm text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">{risk.clause}</p>
-                                    </div>
-                                    <div className="p-3 bg-secondary/3">
-                                      <div className="flex items-center gap-1 mb-1.5">
-                                        <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
-                                      </div>
-                                      <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      );
-                    })}
+                  {result.risks.map((risk, i) => (
+                    <RiskListItem
+                      key={i}
+                      risk={risk}
+                      index={i}
+                      perspective={perspective}
+                      activePartyName={activePartyName}
+                      isBusiness={isBusiness}
+                      selected={selectedRewrites.has(i)}
+                      onToggle={toggleRewrite}
+                      lang={lang}
+                    />
+                  ))}
                 </div>
               </div>
             );
@@ -528,21 +650,27 @@ export default function ContractDetailPage() {
           {/* Action Items */}
           <ActionItemsCard items={result.actionItems ?? []} language={lang} />
 
-          <div className="flex gap-3">
-            <Link href="/history" className="flex-1 py-3 rounded-lg text-sm font-headline font-bold text-on-surface-variant border border-outline-variant/30 hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+            <Link href="/history" className="w-full sm:w-auto sm:flex-1 px-5 py-2.5 rounded-lg text-sm font-headline font-bold text-on-surface-variant border border-outline-variant/30 hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
               {tr("contractDetail.backToHistory")}
             </Link>
             <Link
               href="/analyze"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-base font-semibold bg-surface-container-high/50 hover:bg-surface-container-high transition-colors text-on-surface"
+              className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-headline font-bold bg-surface-container-high/50 hover:bg-surface-container-high transition-colors text-on-surface"
             >
-              <span className="material-symbols-outlined text-[18px]">refresh</span>
+              <span className="material-symbols-outlined text-[16px]">refresh</span>
               {tr("contractDetail.reAnalyze")}
             </Link>
             {showDeleteConfirm ? (
               <div className="flex items-center gap-2 p-3 rounded-xl bg-error-container/20 border border-error/20">
                 <span className="text-sm text-on-surface">{tr("contractDetail.deleteThisContract")}</span>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-5 py-2.5 rounded-lg bg-surface-container-high text-on-surface text-sm font-headline font-bold"
+                >
+                  {tr("common.cancel")}
+                </button>
                 <button
                   onClick={async () => {
                     setDeleting(true);
@@ -559,21 +687,15 @@ export default function ContractDetailPage() {
                     setShowDeleteConfirm(false);
                   }}
                   disabled={deleting}
-                  className="px-3 py-1.5 rounded-lg bg-error text-on-error text-base font-semibold"
+                  className="px-5 py-2.5 rounded-lg bg-error text-on-error text-sm font-headline font-bold"
                 >
                   {deleting ? tr("contractDetail.deleting") : tr("common.delete")}
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface text-base font-semibold"
-                >
-                  {tr("common.cancel")}
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="py-3 px-5 rounded-lg text-sm font-headline font-bold text-error border border-error/30 hover:bg-error/5 transition-colors flex items-center justify-center gap-2"
+                className="px-5 py-2.5 rounded-lg text-sm font-headline font-bold text-error border border-error/30 hover:bg-error/5 transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
                 {tr("common.delete")}
@@ -583,12 +705,141 @@ export default function ContractDetailPage() {
         </div>
           </>
         )}
-      </div>
+      </main>
 
       <AppFooter />
     </div>
   );
 }
+
+/**
+ * Memoized risk list item. Prevents re-rendering every risk row on each
+ * polling state update when the underlying risk, perspective, selection
+ * state, and language are unchanged.
+ */
+interface RiskListItemProps {
+  risk: RiskItem;
+  index: number;
+  perspective: PerspectiveView;
+  activePartyName: string | undefined;
+  isBusiness: boolean;
+  selected: boolean;
+  onToggle: (index: number) => void;
+  lang: string;
+}
+
+const RiskListItem = memo(function RiskListItem({
+  risk,
+  index,
+  perspective,
+  activePartyName,
+  isBusiness,
+  selected,
+  onToggle,
+  lang,
+}: RiskListItemProps) {
+  const { t: tr } = useTranslation();
+  const severity = risk.severity;
+  const severityLabel =
+    tr(`severity.${severity}`) ||
+    (severity === "high" ? "High Risk" : severity === "medium" ? "Medium Risk" : "Low Risk");
+  const severityPillClass =
+    severity === "high"
+      ? "bg-error/10 text-error"
+      : severity === "medium"
+        ? "bg-tertiary/10 text-tertiary"
+        : "bg-secondary/10 text-secondary";
+  const activeSuggestion = perspective === "party_a"
+    ? (risk.suggestion_party_a || risk.suggestion)
+    : perspective === "party_b"
+      ? (risk.suggestion_party_b || risk.suggestion)
+      : risk.suggestion;
+  const activeRewrite = perspective === "party_a"
+    ? (risk.rewrite_party_a || risk.rewrite)
+    : perspective === "party_b"
+      ? (risk.rewrite_party_b || risk.rewrite)
+      : risk.rewrite;
+  const isAdd = risk.rewrite_type === "add";
+  const headerLabel = isAdd ? t(lang, "suggestedAddition") : t(lang, "suggestedRewrite");
+  const headerIcon = isAdd ? "add_circle" : "edit_note";
+
+  return (
+    <div className="bg-surface-container-lowest rounded-xl border-l-4 border-l-outline-variant/30 shadow-sm p-5">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-headline font-bold text-on-surface text-sm">{risk.title}</h3>
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${severityPillClass}`}
+            aria-label={severityLabel}
+          >
+            {severityLabel}
+          </span>
+        </div>
+        {risk.clauseReference && risk.clauseReference !== "N/A" && (
+          <span className="shrink-0 text-[11px] text-on-surface-variant/70 bg-surface-container-high px-1.5 py-0.5 rounded">{risk.clauseReference}</span>
+        )}
+      </div>
+      {risk.clause && (
+        <div className="bg-surface-container-low rounded-lg p-3 mb-3 border-l-2 border-outline-variant">
+          <p className="text-sm text-on-surface-variant italic leading-relaxed">&ldquo;{risk.clause}&rdquo;</p>
+        </div>
+      )}
+      <p className="text-base text-on-surface-variant leading-relaxed">{risk.explanation}</p>
+      {activeSuggestion && (
+        <div className={`mt-3 rounded-lg p-3 ${perspective !== "none" ? "bg-primary/5 border border-primary/20" : "bg-surface-container-low"}`}>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className={`material-symbols-outlined text-[14px] ${perspective !== "none" ? "text-primary" : "text-on-surface-variant"}`}>
+              {perspective !== "none" ? "person_pin" : "lightbulb"}
+            </span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${perspective !== "none" ? "text-primary" : "text-on-surface-variant"}`}>
+              {perspective !== "none" && activePartyName ? `${activePartyName} ${t(lang, "advice")}` : t(lang, "suggestion")}
+            </span>
+          </div>
+          <p className={`text-xs leading-relaxed ${perspective !== "none" ? "text-on-surface" : "text-on-surface-variant"}`}>{activeSuggestion}</p>
+        </div>
+      )}
+      {activeRewrite && (
+        <div className="mt-3 rounded-lg border border-secondary/20 overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-secondary/5">
+            {isBusiness && (
+              <input
+                type="checkbox"
+                checked={selected}
+                onChange={() => onToggle(index)}
+                className="w-4 h-4 accent-secondary rounded cursor-pointer shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            <span className="material-symbols-outlined text-[14px] text-secondary">{headerIcon}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{headerLabel}</span>
+          </div>
+          {isAdd ? (
+            <div className="p-3 bg-secondary/3">
+              <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-outline-variant/15">
+              <div className="p-3 bg-error/3">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <span className="material-symbols-outlined text-[12px] text-error/60">close</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-error/60">{t(lang, "before")}</span>
+                </div>
+                <p className="text-sm text-on-surface-variant/70 leading-relaxed line-through decoration-error/30">{risk.clause}</p>
+              </div>
+              <div className="p-3 bg-secondary/3">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <span className="material-symbols-outlined text-[12px] text-secondary">check</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-secondary">{t(lang, "after")}</span>
+                </div>
+                <p className="text-sm text-on-surface leading-relaxed font-medium">{activeRewrite}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
 
 /** Animated analysis steps for PENDING/PROCESSING */
 function AnalysisSteps({ status }: { status: string }) {
@@ -634,7 +885,7 @@ function AnalysisSteps({ status }: { status: string }) {
               <span className={`material-symbols-outlined text-[16px] ${isDone ? "text-secondary" : isActive ? "text-primary" : "text-on-surface-variant/40"}`}>
                 {step.icon}
               </span>
-              <span className={`text-sm ${isDone ? "text-secondary font-medium" : isActive ? "text-on-surface font-semibold" : "text-on-surface-variant/50"}`}>
+              <span className={`text-sm ${isDone ? "text-secondary font-medium" : isActive ? "text-on-surface font-semibold" : "text-on-surface-variant/70"}`}>
                 {step.label}
               </span>
             </div>

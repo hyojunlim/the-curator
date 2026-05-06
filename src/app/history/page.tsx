@@ -8,14 +8,30 @@ import { PREDEFINED_TAGS, getTagColor } from "@/lib/tags";
 import { useSubscription } from "@/hooks/useSubscription";
 import { MVP_MODE } from "@/lib/config";
 import { useTranslation } from "@/lib/i18n";
+import { formatDate } from "@/lib/dateUtils";
 import type { Contract } from "@/types";
 
 const SORT_KEYS = ["sortMostRecent", "sortAlphabetical"] as const;
 
-const DATE_LOCALES: Record<string, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-BR" };
+/** Map a contract status to a localized, human-friendly label. */
+function getStatusLabel(status: string, tr: (key: string, vars?: Record<string, string | number>) => string): string {
+  switch (status) {
+    case "COMPLETE": return tr("status.complete") || "Ready";
+    case "PENDING": return tr("status.pending") || "Queued";
+    case "PROCESSING": return tr("status.processing") || "Analyzing";
+    case "FAILED": return tr("status.failed") || "Failed";
+    default: return status;
+  }
+}
 
-function formatDate(iso: string, locale = "en") {
-  return new Date(iso).toLocaleDateString(DATE_LOCALES[locale] || "en-US", { month: "short", day: "numeric", year: "numeric" });
+function getStatusAriaLabel(status: string): string {
+  switch (status) {
+    case "COMPLETE": return "Analysis complete";
+    case "PENDING": return "Analysis queued";
+    case "PROCESSING": return "Analysis in progress";
+    case "FAILED": return "Analysis failed";
+    default: return status;
+  }
 }
 
 /* ──────────────────────── Skeleton Card ──────────────────────── */
@@ -63,7 +79,7 @@ function ConfirmDialog({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-xl w-full max-w-sm p-6 mx-4 animate-in fade-in zoom-in-95">
+      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-sm p-6 mx-4 animate-in fade-in zoom-in-95">
         <h3 className="font-headline font-bold text-on-surface text-lg mb-2">{title}</h3>
         <p className="text-sm text-on-surface-variant mb-6">{message}</p>
         <div className="flex justify-end gap-3">
@@ -175,6 +191,17 @@ export default function HistoryPage() {
 
   const isFiltered = activeTag !== null || searchQuery.trim() !== "";
 
+  /* ---- Unique tags with counts (memoized; used in both mobile + desktop filter panels) ---- */
+  const tagsWithCount = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const c of contracts) {
+      for (const tag of c.tags ?? []) {
+        counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      }
+    }
+    return Array.from(counts.entries()).map(([label, count]) => ({ label, count }));
+  }, [contracts]);
+
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
       <AppSidebar />
@@ -202,7 +229,7 @@ export default function HistoryPage() {
         onCancel={() => setDeleteConfirm(null)}
       />
 
-      <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
+      <main id="main-content" className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-32">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -231,7 +258,7 @@ export default function HistoryPage() {
                   className="bg-transparent text-sm text-on-surface placeholder-on-surface-variant/50 outline-none w-44"
                 />
               ) : (
-                <span className="text-sm text-on-surface-variant/40 w-44">{t("history.searchPro")}</span>
+                <span className="text-sm text-on-surface-variant/70 w-44">{t("history.searchPro")}</span>
               )}
               {searchQuery && (MVP_MODE || sub?.plan !== "free") && (
                 <button onClick={() => setSearchQuery("")} className="text-on-surface-variant hover:text-on-surface">
@@ -347,7 +374,7 @@ export default function HistoryPage() {
                       onClick={() => handleStarClick(c.id, c.starred)}
                       aria-label={c.starred ? t("history.unstarContract") : t("history.starContract")}
                       title={c.starred ? t("history.unstarContract") : t("history.starContract")}
-                      className={`absolute top-4 right-4 transition-colors ${c.starred ? "text-yellow-400" : "text-on-surface-variant/30 hover:text-yellow-400"}`}
+                      className={`absolute top-2 right-2 w-11 h-11 flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${c.starred ? "text-yellow-400" : "text-on-surface-variant/50 hover:text-yellow-400"}`}
                     >
                       <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: c.starred ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                     </button>
@@ -357,7 +384,7 @@ export default function HistoryPage() {
                       onClick={() => setDeleteConfirm(c.id)}
                       aria-label="Delete contract"
                       title="Delete contract"
-                      className="absolute top-4 right-12 text-on-surface-variant/0 group-hover:text-on-surface-variant/40 hover:!text-error transition-colors"
+                      className="absolute top-2 right-12 w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant/50 lg:text-on-surface-variant/40 lg:group-hover:text-on-surface-variant/40 hover:!text-error transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
@@ -367,14 +394,22 @@ export default function HistoryPage() {
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-fixed/30">
                           <span className="material-symbols-outlined text-[20px] text-primary">description</span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-fixed/30 text-primary">
-                          {c.status}
+                        <span
+                          aria-label={getStatusAriaLabel(c.status)}
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${{
+                            COMPLETE: "bg-secondary/10 text-secondary",
+                            PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                            PROCESSING: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                            FAILED: "bg-error/10 text-error",
+                          }[c.status] || "bg-primary-fixed/30 text-primary"}`}
+                        >
+                          {getStatusLabel(c.status, t)}
                         </span>
                       </div>
-                      <h3 className="font-headline font-bold text-on-surface text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="font-headline font-bold text-on-surface text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2" title={c.title}>
                         {c.title}
                       </h3>
-                      <p className="text-xs text-on-surface-variant mb-2">{c.type}</p>
+                      <p className="text-xs text-on-surface-variant mb-2" title={c.type}>{c.type}</p>
                     </Link>
 
                     {/* Tags -- clickable to filter */}
@@ -384,7 +419,7 @@ export default function HistoryPage() {
                           <button
                             key={tag}
                             onClick={(e) => handleTagClick(tag, e)}
-                            className={`text-[11px] px-1.5 py-0.5 rounded border font-medium cursor-pointer hover:opacity-80 transition-opacity ${getTagColor(tag)} ${activeTag === tag ? "ring-1 ring-primary" : ""}`}
+                            className={`text-[11px] px-1.5 py-0.5 rounded border font-medium cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${getTagColor(tag)} ${activeTag === tag ? "ring-1 ring-primary" : ""}`}
                           >
                             {tag}
                           </button>
@@ -417,10 +452,41 @@ export default function HistoryPage() {
             )}
           </div>
 
-          {/* Filters panel */}
+          {/* Filters panel -- mobile: horizontal scroll row, desktop: sidebar */}
+          {/* Mobile filter row */}
+          <div className="lg:hidden fixed bottom-16 left-0 right-0 z-30 bg-surface/95 backdrop-blur-sm border-t border-outline-variant/10 px-4 py-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => setActiveTag(null)}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+                  !activeTag
+                    ? "bg-primary/10 text-primary font-bold"
+                    : "bg-surface-container-high text-on-surface-variant"
+                }`}
+              >
+                {t("history.allContracts")}
+              </button>
+              {tagsWithCount.map(({ label, count }) => {
+                const color = getTagColor(label);
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setActiveTag(activeTag === label ? null : label)}
+                    className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                      activeTag === label ? color + " border" : "bg-surface-container-high text-on-surface-variant"
+                    }`}
+                  >
+                    {label} <span className="opacity-60">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop filter sidebar */}
           <div className="hidden lg:block w-56 shrink-0">
             <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-3">
                 {t("history.filterByLabel")}
               </p>
               <div className="flex flex-col gap-1.5 mb-4">
@@ -434,27 +500,22 @@ export default function HistoryPage() {
                 >
                   {t("history.allContracts")}
                 </button>
-                {/* Collect ALL unique tags from contracts (predefined + custom) */}
-                {(() => {
-                  const allTags = new Set<string>();
-                  contracts.forEach((c) => (c.tags ?? []).forEach((tag) => allTags.add(tag)));
-                  return Array.from(allTags).map((label) => {
-                    const count = contracts.filter((c) => (c.tags ?? []).includes(label)).length;
-                    const color = getTagColor(label);
-                    return (
-                      <button
-                        key={label}
-                        onClick={() => setActiveTag(activeTag === label ? null : label)}
-                        className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-                          activeTag === label ? color + " border" : "text-on-surface-variant hover:bg-surface-container-high"
-                        }`}
-                      >
-                        <span>{label}</span>
-                        <span className="text-[10px] opacity-60">{count}</span>
-                      </button>
-                    );
-                  });
-                })()}
+                {/* Collect ALL unique tags from contracts (predefined + custom) — memoized as tagsWithCount */}
+                {tagsWithCount.map(({ label, count }) => {
+                  const color = getTagColor(label);
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => setActiveTag(activeTag === label ? null : label)}
+                      className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                        activeTag === label ? color + " border" : "text-on-surface-variant hover:bg-surface-container-high"
+                      }`}
+                    >
+                      <span>{label}</span>
+                      <span className="text-[10px] opacity-60">{count}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="border-t border-outline-variant/10 pt-3 relative">
@@ -486,7 +547,7 @@ export default function HistoryPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <AppFooter />
     </div>
