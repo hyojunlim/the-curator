@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "./supabase";
-import { PLAN_FEATURES } from "./config";
+import { PLAN_FEATURES, PADDLE_API_BASE } from "./config";
 import type { PlanType } from "./config";
 
 export interface Subscription {
@@ -121,19 +121,11 @@ export async function activatePlan(userId: string, plan: "pro" | "business", sub
   }
 }
 
-/** Downgrade to free plan */
-export async function deactivatePro(userId: string): Promise<void> {
-  await supabaseAdmin
-    .from("subscriptions")
-    .update({ plan: "free", paddle_subscription_id: null })
-    .eq("user_id", userId);
-}
-
 /** Cancel Paddle subscription via API */
 export async function cancelPaddleSubscription(subscriptionId: string): Promise<boolean> {
   try {
     const res = await fetch(
-      `https://${process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox" ? "sandbox-api" : "api"}.paddle.com/subscriptions/${subscriptionId}/cancel`,
+      `${PADDLE_API_BASE}/subscriptions/${subscriptionId}/cancel`,
       {
         method: "POST",
         headers: {

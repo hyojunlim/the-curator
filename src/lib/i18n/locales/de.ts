@@ -25,12 +25,29 @@ const de: Translations = {
     unexpectedError: "Ein unerwarteter Fehler ist aufgetreten",
     tryAgain: "Erneut versuchen",
     goHome: "Zur Startseite",
+    goToDashboard: "Zum Dashboard",
+    required: "Erforderlich",
+    optional: "Optional",
+    skipToContent: "Zum Hauptinhalt springen",
     copyright: "The Curator",
     allRightsReserved: "Alle Rechte vorbehalten.",
     builtWithAI: "Mit KI entwickelt \u00B7 Powered by Gemini",
     processing: "Verarbeitung...",
     retry: "Erneut versuchen",
     subscribe: "Jetzt abonnieren",
+  },
+
+  status: {
+    complete: "Bereit",
+    pending: "In Warteschlange",
+    processing: "Wird analysiert",
+    failed: "Fehlgeschlagen",
+  },
+
+  severity: {
+    high: "Hohes Risiko",
+    medium: "Mittleres Risiko",
+    low: "Niedriges Risiko",
   },
 
   sidebar: {
@@ -209,6 +226,8 @@ const de: Translations = {
     reportLanguageNote: "Dies steuert die Sprache der KI-Analyseergebnisse. Die UI-Sprache kann \u00FCber den Sprachumschalter in der Seitenleiste ge\u00E4ndert werden.",
     saveChanges: "\u00C4nderungen speichern",
     saved: "Gespeichert",
+    saveFailed: "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    upgradeSuccessful: "Upgrade erfolgreich! Ihr neuer Plan ist jetzt aktiv.",
     emailNotifications: "E-Mail-Benachrichtigungen",
     emailNotificationsDesc: "Analyseberichte per E-Mail erhalten",
     browserNotifications: "Browser-Benachrichtigungen",
@@ -385,6 +404,8 @@ const de: Translations = {
     analysisFailedDesc: "Bei der Analyse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
     retrying: "Erneuter Versuch...",
     tryAgain: "Erneut versuchen",
+    partyA: "Partei A",
+    partyB: "Partei B",
     stepUploading: "Dokument wird hochgeladen",
     stepExtracting: "Text wird extrahiert",
     stepAnalyzing: "Klauseln werden analysiert",

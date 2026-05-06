@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { PADDLE_SCRIPT_TIMEOUT_MS } from "@/lib/config";
 
 /**
  * Loads Paddle.js and initializes it.
@@ -56,7 +57,7 @@ export default function PaddleScript() {
       if (!window.Paddle) {
         console.warn("[PaddleScript] Paddle.js load timeout — checkout may not be available.");
       }
-    }, 10000);
+    }, PADDLE_SCRIPT_TIMEOUT_MS);
 
     document.head.appendChild(script);
 

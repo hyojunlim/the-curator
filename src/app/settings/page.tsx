@@ -33,6 +33,8 @@ export default function SettingsPage() {
       }
       if (params.get("upgraded")) {
         setActiveSection("billing");
+        setJustUpgraded(true);
+        setTimeout(() => setJustUpgraded(false), 5000);
         if (!params.get("_ptxn")) {
           window.history.replaceState({}, "", "/settings");
           refreshSub();
@@ -42,6 +44,8 @@ export default function SettingsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [justUpgraded, setJustUpgraded] = useState(false);
   const { sub, loading: subLoading, refresh: refreshSub } = useSubscription();
   const [cancelling, setCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -72,6 +76,7 @@ export default function SettingsPage() {
   }, [user]);
 
   async function handleSave() {
+    setSaveError("");
     try {
       // Persist language & org to localStorage BEFORE Clerk update
       // (Clerk update triggers useEffect which reads localStorage)
@@ -89,6 +94,7 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 2500);
     } catch {
       setSaved(false);
+      setSaveError(t("settings.saveFailed") || "Failed to save. Please try again.");
     }
   }
 
@@ -97,7 +103,15 @@ export default function SettingsPage() {
       <PaddleScript />
       <AppSidebar />
 
-      <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
+      <main id="main-content" className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-20">
+        {justUpgraded && (
+          <div className="mb-6 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 flex items-center gap-3">
+            <span className="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
+            <p className="text-sm font-medium text-green-800 dark:text-green-200">
+              {t("settings.upgradeSuccessful") || "Upgrade successful! Your new plan is now active."}
+            </p>
+          </div>
+        )}
         <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-8">{t("settings.title")}</h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -129,10 +143,12 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                    {t("settings.fullName")}
+                    {t("settings.fullName")} <span className="text-error" aria-label={t("common.required") || "Required"}>*</span>
                   </label>
                   <input
                     type="text"
+                    required
+                    aria-required="true"
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                     className="w-full bg-surface-container-low rounded-lg px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20 transition-all"
@@ -152,7 +168,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant block mb-1.5">
-                    {t("settings.organization")}
+                    {t("settings.organization")} <span className="text-on-surface-variant/50 normal-case font-medium">({t("common.optional") || "Optional"})</span>
                   </label>
                   <input
                     type="text"
@@ -185,22 +201,30 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                <button
-                  onClick={handleSave}
-                  className="btn-primary-gradient text-white font-headline font-bold text-sm px-6 py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-2"
-                >
-                  {saved ? (
-                    <>
-                      <span className="material-symbols-outlined text-[16px]">check</span>
-                      {t("settings.saved")}
-                    </>
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined text-[16px]">save</span>
-                      {t("settings.saveChanges")}
-                    </>
+                <div>
+                  <button
+                    onClick={handleSave}
+                    className="btn-primary-gradient text-white font-headline font-bold text-sm px-6 py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-2"
+                  >
+                    {saved ? (
+                      <>
+                        <span className="material-symbols-outlined text-[16px]">check</span>
+                        {t("settings.saved")}
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[16px]">save</span>
+                        {t("settings.saveChanges")}
+                      </>
+                    )}
+                  </button>
+                  {saveError && (
+                    <p className="text-xs text-error mt-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      {saveError}
+                    </p>
                   )}
-                </button>
+                </div>
               </div>
             )}
 
@@ -519,7 +543,7 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       <AppFooter />
     </div>

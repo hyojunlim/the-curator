@@ -211,12 +211,21 @@ export default function AnalyzePage() {
         });
       }
       if (!response.ok) {
-        const err = await response.json();
+        const err = await response.json().catch(() => ({}));
         if (err.code === "USAGE_LIMIT") {
           setUsageLimited(true);
           refreshSub();
         }
-        throw new Error(err.error ?? "Upload failed");
+        // Map known error codes / statuses to specific user-facing messages.
+        let specificMessage: string | null = null;
+        if (response.status === 413 || err.code === "FILE_TOO_LARGE") {
+          specificMessage = t("analyze.fileSizeError");
+        } else if (response.status === 400 && err.code === "TEXT_TOO_SHORT") {
+          specificMessage = t("analyze.minCharError");
+        } else if (response.status === 429 || err.code === "RATE_LIMIT") {
+          specificMessage = "Too many requests. Please wait a moment and try again.";
+        }
+        throw new Error(specificMessage ?? err.error ?? "Upload failed");
       }
       const { contractId, language: lang } = await response.json();
 
@@ -230,7 +239,17 @@ export default function AnalyzePage() {
       // Redirect to contract detail page
       router.push(`/contracts/${contractId}`);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : t("analyze.unknownError"));
+      // Distinguish network errors from known API errors.
+      let msg: string;
+      if (err instanceof TypeError) {
+        // fetch() throws TypeError on network failure
+        msg = "Network error. Please check your connection and try again.";
+      } else if (err instanceof Error && err.message) {
+        msg = err.message;
+      } else {
+        msg = t("analyze.unknownError");
+      }
+      setErrorMessage(msg);
       setStatus("error");
     }
   }
@@ -244,9 +263,9 @@ export default function AnalyzePage() {
       <AppSidebar />
 
       {/* Main content */}
-      <div className="ml-0 lg:ml-64 flex-1 flex flex-col lg:flex-row pt-14 lg:pt-0">
+      <main id="main-content" className="ml-0 lg:ml-64 flex-1 flex flex-col lg:flex-row pt-14 lg:pt-0">
         {/* Upload panel */}
-        <div className="flex-1 p-10 max-w-2xl">
+        <div className="flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24 max-w-2xl mx-auto w-full">
           <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-1">{t("analyze.title")}</h1>
           <p className="text-sm text-on-surface-variant mb-8">
             {t("analyze.description")}
@@ -284,7 +303,8 @@ export default function AnalyzePage() {
                     type="button"
                     onClick={() => { if (!isLocked) { setLanguage(lang.code); localStorage.setItem("curator-language", lang.code); } }}
                     disabled={isLocked}
-                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border ${
+                    title={isLocked ? "Upgrade to Pro to unlock" : ""}
+                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                       isLocked
                         ? "border-outline-variant/30 text-on-surface-variant/40 cursor-not-allowed bg-surface-container-high/30"
                         : language === lang.code
@@ -374,7 +394,7 @@ export default function AnalyzePage() {
           <button
             onClick={handleAnalyze}
             disabled={!canAnalyze}
-            className={`w-full py-3.5 rounded-lg text-sm font-headline font-bold transition-all flex items-center justify-center gap-2 ${
+            className={`w-full py-3.5 rounded-lg text-sm font-headline font-bold transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               canAnalyze
                 ? "btn-primary-gradient text-white shadow-md hover:opacity-90"
                 : "bg-surface-container-high text-on-surface-variant cursor-not-allowed"
@@ -402,7 +422,7 @@ export default function AnalyzePage() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="material-symbols-outlined text-primary text-[16px]">bolt</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                 {t("analyze.liveIntelligence")}
               </span>
             </div>
@@ -451,7 +471,7 @@ export default function AnalyzePage() {
               <div className="bg-error-container/20 rounded-xl p-4">
                 <p className="font-headline font-bold text-on-surface text-sm mb-2">{t("analyze.analysisFailed")}</p>
                 <p className="text-xs text-on-surface-variant">
-                  {t("analyze.analysisSomethingWrong")}
+                  {errorMessage || t("analyze.analysisSomethingWrong")}
                 </p>
               </div>
             )}
@@ -459,7 +479,7 @@ export default function AnalyzePage() {
 
           {/* Architecture Trust */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-3">
               {t("analyze.architectureTrust")}
             </p>
             <div className="space-y-2">
@@ -475,7 +495,7 @@ export default function AnalyzePage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <AppFooter />
     </div>

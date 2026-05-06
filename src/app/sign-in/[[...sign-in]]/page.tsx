@@ -13,7 +13,7 @@ export default function SignInPage() {
       <div className="flex-1 flex items-center justify-center pb-16">
         <div className="w-full max-w-md px-4">
           <Link href="/" className="block text-center mb-8 group">
-            <h1 className="font-headline font-extrabold text-3xl text-primary tracking-tighter group-hover:opacity-80 transition-opacity">The Curator</h1>
+            <h1 className="font-headline font-extrabold text-3xl text-primary tracking-tighter group-hover:opacity-80 transition-opacity">{t("common.appName")}</h1>
             <p className="text-sm text-on-surface-variant mt-1">{t("common.tagline")}</p>
           </Link>
           <div className="flex justify-center">

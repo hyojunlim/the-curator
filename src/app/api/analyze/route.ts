@@ -4,7 +4,7 @@ import { extractPDF, extractDOCX, extractHWP } from "@/lib/extractors";
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { checkUsage } from "@/lib/subscription";
-import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_WORD_COUNT, PLAN_FEATURES } from "@/lib/config";
+import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_WORD_COUNT, PLAN_FEATURES, MIN_CONTRACT_TEXT_LENGTH, MAX_CONTRACT_TEXT_CHARS, RATE_LIMIT_MAX_REQUESTS } from "@/lib/config";
 
 export const runtime = "nodejs";
 export const maxDuration = 30; // Only text extraction now — fast
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (!limit.allowed) {
       const retryMinutes = Math.ceil((limit.resetAt - Date.now()) / 60_000);
       return NextResponse.json(
-        { error: `Rate limit reached. You can analyze up to 20 contracts per hour. Try again in ${retryMinutes} minutes.` },
+        { error: `Rate limit reached. You can analyze up to ${RATE_LIMIT_MAX_REQUESTS} contracts per hour. Try again in ${retryMinutes} minutes.` },
         { status: 429, headers: { "Retry-After": String(retryMinutes * 60) } }
       );
     }
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
           contractText = "";
         }
         // If text extraction fails (scanned/image PDF), store base64 for vision fallback
-        if (!contractText || contractText.trim().length < 50) {
+        if (!contractText || contractText.trim().length < MIN_CONTRACT_TEXT_LENGTH) {
           pdfBase64 = buffer.toString("base64");
           contractText = ""; // Will use vision in process route
         }
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Reject excessively large pasted text
-    if (contractText.length > 500000) {
+    if (contractText.length > MAX_CONTRACT_TEXT_CHARS) {
       return NextResponse.json(
         { error: "Text too long. Maximum 500,000 characters." },
         { status: 400 }
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     }
 
     // For non-vision cases, validate text length
-    if (!pdfBase64 && (!contractText || contractText.length < 50)) {
+    if (!pdfBase64 && (!contractText || contractText.length < MIN_CONTRACT_TEXT_LENGTH)) {
       return NextResponse.json(
         { error: "Contract text is too short or empty. Please provide more content." },
         { status: 400 }

@@ -25,12 +25,29 @@ const pt: Translations = {
     unexpectedError: "Ocorreu um erro inesperado",
     tryAgain: "Tentar novamente",
     goHome: "Ir para o in\u00EDcio",
+    goToDashboard: "Ir para o painel",
+    required: "Obrigatório",
+    optional: "Opcional",
+    skipToContent: "Pular para o conteúdo principal",
     copyright: "The Curator",
     allRightsReserved: "Todos os direitos reservados.",
     builtWithAI: "Construido com IA \u00B7 Powered by Gemini",
     processing: "Processando...",
     retry: "Tentar novamente",
     subscribe: "Assinar agora",
+  },
+
+  status: {
+    complete: "Pronto",
+    pending: "Na fila",
+    processing: "Analisando",
+    failed: "Falhou",
+  },
+
+  severity: {
+    high: "Alto risco",
+    medium: "Risco médio",
+    low: "Baixo risco",
   },
 
   sidebar: {
@@ -209,6 +226,8 @@ const pt: Translations = {
     reportLanguageNote: "Isso controla o idioma dos resultados da an\u00E1lise de IA. O idioma da interface pode ser alterado pelo seletor de idioma na barra lateral.",
     saveChanges: "Salvar altera\u00E7\u00F5es",
     saved: "Salvo",
+    saveFailed: "Falha ao salvar. Por favor, tente novamente.",
+    upgradeSuccessful: "Upgrade bem-sucedido! Seu novo plano está ativo.",
     emailNotifications: "Notifica\u00E7\u00F5es por e-mail",
     emailNotificationsDesc: "Receber relat\u00F3rios de an\u00E1lise por e-mail",
     browserNotifications: "Notifica\u00E7\u00F5es do navegador",
@@ -385,6 +404,8 @@ const pt: Translations = {
     analysisFailedDesc: "Algo deu errado durante a análise. Por favor, tente novamente.",
     retrying: "Tentando novamente...",
     tryAgain: "Tentar novamente",
+    partyA: "Parte A",
+    partyB: "Parte B",
     stepUploading: "Enviando documento",
     stepExtracting: "Extraindo texto",
     stepAnalyzing: "Analisando cláusulas",

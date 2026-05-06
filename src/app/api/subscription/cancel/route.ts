@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getSubscription, cancelPaddleSubscription } from "@/lib/subscription";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -5,18 +6,18 @@ import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST() {
   const { userId } = await auth();
-  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const limit = await checkRateLimit(`${userId}:cancel`, 5);
   if (!limit.allowed) {
-    return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
   }
 
   try {
     const sub = await getSubscription(userId);
 
     if (sub.plan === "free") {
-      return Response.json({ error: "Already on Free plan" }, { status: 400 });
+      return NextResponse.json({ error: "Already on Free plan" }, { status: 400 });
     }
 
     const subId = sub.paddle_subscription_id;
@@ -27,9 +28,9 @@ export async function POST() {
       // Webhook (subscription.canceled) will downgrade when period ends
       const success = await cancelPaddleSubscription(subId);
       if (!success) {
-        return Response.json({ error: "Failed to cancel with payment provider" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to cancel with payment provider" }, { status: 500 });
       }
-      return Response.json({
+      return NextResponse.json({
         success: true,
         message: "Subscription canceled. You'll keep access until the end of your billing period.",
         keepAccess: true,
@@ -48,12 +49,12 @@ export async function POST() {
       })
       .eq("user_id", userId);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       message: "Plan downgraded to Free.",
     });
   } catch (err) {
     console.error("[/api/subscription/cancel] Error:", err);
-    return Response.json({ error: "Failed to cancel subscription" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to cancel subscription" }, { status: 500 });
   }
 }

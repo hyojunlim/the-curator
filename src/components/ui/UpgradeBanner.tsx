@@ -80,7 +80,9 @@ export default function UpgradeBanner({ remaining, limit, plan, onUpgraded }: Up
         {!showCheckout && (
           <button
             onClick={() => setShowCheckout(true)}
-            className="shrink-0 btn-primary-gradient text-white px-5 py-2 rounded-lg font-headline font-bold text-xs hover:opacity-90 transition-all shadow-md"
+            disabled={showCheckout}
+            aria-expanded={showCheckout}
+            className="shrink-0 btn-primary-gradient text-white px-5 py-2.5 rounded-lg font-headline font-bold text-sm hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t("upgradeBanner.upgradeButton", { plan: infoLabel })}
           </button>

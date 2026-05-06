@@ -70,6 +70,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </head>
         <body className={`${inter.variable} ${manrope.variable} font-body bg-surface text-on-surface`}>
+          {/* Skip link for keyboard / screen-reader users */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
+          >
+            Skip to main content
+          </a>
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{

@@ -3,6 +3,18 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["pdf-parse", "mammoth", "hwp.js", "pdfkit"],
   },
+  async redirects() {
+    return [
+      // Canonical domain: redirect www → non-www (301) to eliminate duplicate content
+      // and fix Google Search Console "redirect error" / "duplicate, user did not select canonical"
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.thecurator.site" }],
+        destination: "https://thecurator.site/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -31,13 +43,10 @@ const nextConfig = {
           },
         ],
       },
-      {
-        // Prevent API responses from being cached
-        source: "/api/(.*)",
-        headers: [
-          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
-        ],
-      },
+      // Note: removed blanket no-store on /api/(.*). Next.js dynamic API routes
+      // are not cached by default, and individual routes that specifically need
+      // no-store already set it themselves. This allows read endpoints like
+      // /api/contracts and /api/subscription to be cached when appropriate.
     ];
   },
 };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { supabaseAdmin } from "@/lib/supabase";
+import { WEBHOOK_REPLAY_WINDOW_SECONDS } from "@/lib/config";
 
 /**
  * Verify Paddle webhook signature (HMAC-SHA256).
@@ -30,7 +31,7 @@ function verifyPaddleSignature(rawBody: string, signature: string | null): boole
 
     // Reject webhooks older than 5 minutes to prevent replay attacks
     const webhookAge = Math.abs(Date.now() / 1000 - parseInt(ts, 10));
-    if (webhookAge > 300) return false;
+    if (webhookAge > WEBHOOK_REPLAY_WINDOW_SECONDS) return false;
 
     const signedPayload = `${ts}:${rawBody}`;
     const expectedSig = createHmac("sha256", secret).update(signedPayload).digest("hex");

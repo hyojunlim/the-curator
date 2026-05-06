@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-
-const PADDLE_API = process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox"
-  ? "https://sandbox-api.paddle.com"
-  : "https://api.paddle.com";
+import { PADDLE_API_BASE } from "@/lib/config";
 
 const ALLOWED_ORIGINS = [
   "https://thecurator.site",
@@ -53,7 +50,7 @@ export async function POST(req: NextRequest) {
     // is confirmed. We do NOT cancel here to avoid losing the subscription if the
     // user abandons checkout.
 
-    const res = await fetch(`${PADDLE_API}/transactions`, {
+    const res = await fetch(`${PADDLE_API_BASE}/transactions`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${API_KEY}`,

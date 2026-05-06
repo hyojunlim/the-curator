@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
 import Link from "next/link";
@@ -23,23 +23,31 @@ export default function AnalyticsPage() {
 
   const total = contracts.length;
 
-  // Group by month for the bar chart (last 6 months)
-  const monthlyData = (() => {
+  // Group by month for the bar chart (last 6 months) — memoized so polling or
+  // unrelated re-renders don't re-run the O(contracts * 6) bucketing pass.
+  const monthlyData = useMemo(() => {
     const months: { label: string; count: number }[] = [];
+    // Pre-bucket contracts once by year-month key for O(n) aggregation
+    const buckets = new Map<string, number>();
+    for (const c of contracts) {
+      const cd = new Date(c.created_at);
+      const key = `${cd.getFullYear()}-${cd.getMonth()}`;
+      buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const label = d.toLocaleDateString(dateLocale, { month: "short" });
-      const count = contracts.filter((c) => {
-        const cd = new Date(c.created_at);
-        return cd.getMonth() === d.getMonth() && cd.getFullYear() === d.getFullYear();
-      }).length;
-      months.push({ label, count });
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      months.push({ label, count: buckets.get(key) ?? 0 });
     }
     return months;
-  })();
+  }, [contracts, dateLocale]);
 
-  const maxMonthly = Math.max(...monthlyData.map((m) => m.count), 1);
+  const maxMonthly = useMemo(
+    () => Math.max(...monthlyData.map((m) => m.count), 1),
+    [monthlyData],
+  );
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
@@ -80,7 +88,7 @@ export default function AnalyticsPage() {
             {/* Summary stats */}
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("analytics.totalContracts")}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">{t("analytics.totalContracts")}</p>
                 <span className="font-headline font-extrabold text-4xl text-on-surface">{total}</span>
               </div>
             </div>

@@ -25,12 +25,29 @@ const fr: Translations = {
     unexpectedError: "Une erreur inattendue s'est produite",
     tryAgain: "R\u00E9essayer",
     goHome: "Aller \u00E0 l'accueil",
+    goToDashboard: "Aller au tableau de bord",
+    required: "Requis",
+    optional: "Facultatif",
+    skipToContent: "Passer au contenu principal",
     copyright: "The Curator",
     allRightsReserved: "Tous droits r\u00E9serv\u00E9s.",
     builtWithAI: "Construit avec l'IA \u00B7 Powered by Gemini",
     processing: "Traitement...",
     retry: "Réessayer",
     subscribe: "S'abonner",
+  },
+
+  status: {
+    complete: "Prêt",
+    pending: "En attente",
+    processing: "Analyse",
+    failed: "Échec",
+  },
+
+  severity: {
+    high: "Risque élevé",
+    medium: "Risque moyen",
+    low: "Risque faible",
   },
 
   sidebar: {
@@ -209,6 +226,8 @@ const fr: Translations = {
     reportLanguageNote: "Ceci contr\u00F4le la langue des r\u00E9sultats d'analyse IA. La langue de l'interface peut \u00EAtre modifi\u00E9e via le s\u00E9lecteur de langue dans la barre lat\u00E9rale.",
     saveChanges: "Enregistrer les modifications",
     saved: "Enregistr\u00E9",
+    saveFailed: "Échec de l'enregistrement. Veuillez réessayer.",
+    upgradeSuccessful: "Mise à niveau réussie ! Votre nouveau plan est maintenant actif.",
     emailNotifications: "Notifications par e-mail",
     emailNotificationsDesc: "Recevoir les rapports d'analyse par e-mail",
     browserNotifications: "Notifications du navigateur",
@@ -385,6 +404,8 @@ const fr: Translations = {
     analysisFailedDesc: "Un problème est survenu pendant l'analyse. Veuillez réessayer.",
     retrying: "Nouvelle tentative...",
     tryAgain: "Réessayer",
+    partyA: "Partie A",
+    partyB: "Partie B",
     stepUploading: "Téléchargement du document",
     stepExtracting: "Extraction du texte",
     stepAnalyzing: "Analyse des clauses",

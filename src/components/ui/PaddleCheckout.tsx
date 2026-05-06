@@ -68,7 +68,7 @@ export default function PaddleCheckout({ plan }: PaddleCheckoutProps) {
     <button
       onClick={handleCheckout}
       disabled={loading}
-      className="w-full btn-primary-gradient text-white font-headline font-bold text-sm px-6 py-3 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+      className="w-full btn-primary-gradient text-white font-headline font-bold text-sm px-5 py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
     >
       {loading ? (
         <>

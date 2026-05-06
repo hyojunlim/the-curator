@@ -9,7 +9,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface font-body text-on-surface px-8">
       <div className="max-w-md text-center">
-        <p className="text-8xl font-headline font-black text-on-surface/10 mb-4">404</p>
+        <p className="text-8xl font-headline font-black text-on-surface/25 mb-4">404</p>
         <h1 className="font-headline font-extrabold text-2xl text-on-surface mb-3">
           {t("common.pageNotFound")}
         </h1>
@@ -23,6 +23,14 @@ export default function NotFound() {
           <span className="material-symbols-outlined text-[18px]">home</span>
           {t("common.backToHome")}
         </Link>
+        <div className="mt-4">
+          <Link
+            href="/dashboard"
+            className="text-sm text-primary hover:underline font-medium"
+          >
+            {t("common.goToDashboard") === "common.goToDashboard" ? "Go to dashboard →" : t("common.goToDashboard")}
+          </Link>
+        </div>
       </div>
     </div>
   );

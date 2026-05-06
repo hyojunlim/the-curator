@@ -154,6 +154,15 @@
       linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     background-size: 48px 48px;
   }
+  /* Button size system */
+  .btn-sm { @apply px-4 py-2 text-xs rounded-lg font-headline font-bold transition-all; }
+  .btn-md { @apply px-5 py-2.5 text-sm rounded-lg font-headline font-bold transition-all; }
+  .btn-lg { @apply px-8 py-3.5 text-base rounded-xl font-headline font-bold transition-all; }
+  .btn-xl { @apply px-10 py-4 text-lg rounded-xl font-headline font-bold transition-all; }
+
+  /* Focus ring utility */
+  .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface; }
+
   /* Card used on the landing page */
   .card-dark {
     background: rgba(0, 0, 0, 0.03);

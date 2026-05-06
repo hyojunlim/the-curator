@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { jsonrepair } from "jsonrepair";
 import { GEMINI_PROMPT } from "./prompts";
+import { GEMINI_TIMEOUT_MS, GEMINI_MAX_RETRIES } from "./config";
 import type { AnalysisResult } from "@/types";
 
 if (!process.env.GEMINI_API_KEY) {
@@ -139,7 +140,7 @@ function parseResponse(responseText: string): AnalysisResult {
 }
 
 /** Single API call to Gemini with timeout via AbortController */
-async function callGemini(prompt: string, timeoutMs = 240_000): Promise<string> {
+async function callGemini(prompt: string, timeoutMs = GEMINI_TIMEOUT_MS): Promise<string> {
   const model = getModel();
 
   // Race between API call and timeout
@@ -182,20 +183,19 @@ export async function analyzeContract(
     .replace(/\{\{LANGUAGE\}\}/g, language)
     .replace("{{CONTRACT_TEXT}}", contractText);
 
-  const MAX_RETRIES = 1; // Only 1 retry to stay within timeout
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt <= GEMINI_MAX_RETRIES; attempt++) {
     try {
       const responseText = await callGemini(prompt);
       return parseResponse(responseText);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      console.error(`[Gemini] Attempt ${attempt + 1}/${MAX_RETRIES + 1} failed:`, lastError.message);
+      console.error(`[Gemini] Attempt ${attempt + 1}/${GEMINI_MAX_RETRIES + 1} failed:`, lastError.message);
       // Only retry on INVALID_JSON or EMPTY_RESPONSE
       if (!lastError.message.startsWith("INVALID_JSON") && lastError.message !== "EMPTY_RESPONSE") throw lastError;
       // Wait briefly before retry
-      if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 500));
+      if (attempt < GEMINI_MAX_RETRIES) await new Promise(r => setTimeout(r, 500));
     }
   }
 
@@ -218,7 +218,7 @@ export async function analyzeContractFromPDF(
   async function callPDF(): Promise<string> {
     let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error("TIMEOUT")), 240_000);
+      timeoutId = setTimeout(() => reject(new Error("TIMEOUT")), GEMINI_TIMEOUT_MS);
     }).catch((e) => { throw e; }); // prevent unhandled rejection if timeout fires after race settles
 
     try {
@@ -245,18 +245,17 @@ export async function analyzeContractFromPDF(
     }
   }
 
-  const MAX_RETRIES = 1;
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt <= GEMINI_MAX_RETRIES; attempt++) {
     try {
       const responseText = await callPDF();
       return parseResponse(responseText);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      console.error(`[Gemini PDF] Attempt ${attempt + 1}/${MAX_RETRIES + 1} failed:`, lastError.message);
+      console.error(`[Gemini PDF] Attempt ${attempt + 1}/${GEMINI_MAX_RETRIES + 1} failed:`, lastError.message);
       if (!lastError.message.startsWith("INVALID_JSON") && lastError.message !== "EMPTY_RESPONSE") throw lastError;
-      if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 500));
+      if (attempt < GEMINI_MAX_RETRIES) await new Promise(r => setTimeout(r, 500));
     }
   }
 

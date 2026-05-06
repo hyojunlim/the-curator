@@ -86,18 +86,18 @@ export default function DashboardPage() {
     const hour = new Date().getHours();
     setGreeting(hour < 12 ? t("dashboard.goodMorning") : hour < 18 ? t("dashboard.goodAfternoon") : t("dashboard.goodEvening"));
   }, [t]);
-  const displayName = userLoaded && user ? (user.firstName ?? user.username ?? null) : null;
+  const displayName = userLoaded && user ? (user.firstName || user.username || "") : "";
 
   return (
     <div className="flex min-h-screen bg-surface font-body text-on-surface">
       <AppSidebar />
 
-      <div className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24">
+      <main id="main-content" className="ml-0 lg:ml-64 flex-1 p-6 pt-16 lg:pt-6 lg:p-10 pb-24">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-headline font-extrabold text-2xl text-on-surface">
-              {displayName ? `${greeting}, ${displayName}` : greeting}
+              {greeting && `${greeting}${displayName ? `, ${displayName}` : ""}`}
             </h1>
             <p className="text-sm text-on-surface-variant mt-1">
               {lastAnalyzed && !loading
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/analyze"
-            className="btn-primary-gradient text-white px-5 py-2.5 rounded-lg font-headline font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-md"
+            className="btn-primary-gradient text-white px-5 py-2.5 rounded-lg font-headline font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             {t("dashboard.newAnalysis")}
@@ -124,18 +124,26 @@ export default function DashboardPage() {
           ) : (
             <>
               <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("dashboard.totalContracts")}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">{t("dashboard.totalContracts")}</p>
                 <span className="font-headline font-extrabold text-4xl text-on-surface">{total}</span>
                 <p className="text-xs text-on-surface-variant mt-1">{t("dashboard.analyzedToDate")}</p>
               </div>
               <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("dashboard.plan")}</p>
-                <span className="font-headline font-extrabold text-4xl text-primary">
-                  {sub ? (sub.plan === "business" ? t("dashboard.business") : sub.plan === "pro" ? t("dashboard.pro") : t("dashboard.free")) : "—"}
-                </span>
-                <p className="text-xs text-on-surface-variant mt-1">
-                  {sub?.plan === "business" ? t("dashboard.unlimitedAnalyses") : sub?.plan === "pro" ? t("dashboard.proRemaining", { remaining: sub.remaining }) : sub ? t("dashboard.freeRemaining", { remaining: sub.remaining }) : t("common.loading")}
-                </p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">{t("dashboard.plan")}</p>
+                {sub ? (
+                  <span className="font-headline font-extrabold text-4xl text-primary">
+                    {sub.plan === "business" ? t("dashboard.business") : sub.plan === "pro" ? t("dashboard.pro") : t("dashboard.free")}
+                  </span>
+                ) : (
+                  <div className="h-8 w-20 bg-surface-container animate-pulse rounded" />
+                )}
+                {sub ? (
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    {sub.plan === "business" ? t("dashboard.unlimitedAnalyses") : sub.plan === "pro" ? t("dashboard.proRemaining", { remaining: sub.remaining }) : t("dashboard.freeRemaining", { remaining: sub.remaining })}
+                  </p>
+                ) : (
+                  <div className="h-3 w-32 bg-surface-container animate-pulse rounded mt-2" />
+                )}
               </div>
             </>
           )}
@@ -206,7 +214,7 @@ export default function DashboardPage() {
             </div>
 
             <p className="text-xs mb-5 text-on-surface-variant/60">{t("dashboard.supportedFormats")}</p>
-            <Link href="/analyze" className="inline-flex items-center gap-2 btn-primary-gradient text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity shadow-md">
+            <Link href="/analyze" className="inline-flex items-center gap-2 btn-primary-gradient text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
               <span className="material-symbols-outlined text-[16px]">upload_file</span>
               {t("dashboard.uploadFirst")}
             </Link>
@@ -236,37 +244,41 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Quick actions */}
-        <h2 className="font-headline font-bold text-on-surface mb-4">{t("dashboard.quickActions")}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            href="/analyze"
-            className="relative overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 rounded-xl p-6 hover:shadow-lg hover:border-primary/25 transition-all group flex items-center gap-5"
-          >
-            <div className="w-14 h-14 bg-primary/15 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:scale-105 transition-all shadow-sm">
-              <span className="material-symbols-outlined text-[26px] text-primary group-hover:text-white transition-colors">psychology</span>
+        {/* Quick actions — hidden on empty state to avoid competing CTAs */}
+        {contracts.length > 0 && (
+          <>
+            <h2 className="font-headline font-bold text-on-surface mb-4">{t("dashboard.quickActions")}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link
+                href="/analyze"
+                className="relative overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 rounded-xl p-6 hover:shadow-lg hover:border-primary/25 transition-all group flex items-center gap-5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+              >
+                <div className="w-14 h-14 bg-primary/15 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:scale-105 transition-all shadow-sm">
+                  <span className="material-symbols-outlined text-[26px] text-primary group-hover:text-white transition-colors">psychology</span>
+                </div>
+                <div>
+                  <p className="font-headline font-bold text-on-surface group-hover:text-primary transition-colors">{t("dashboard.analyzeContract")}</p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">{t("dashboard.analyzeContractDesc")}</p>
+                </div>
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant/40 group-hover:text-primary ml-auto transition-colors">arrow_forward</span>
+              </Link>
+              <Link
+                href="/history"
+                className="relative overflow-hidden bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/10 rounded-xl p-6 hover:shadow-lg hover:border-secondary/25 transition-all group flex items-center gap-5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+              >
+                <div className="w-14 h-14 bg-secondary/15 rounded-2xl flex items-center justify-center group-hover:bg-secondary group-hover:scale-105 transition-all shadow-sm">
+                  <span className="material-symbols-outlined text-[26px] text-secondary group-hover:text-white transition-colors">inventory_2</span>
+                </div>
+                <div>
+                  <p className="font-headline font-bold text-on-surface group-hover:text-secondary transition-colors">{t("dashboard.viewAllContracts")}</p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">{t("dashboard.viewAllContractsDesc")}</p>
+                </div>
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant/40 group-hover:text-secondary ml-auto transition-colors">arrow_forward</span>
+              </Link>
             </div>
-            <div>
-              <p className="font-headline font-bold text-on-surface group-hover:text-primary transition-colors">{t("dashboard.analyzeContract")}</p>
-              <p className="text-xs text-on-surface-variant mt-0.5">{t("dashboard.analyzeContractDesc")}</p>
-            </div>
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant/40 group-hover:text-primary ml-auto transition-colors">arrow_forward</span>
-          </Link>
-          <Link
-            href="/history"
-            className="relative overflow-hidden bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/10 rounded-xl p-6 hover:shadow-lg hover:border-secondary/25 transition-all group flex items-center gap-5"
-          >
-            <div className="w-14 h-14 bg-secondary/15 rounded-2xl flex items-center justify-center group-hover:bg-secondary group-hover:scale-105 transition-all shadow-sm">
-              <span className="material-symbols-outlined text-[26px] text-secondary group-hover:text-white transition-colors">inventory_2</span>
-            </div>
-            <div>
-              <p className="font-headline font-bold text-on-surface group-hover:text-secondary transition-colors">{t("dashboard.viewAllContracts")}</p>
-              <p className="text-xs text-on-surface-variant mt-0.5">{t("dashboard.viewAllContractsDesc")}</p>
-            </div>
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant/40 group-hover:text-secondary ml-auto transition-colors">arrow_forward</span>
-          </Link>
-        </div>
-      </div>
+          </>
+        )}
+      </main>
 
       <AppFooter />
     </div>

@@ -1,14 +1,11 @@
+import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getSubscription } from "@/lib/subscription";
-import { FREE_ANALYSIS_LIMIT, PRO_ANALYSIS_LIMIT, MVP_MODE } from "@/lib/config";
-
-const PADDLE_API = process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox"
-  ? "https://sandbox-api.paddle.com"
-  : "https://api.paddle.com";
+import { FREE_ANALYSIS_LIMIT, PRO_ANALYSIS_LIMIT, MVP_MODE, PADDLE_API_BASE } from "@/lib/config";
 
 export async function GET() {
   const { userId } = await auth();
-  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const sub = await getSubscription(userId);
@@ -34,7 +31,7 @@ export async function GET() {
 
     if (subId && subId.startsWith("sub_") && process.env.PADDLE_API_KEY) {
       try {
-        const res = await fetch(`${PADDLE_API}/subscriptions/${subId}`, {
+        const res = await fetch(`${PADDLE_API_BASE}/subscriptions/${subId}`, {
           headers: { Authorization: `Bearer ${(process.env.PADDLE_API_KEY || "").trim()}` },
         });
         if (res.ok) {
@@ -50,7 +47,7 @@ export async function GET() {
       }
     }
 
-    return Response.json({
+    return NextResponse.json({
       plan: sub.plan,
       usage: sub.usage_count,
       limit,
@@ -61,6 +58,6 @@ export async function GET() {
     });
   } catch (err) {
     console.error("[/api/subscription] Error:", err);
-    return Response.json({ error: "Failed to fetch subscription" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch subscription" }, { status: 500 });
   }
 }

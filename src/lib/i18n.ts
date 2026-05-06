@@ -1,4 +1,4 @@
-export { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
+export { LanguageProvider } from "./i18n/LanguageContext";
 export { useTranslation } from "./i18n/useTranslation";
 
 import en from "./i18n/locales/en";
@@ -33,6 +33,3 @@ export function t(language: string, key: string): string {
   return results?.[key] || enResults?.[key] || key;
 }
 
-export function getLocale(language: string): string {
-  return langMap[language] || "en";
-}

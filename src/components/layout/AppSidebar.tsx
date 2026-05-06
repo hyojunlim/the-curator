@@ -73,7 +73,7 @@ export default function AppSidebar() {
           <h1 className="font-headline font-extrabold text-primary text-2xl tracking-tighter hover:opacity-80 transition-opacity">
             {t("common.appName")}
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/60 mt-0.5">
+          <p className="text-[11px] uppercase tracking-wider text-on-surface-variant/60 mt-0.5">
             {t("common.tagline")}
           </p>
         </Link>
@@ -105,7 +105,7 @@ export default function AppSidebar() {
               setMobileOpen(false);
               window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
             }}
-            className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs hover:bg-surface-container-high hover:text-on-surface transition-all border border-outline-variant/15"
+            className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs hover:bg-surface-container-high hover:text-on-surface transition-all border border-outline-variant/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <span className="material-symbols-outlined text-[16px]">search</span>
             <span className="flex-1 text-left">{t("sidebar.searchContracts")}</span>
@@ -114,7 +114,7 @@ export default function AppSidebar() {
           <SearchPalette />
         </>
       ) : (
-        <div className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container-high/30 text-on-surface-variant/40 text-xs border border-outline-variant/10 cursor-not-allowed">
+        <div className="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg bg-surface-container-high/30 text-on-surface-variant/60 text-xs border border-outline-variant/10 cursor-not-allowed">
           <span className="material-symbols-outlined text-[16px]">search</span>
           <span className="flex-1 text-left">{t("sidebar.searchContracts")}</span>
           <span className="material-symbols-outlined text-[12px]">lock</span>
@@ -128,7 +128,7 @@ export default function AppSidebar() {
             key={item.label}
             href={item.href}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center px-4 py-3 rounded-lg transition-all text-sm ${
+            className={`flex items-center px-4 py-3 rounded-lg transition-all text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               isActive(item.href)
                 ? "bg-surface-container-lowest text-primary font-semibold shadow-sm"
                 : "text-on-surface-variant hover:translate-x-1"
@@ -151,7 +151,7 @@ export default function AppSidebar() {
             key={item.label}
             href={item.href}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center px-4 py-2 rounded-lg transition-all text-sm ${
+            className={`flex items-center px-4 py-2 rounded-lg transition-all text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               isActive(item.href)
                 ? "bg-surface-container-lowest text-primary font-semibold"
                 : "text-on-surface-variant hover:translate-x-1"
@@ -173,7 +173,7 @@ export default function AppSidebar() {
         {/* Sign Out */}
         <button
           onClick={() => signOut({ redirectUrl: "/" })}
-          className="flex items-center gap-2 mx-2 px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-error/10 hover:text-error transition-all"
+          className="flex items-center gap-2 mx-2 px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-error/10 hover:text-error transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <span className="material-symbols-outlined text-[20px]">logout</span>
           {t("common.signOut")}

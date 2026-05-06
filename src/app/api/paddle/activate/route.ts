@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { activatePlan, getSubscription, cancelPaddleSubscription } from "@/lib/subscription";
-
-const PADDLE_API = process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox"
-  ? "https://sandbox-api.paddle.com"
-  : "https://api.paddle.com";
+import { PADDLE_API_BASE } from "@/lib/config";
 
 /**
  * POST /api/paddle/activate
@@ -26,7 +23,7 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.PADDLE_API_KEY || "").trim();
 
     // Step 1: Get transaction details
-    const txnRes = await fetch(`${PADDLE_API}/transactions/${transactionId}`, {
+    const txnRes = await fetch(`${PADDLE_API_BASE}/transactions/${transactionId}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
 
@@ -71,7 +68,7 @@ export async function POST(req: NextRequest) {
     if (!subscriptionId && txn.customer_id) {
       try {
         const subRes = await fetch(
-          `${PADDLE_API}/subscriptions?customer_id=${txn.customer_id}&status=active`,
+          `${PADDLE_API_BASE}/subscriptions?customer_id=${txn.customer_id}&status=active`,
           { headers: { Authorization: `Bearer ${apiKey}` } }
         );
         if (subRes.ok) {

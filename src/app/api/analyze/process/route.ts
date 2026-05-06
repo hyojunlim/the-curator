@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { incrementUsage, getSubscription } from "@/lib/subscription";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { isValidUUID } from "@/lib/validation";
+import { HIGH_RISK_THRESHOLD, RISK_SCORE_WEIGHTS } from "@/lib/config";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes — plenty of time for Gemini
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       const medCount = result.risks.filter((r: { severity: string }) => r.severity === "medium").length;
       const riskScore = aiScore !== null
         ? Math.max(0, Math.min(100, aiScore))
-        : Math.min(100, highCount * 20 + medCount * 10 + result.risks.length * 2);
+        : Math.min(100, highCount * RISK_SCORE_WEIGHTS.high + medCount * RISK_SCORE_WEIGHTS.medium + result.risks.length * RISK_SCORE_WEIGHTS.low);
 
       // Update contract with results
       await supabaseAdmin
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
           status: "COMPLETE",
           type: result.contractType || "General Contract",
           risk_score: riskScore,
-          risk_high: riskScore >= 60,
+          risk_high: riskScore >= HIGH_RISK_THRESHOLD,
           result,
           pdf_base64: null, // Clean up stored PDF data after processing
         })
