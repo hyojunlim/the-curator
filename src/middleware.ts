@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   "/opengraph-image(.*)",
   "/support",
   "/api/paddle/webhook",
+  "/api/keepalive",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
