@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { analyzeContract, analyzeContractFromPDF } from "@/lib/gemini";
 import { supabaseAdmin } from "@/lib/supabase";
 import { incrementUsage, getSubscription } from "@/lib/subscription";
+import { sendAnalysisCompleteEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { isValidUUID } from "@/lib/validation";
 import { HIGH_RISK_THRESHOLD, RISK_SCORE_WEIGHTS, STALE_PROCESSING_MS } from "@/lib/config";
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
       .eq("id", contractId)
       .eq("user_id", userId)
       .or(`status.eq.PENDING,status.eq.FAILED,and(status.eq.PROCESSING,updated_at.lt.${staleThreshold})`)
-      .select("id, contract_text, pdf_base64, language")
+      .select("id, contract_text, pdf_base64, language, title")
       .maybeSingle();
 
     if (!contract) {
@@ -115,6 +116,14 @@ export async function POST(req: NextRequest) {
       if (sub.plan !== "business") {
         await incrementUsage(userId);
       }
+
+      // Notify the user their analysis is ready (best-effort, never throws).
+      // Awaited so it runs within the serverless function's lifetime.
+      await sendAnalysisCompleteEmail(userId, {
+        contractId,
+        title: contract.title || "your contract",
+        riskScore,
+      });
 
       return NextResponse.json({ status: "COMPLETE", riskScore });
     } catch (err) {

@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "./supabase";
 import { PLAN_FEATURES, PADDLE_API_BASE } from "./config";
 import type { PlanType } from "./config";
+import { sendWelcomeEmail } from "./email";
 
 export interface Subscription {
   id: string;
@@ -68,6 +69,12 @@ export async function getSubscription(userId: string): Promise<Subscription> {
     if (existing) return existing as Subscription;
     throw new Error("Failed to create subscription");
   }
+
+  // A returned row from ON CONFLICT DO NOTHING means this was a genuine first
+  // insert (a conflict returns nothing), so this is the user's first contact
+  // with the app — send the welcome email once. Fire-and-forget.
+  void sendWelcomeEmail(userId).catch(() => {});
+
   return created as Subscription;
 }
 
