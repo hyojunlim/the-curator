@@ -175,6 +175,7 @@ export async function POST(req: NextRequest) {
         risk_high: false,
         contract_text: contractText || null,
         pdf_base64: pdfBase64 || null,
+        language,
         result: null,
       })
       .select("id")

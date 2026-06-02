@@ -36,6 +36,13 @@ export const RISK_SCORE_WEIGHTS = {
 export const GEMINI_TIMEOUT_MS = 240_000;
 export const GEMINI_MAX_RETRIES = 1;
 
+// ── Stuck-analysis recovery ──
+// A contract left in PROCESSING longer than this is considered dead (the
+// serverless function was killed by a Vercel timeout, redeploy, or crash)
+// and may be safely re-claimed for reprocessing. Must exceed the route's
+// maxDuration (300s) so we never reclaim an analysis that is still running.
+export const STALE_PROCESSING_MS = 6 * 60 * 1000; // 6 minutes
+
 // ── Paddle ──
 export const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox"
   ? "https://sandbox-api.paddle.com"

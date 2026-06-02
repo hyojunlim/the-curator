@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, memo, useCallback } from "react";
+import { useState, useEffect, useMemo, memo, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppFooter from "@/components/layout/AppFooter";
@@ -14,7 +14,7 @@ import ActionItemsCard from "@/components/results/ActionItemsCard";
 import { t } from "@/lib/i18n";
 import { useTranslation } from "@/lib/i18n";
 import { DATE_LOCALES } from "@/lib/dateUtils";
-import { MVP_MODE } from "@/lib/config";
+import { MVP_MODE, STALE_PROCESSING_MS } from "@/lib/config";
 import type { AnalysisResult, RiskItem } from "@/types";
 
 interface ContractDetail {
@@ -30,6 +30,7 @@ interface ContractDetail {
   tags: string[];
   error_message?: string;
   contract_text?: string;
+  language?: string;
 }
 
 type PerspectiveView = "none" | "party_a" | "party_b";
@@ -87,22 +88,41 @@ export default function ContractDetailPage() {
       .catch(() => { setLoading(false); setNotFound(true); });
   }, [id, router]);
 
-  // Auto-trigger process if stuck in PENDING (e.g. after retry/reset)
+  // Auto-trigger / auto-recover processing:
+  //  - PENDING: kick off analysis (covers the fire-and-forget request being
+  //    dropped when the user navigated to this page).
+  //  - PROCESSING but stale: the previous serverless run died mid-analysis;
+  //    re-claim it. The server's atomic claim ignores fresh PROCESSING, so this
+  //    never double-runs a live analysis.
+  // A ref guards against re-firing on every poll tick.
+  const kickedRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!contract || contract.status !== "PENDING") return;
-    const lang = contract.result?.language || "Korean";
+    if (!contract) return;
+    const isStaleProcessing =
+      contract.status === "PROCESSING" &&
+      Date.now() - new Date(contract.created_at).getTime() > STALE_PROCESSING_MS;
+    if (contract.status !== "PENDING" && !isStaleProcessing) return;
+
+    const key = `${contract.id}:${contract.status === "PENDING" ? "pending" : "stale"}`;
+    if (kickedRef.current === key) return; // already kicked for this state
+    kickedRef.current = key;
+
     fetch("/api/analyze/process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contractId: contract.id, language: lang }),
+      body: JSON.stringify({ contractId: contract.id, language: contract.language || contract.result?.language }),
     }).catch(() => {});
-  }, [contract?.status, contract?.id, contract?.result?.language]);
+  }, [contract?.status, contract?.id, contract?.created_at, contract?.language, contract?.result?.language]);
 
-  // Poll for status updates when PENDING or PROCESSING with exponential backoff:
-  //   polls 1-10:   every 2s
-  //   polls 11-20:  every 5s
-  //   polls 21-30:  every 10s
-  //   after 30:     stop polling and show a timeout message
+  // Poll for status updates when PENDING or PROCESSING with exponential backoff.
+  // Kept alive long enough to outlast both a slow-but-legitimate analysis
+  // (up to ~5 min) and the 6 min stale-recovery window, so an auto-recovered
+  // result is always picked up before polling gives up:
+  //   polls 1-10:   every 2s   (~20s)
+  //   polls 11-20:  every 5s   (~70s cumulative)
+  //   polls 21-40:  every 10s  (~270s cumulative)
+  //   polls 41-70:  every 15s  (~720s / 12 min cumulative)
+  //   after 70:     stop polling and show a timeout message
   useEffect(() => {
     if (!contract || (contract.status !== "PENDING" && contract.status !== "PROCESSING")) return;
 
@@ -111,7 +131,8 @@ export default function ContractDetailPage() {
     let pollCount = 0;
 
     const getDelay = (count: number): number | null => {
-      if (count >= 30) return null; // stop
+      if (count >= 70) return null; // stop
+      if (count >= 40) return 15000;
       if (count >= 20) return 10000;
       if (count >= 10) return 5000;
       return 2000;
@@ -395,11 +416,24 @@ export default function ContractDetailPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setPollTimedOut(false); window.location.reload(); }}
+                  onClick={async () => {
+                    // Re-claim and re-run the analysis. The server reclaims a
+                    // stale PROCESSING row; if it's still running fresh, the
+                    // 409 is harmless and the reload simply resumes polling.
+                    try {
+                      await fetch("/api/analyze/process", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ contractId: contract.id, language: contract.language || contract.result?.language }),
+                      });
+                    } catch {}
+                    setPollTimedOut(false);
+                    window.location.reload();
+                  }}
                   className="w-full px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-[14px]">refresh</span>
-                  {tr("contractDetail.refresh") || "Refresh"}
+                  {tr("contractDetail.retry") || tr("contractDetail.tryAgain") || "Retry"}
                 </button>
               </div>
             )}
