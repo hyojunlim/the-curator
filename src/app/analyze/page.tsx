@@ -8,6 +8,7 @@ import UpgradeBanner from "@/components/ui/UpgradeBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { MVP_MODE } from "@/lib/config";
 import { useTranslation } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 
 type Tab = "upload" | "paste";
 type Status = "idle" | "loading" | "error";
@@ -191,6 +192,7 @@ export default function AnalyzePage() {
   async function handleAnalyze() {
     setStatus("loading");
     setErrorMessage("");
+    track("analyze_submitted", { mode: activeTab, language });
     try {
       let response: Response;
       if (activeTab === "upload" && file) {

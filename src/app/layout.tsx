@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { LanguageProvider } from "@/lib/i18n";
 import "./globals.css";
 
@@ -141,11 +142,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
           {/* Prevent Google Translate from translating Material Symbol icon ligatures */}
           <style dangerouslySetInnerHTML={{ __html: `.material-symbols-outlined{font-feature-settings:"liga"}` }} />
-          <LanguageProvider>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-              {children}
-            </ThemeProvider>
-          </LanguageProvider>
+          <PostHogProvider>
+            <LanguageProvider>
+              <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+                {children}
+              </ThemeProvider>
+            </LanguageProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>

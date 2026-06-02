@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 
 interface PaddleCheckoutProps {
   plan: "pro" | "business";
@@ -15,6 +16,7 @@ export default function PaddleCheckout({ plan }: PaddleCheckoutProps) {
   async function handleCheckout() {
     setLoading(true);
     setError("");
+    track("upgrade_clicked", { plan });
 
     try {
       const res = await fetch("/api/paddle/checkout", {

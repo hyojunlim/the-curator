@@ -15,6 +15,7 @@ import { t } from "@/lib/i18n";
 import { useTranslation } from "@/lib/i18n";
 import { DATE_LOCALES } from "@/lib/dateUtils";
 import { MVP_MODE, STALE_PROCESSING_MS } from "@/lib/config";
+import { track } from "@/lib/analytics";
 import type { AnalysisResult, RiskItem } from "@/types";
 
 interface ContractDetail {
@@ -80,6 +81,21 @@ export default function ContractDetailPage() {
 
   // Clear selections when perspective changes
   useEffect(() => { setSelectedRewrites(new Set()); }, [perspective]);
+
+  // Fire a funnel event once when analysis reaches a terminal state.
+  const trackedTerminalRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!contract) return;
+    if (contract.status !== "COMPLETE" && contract.status !== "FAILED") return;
+    const key = `${contract.id}:${contract.status}`;
+    if (trackedTerminalRef.current === key) return;
+    trackedTerminalRef.current = key;
+    if (contract.status === "COMPLETE") {
+      track("analysis_completed", { riskScore: contract.risk_score });
+    } else {
+      track("analysis_failed");
+    }
+  }, [contract?.status, contract?.id, contract?.risk_score]);
 
   useEffect(() => {
     fetch(`/api/contracts/${id}`)
