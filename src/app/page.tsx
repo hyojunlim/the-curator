@@ -688,6 +688,41 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* -- Trust & Security -- */}
+      <section className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary mb-4">
+              <span className="material-symbols-outlined text-[16px]">verified_user</span>
+              {t("landing.trustBadge")}
+            </span>
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-4">
+              {t("landing.trustTitle")}
+            </h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed max-w-2xl mx-auto">{t("landing.trustDesc")}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: "lock", title: t("landing.trustEncryptTitle"), desc: t("landing.trustEncryptDesc") },
+              { icon: "shield_person", title: t("landing.trustIsolationTitle"), desc: t("landing.trustIsolationDesc") },
+              { icon: "delete_sweep", title: t("landing.trustDeleteTitle"), desc: t("landing.trustDeleteDesc") },
+              { icon: "balance", title: t("landing.trustTransparentTitle"), desc: t("landing.trustTransparentDesc") },
+              { icon: "smart_toy", title: t("landing.trustAiTitle"), desc: t("landing.trustAiDesc") },
+              { icon: "credit_card_off", title: t("landing.trustNoCardTitle"), desc: t("landing.trustNoCardDesc") },
+            ].map((card, i) => (
+              <div key={i} className="bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-8 hover:border-outline-variant/30 transition-all">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-5">
+                  <span className="material-symbols-outlined text-primary text-[24px]">{card.icon}</span>
+                </div>
+                <h3 className="text-lg font-headline font-bold text-on-surface mb-2">{card.title}</h3>
+                <p className="text-sm text-on-surface-variant leading-relaxed">{card.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* -- Pricing -- */}
       <section id="pricing" className="py-40 px-5 sm:px-8 border-t border-outline-variant/15">
         <div className="max-w-5xl mx-auto">
